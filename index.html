@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans pb-24">
+<body class="bg-gray-50 text-gray-900 font-sans">
     <!-- Header met Voldaan Logo -->
-    <header class="bg-white border-b border-gray-100 py-3 px-4 sticky top-0 z-40 flex items-center justify-between shadow-xs">
+    <header class="bg-white border-b border-gray-100 py-3 px-4 flex items-center justify-between shadow-xs">
         <div class="flex items-center gap-2.5">
             <img src="icon.jpg" alt="Voldaan Logo" class="w-8 h-8 rounded-xl object-cover shadow-xs border border-indigo-100">
             <div>
@@ -34,32 +34,32 @@
         <div id="luchtig" class="tab-content hidden"></div>
     </main>
 
-    <!-- Onderste Menubalk -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 py-2 px-2 z-40 shadow-lg">
-        <div class="grid grid-cols-8 gap-0.5 text-center text-[10px] font-medium max-w-md mx-auto">
-            <button data-tab="vandaag" class="nav-btn flex flex-col items-center justify-center py-1 text-indigo-600">
-                <span class="text-base">✨</span><span>Vandaag</span>
+    <!-- Onderste Menubalk (Nu in 2 strakke rijen van 4 om overflow te voorkomen) -->
+    <nav class="py-1.5 px-2">
+        <div class="grid grid-cols-4 gap-1 text-center text-[10px] font-medium">
+            <button data-tab="vandaag" class="nav-btn flex flex-col items-center justify-center py-1 text-indigo-600 rounded-lg bg-indigo-50/50">
+                <span class="text-sm">✨</span><span>Vandaag</span>
             </button>
-            <button data-tab="plannen" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">🎯</span><span>Plannen</span>
+            <button data-tab="plannen" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">🎯</span><span>Plannen</span>
             </button>
-            <button data-tab="vitality" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">⚡</span><span>Vitaliteit</span>
+            <button data-tab="vitality" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">⚡</span><span>Vitaliteit</span>
             </button>
-            <button data-tab="geld" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">💶</span><span>Geld</span>
+            <button data-tab="geld" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">💶</span><span>Geld</span>
             </button>
-            <button data-tab="ideeen" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">📌</span><span>Ideeën</span>
+            <button data-tab="ideeen" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">📌</span><span>Ideeën</span>
             </button>
-            <button data-tab="kennis" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">📚</span><span>Kennis</span>
+            <button data-tab="kennis" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">📚</span><span>Kennis</span>
             </button>
-            <button data-tab="inzichten" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">📊</span><span>Inzichten</span>
+            <button data-tab="inzichten" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">📊</span><span>Inzichten</span>
             </button>
-            <button data-tab="luchtig" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
-                <span class="text-base">🍃</span><span>Luchtig</span>
+            <button data-tab="luchtig" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-500 hover:text-indigo-600 rounded-lg">
+                <span class="text-sm">🍃</span><span>Luchtig</span>
             </button>
         </div>
     </nav>
