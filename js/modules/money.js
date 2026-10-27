@@ -110,4 +110,115 @@ function initMoneyLogic(appData) {
             appData.money.transactions.push({ id: Date.now(), description, amount, category, date: new Date().toISOString() });
             
             appData.money.balance = (appData.money.balance || 0) + amount;
-            saveAppData
+            saveAppData(appData);
+            txForm.reset();
+            renderMoneyView(appData);
+        }
+    });
+
+    // Impuls formulier
+    const impulseForm = document.getElementById('impulse-form');
+    impulseForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const item = document.getElementById('impulse-item').value.trim();
+        if (item) {
+            if (!appData.money.impulseWants) appData.money.impulseWants = [];
+            appData.money.impulseWants.push({ id: Date.now(), item, date: new Date().toISOString() });
+            saveAppData(appData);
+            impulseForm.reset();
+            renderMoneyView(appData);
+        }
+    });
+
+    // Savings formulier
+    const savingsForm = document.getElementById('savings-form');
+    savingsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('savings-name').value.trim();
+        if (name) {
+            if (!appData.money.savingsPots) appData.money.savingsPots = [];
+            appData.money.savingsPots.push({ id: Date.now(), name, saved: 0, date: new Date().toISOString() });
+            saveAppData(appData);
+            savingsForm.reset();
+            renderMoneyView(appData);
+        }
+    });
+
+    document.getElementById('tx-filter-date').addEventListener('change', () => renderMoneyView(appData));
+
+    renderMoneyView(appData);
+    initPaydayRadar();
+}
+
+function renderMoneyView(appData) {
+    const balanceEl = document.getElementById('current-balance');
+    const balance = appData.money?.balance || 0;
+    balanceEl.textContent = `€ ${balance.toFixed(2)}`;
+    balanceEl.className = balance < 0 ? "text-3xl font-bold text-red-600" : "text-3xl font-bold text-indigo-900";
+
+    // Transacties renderen met filter
+    const txList = document.getElementById('transaction-list');
+    const dateFilter = document.getElementById('tx-filter-date').value;
+    const txs = (appData.money?.transactions || []).filter(t => checkDateFilter(t.date, dateFilter));
+
+    txList.innerHTML = txs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen transacties gevonden.</p>' : txs.slice(-10).reverse().map(t => `
+        <li class="flex justify-between items-center p-2 rounded-xl text-xs border ${t.amount >= 0 ? 'bg-green-50/50 border-green-100 text-green-900' : 'bg-red-50/50 border-red-100 text-red-900'}">
+            <div><span class="font-bold">[${t.category}]</span> ${t.description}</div>
+            <span class="font-bold">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
+        </li>
+    `).join('');
+
+    // Impuls wachtkamer
+    const impulseList = document.getElementById('impulse-list');
+    const impulses = appData.money?.impulseWants || [];
+    impulseList.innerHTML = impulses.length === 0 ? '<p class="italic text-gray-400">Geen aankopen in de wacht.</p>' : impulses.map(i => `
+        <div class="flex justify-between py-1 border-b">
+            <span>⏳ ${i.item}</span>
+            <span class="text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
+        </div>
+    `).join('');
+
+    // Spaarpotjes
+    const savingsList = document.getElementById('savings-list');
+    const pots = appData.money?.savingsPots || [];
+    savingsList.innerHTML = pots.length === 0 ? '<p class="italic text-gray-400">Nog geen spaarpotjes.</p>' : pots.map(p => `
+        <div class="flex justify-between py-1 border-b">
+            <span>🌱 ${p.name}</span>
+            <span class="font-semibold text-indigo-900">€ ${p.saved.toFixed(2)}</span>
+        </div>
+    `).join('');
+}
+
+// Paydayradar logica (telt af naar 23e om 08:00, of vrijdag ervoor als weekend)
+function initPaydayRadar() {
+    const radarEl = document.getElementById('payday-countdown');
+    if (!radarEl) return;
+
+    function updateRadar() {
+        const now = new Date();
+        let targetMonth = now.getMonth();
+        let targetYear = now.getFullYear();
+
+        // Bepaal de 23e van deze maand om 08:00
+        let payday = new Date(targetYear, targetMonth, 23, 8, 0, 0);
+
+        // Als vandaag al voorbij de 23e is, pak de 23e van volgende maand
+        if (now > payday) {
+            payday = new Date(targetYear, targetMonth + 1, 23, 8, 0, 0);
+        }
+
+        // Weekend check (zaterdag = 6, zondag = 0) -> vrijdag ervoor
+        const dayOfWeek = payday.getDay();
+        if (dayOfWeek === 6) payday.setDate(payday.getDate() - 1);
+        if (dayOfWeek === 0) payday.setDate(payday.getDate() - 2);
+
+        const diff = payday - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+
+        radarEl.textContent = `Nog ${days} dagen en ${hours} uur tot loon! 💶`;
+    }
+
+    updateRadar();
+    setInterval(updateRadar, 60000); // update elk minuut
+}
