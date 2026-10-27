@@ -1,5 +1,5 @@
 // js/modules/vandaag.js
-import { saveAppData, checkDateFilter } from './storage.js';
+import { saveAppData, checkDateFilter, voegTrotsKnikkerToe } from './storage.js';
 
 const CATEGORIES = ['Algemeen', 'Taken', 'Doelen', 'Gezondheid', 'Geld & Aflossingen', 'Contacten', 'Dagstart'];
 
@@ -42,7 +42,6 @@ export function initVandaagModule(appData) {
                         <option value="all">Alles</option>
                     </select>
                 </div>
-                <!-- Visuele mini-grafiek balken -->
                 <div id="mood-chart-bars" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
                 <div id="mood-history-list" class="space-y-1 text-xs text-gray-600 max-h-32 overflow-y-auto"></div>
             </div>
@@ -126,20 +125,14 @@ export function initVandaagModule(appData) {
         </div>
     `;
 
-    // Modal voor Knikker toevoegen (Prachtige pop-up i.p.v. simpele prompt)
     initMarbleModal(appData);
     initVandaagLogic(appData);
 }
-
-// ---------------------------------------------------------
-// Logica & Pop-ups voor Vandaag
-// ---------------------------------------------------------
 
 function initVandaagLogic(appData) {
     if (!appData.moods) appData.moods = [];
     if (!appData.marbles) appData.marbles = [];
 
-    // Mood knoppen met zachte feedback en confetti-effect
     document.querySelectorAll('.mood-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const mood = btn.getAttribute('data-mood');
@@ -147,8 +140,6 @@ function initVandaagLogic(appData) {
             appData.moods.push({ id: Date.now(), mood, icon, date: new Date().toISOString() });
             saveAppData(appData);
             
-            triggerConfetti();
-            showToast(`Mood geregistreerd: ${icon} ${mood} 🪷`);
             renderMoodHistory(appData);
         });
     });
@@ -168,7 +159,6 @@ function initVandaagLogic(appData) {
     initBackupLogic(appData);
 }
 
-// Trots-Kluis weergave en filters
 function renderTrotsKluis(appData) {
     const listEl = document.getElementById('marble-list');
     const countBadge = document.getElementById('marble-count-badge');
@@ -215,7 +205,6 @@ function renderTrotsKluis(appData) {
     document.getElementById('marble-specific-date').onchange = () => renderTrotsKluis(appData);
 }
 
-// Prachtige Modal Pop-up voor Knikker Toevoegen
 function initMarbleModal(appData) {
     const modalHTML = `
         <div id="marble-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
@@ -255,19 +244,14 @@ function initMarbleModal(appData) {
         const text = document.getElementById('modal-marble-text').value.trim();
         const category = document.getElementById('modal-marble-cat').value;
         if (text) {
-            if (!appData.marbles) appData.marbles = [];
-            appData.marbles.push({ id: Date.now(), text, category, date: new Date().toISOString() });
-            saveAppData(appData);
+            voegTrotsKnikkerToe(appData, text, category);
             modal.classList.add('hidden');
             e.target.reset();
-            triggerConfetti();
             renderTrotsKluis(appData);
-            showToast("Knikker succesvol toegevoegd aan de Trots-Kluis! 🏺");
         }
     });
 }
 
-// Render Mood Historie met visuele balkjes (Lijngrafiek-stijl)
 function renderMoodHistory(appData) {
     const listEl = document.getElementById('mood-history-list');
     const barsEl = document.getElementById('mood-chart-bars');
@@ -282,7 +266,6 @@ function renderMoodHistory(appData) {
         </div>
     `).join('');
 
-    // Visuele verdeling balkjes
     const counts = {};
     moods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
     const total = moods.length;
@@ -303,7 +286,6 @@ function renderMoodHistory(appData) {
     }).join('');
 }
 
-// Actie-Hub koppeling
 function renderActieHub(appData) {
     const listEl = document.getElementById('actie-hub-list');
     const tasks = (appData.tasks || []).filter(t => !t.archived && !t.completed).slice(0, 5);
@@ -319,15 +301,13 @@ function renderActieHub(appData) {
         const task = appData.tasks.find(t => t.id === id);
         if (task) {
             task.completed = true;
+            voegTrotsKnikkerToe(appData, `Taak volbracht: ${task.text}`, task.category || 'Taken');
             saveAppData(appData);
-            triggerConfetti();
             renderActieHub(appData);
-            showToast("Taak volbracht en afgevinkt! 🎯");
         }
     };
 }
 
-// Idee van de Dag met uitvouwbare tekst
 function renderIdeeVanDeDag(appData) {
     const textEl = document.getElementById('idea-day-text');
     const ideas = (appData.ideas || []).filter(i => !i.archived);
@@ -349,7 +329,6 @@ function renderIdeeVanDeDag(appData) {
     };
 }
 
-// Backup & Toast helpers
 function initBackupLogic(appData) {
     document.getElementById('export-json-btn').addEventListener('click', () => {
         const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
@@ -379,15 +358,6 @@ function initBackupLogic(appData) {
         };
         reader.readAsText(file);
     });
-}
-
-// Subtiele Confetti en Toast Notificatie helper
-function triggerConfetti() {
-    // Eenvoudige visuele flash of confetti effect
-    const flash = document.createElement('div');
-    flash.className = 'fixed inset-0 bg-indigo-500/10 z-50 pointer-events-none transition duration-300';
-    document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 300);
 }
 
 function showToast(msg) {
