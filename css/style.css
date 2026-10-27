@@ -86,7 +86,7 @@ header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
 }
 .energy-btn.selected { border-color: var(--accent-primary); background-color: rgba(90, 103, 216, 0.15); font-weight: 600; }
 
-/* --- VITALITEIT / HABIT GRID (GECORRIGEERD) --- */
+/* --- VITALITEIT / HABIT GRID --- */
 .habit-grid { 
   display: grid; 
   grid-template-columns: repeat(2, 1fr); 
@@ -112,11 +112,11 @@ header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
   color: #38A169; 
 }
 
-input[type="text"] {
+input[type="text"], input[type="number"], select {
   width: 100%; background: var(--input-bg); color: var(--text-main); border: 1.5px solid var(--input-border);
   border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; margin-bottom: 10px; outline: none;
 }
-input[type="text"]:focus { border-color: var(--accent-primary); }
+input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--accent-primary); }
 
 .item-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .item-card {
