@@ -20,51 +20,125 @@ export function saveAppData(appData) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
 }
 
-// Slimme migratie die jouw oude backup-formaat (met losse voldaan_ sleutels) feilloos omzet
+// Feilloze migratie van jouw specifieke backup-structuur naar de nieuwe app-objecten
 function migrateDataStructure(data) {
     if (!data) return getInitialAppData();
 
-    // Als het een platte export is van jouw oude app, converteren we hem hier direct:
     let parsedTasks = [];
     let parsedMarbles = [];
     let parsedMoods = [];
     let parsedIdeas = [];
+    let parsedProjects = [];
+    let parsedTransactions = [];
+    let parsedExpected = [];
+    let parsedStudyDebt = { total: 41939, paid: 477.35, monthly: 477.35 };
 
     try {
-        if (data.voldaan_tasks) parsedTasks = JSON.parse(data.voldaan_tasks);
-        if (data.voldaan_marbles) parsedMarbles = JSON.parse(data.voldaan_marbles);
+        // 1. Taken (Zacht Planbord)
+        if (data.voldaan_tasks) {
+            parsedTasks = JSON.parse(data.voldaan_tasks);
+        }
+        // 2. Knikkers (Trots-Kluis)
+        if (data.voldaan_marbles) {
+            parsedMarbles = JSON.parse(data.voldaan_marbles);
+        }
+        // 3. Moods (Mijn Dag Begint Nu)
         if (data.voldaan_energy_logs) {
             parsedMoods = JSON.parse(data.voldaan_energy_logs).map(e => ({
                 id: e.id || Date.now(),
                 mood: e.energy || 'Oké',
                 icon: e.energy === 'Gefocust' ? '🚀' : e.energy === 'Wazig / Moe' ? '🌫️' : '🪨',
-                date: e.displayTime ? new Date().toISOString() : new Date(e.timestamp).toISOString()
+                date: e.displayTime ? new Date().toISOString() : new Date(e.timestamp || Date.now()).toISOString()
             }));
         }
-        if (data.voldaan_ideas) parsedIdeas = JSON.parse(data.voldaan_ideas);
+        // 4. Ideeën (Ideeënkluis)
+        if (data.voldaan_ideas) {
+            parsedIdeas = JSON.parse(data.voldaan_ideas);
+        }
+        // 5. Geld / Ruimte-kompas projecten
+        if (data.voldaan_ruimte_projects) {
+            parsedProjects = JSON.parse(data.voldaan_ruimte_projects);
+        }
+        // 6. Transacties
+        if (data.voldaan_transactions) {
+            parsedTransactions = JSON.parse(data.voldaan_transactions);
+        }
+        // 7. Vaste lasten / Verwachte uitgaven
+        if (data.voldaan_fixed_bills) {
+            parsedExpected = JSON.parse(data.voldaan_fixed_bills);
+        }
+        // 8. Studieschuld
+        if (data.voldaan_study_debt) {
+            parsedStudyDebt = JSON.parse(data.voldaan_study_debt);
+        }
     } catch (err) {
-        console.error("Kon oude tabellendata niet parsen:", err);
+        console.error("Fout bij parsen backup tabellendata:", err);
     }
 
+    // Mappen netjes vullen met zowel nieuwe app-data als je oude backup-data
     return {
         settings: data.settings || { darkMode: false },
-        moods: data.moods && data.moods.length > 0 ? data.moods : parsedMoods,
-        marbles: data.marbles && data.marbles.length > 0 ? data.marbles : parsedMarbles,
-        tasks: data.tasks && data.tasks.length > 0 ? data.tasks : parsedTasks.map(t => ({
+        moods: (data.moods && data.moods.length > 0) ? data.moods : parsedMoods,
+        marbles: (data.marbles && data.marbles.length > 0) ? data.marbles : parsedMarbles.map(m => ({
+            id: m.id || Date.now(),
+            text: m.reason || m.text || 'Knikker',
+            category: m.category || 'Algemeen',
+            date: m.date ? new Date().toISOString() : new Date().toISOString()
+        })),
+        tasks: (data.tasks && data.tasks.length > 0) ? data.tasks : parsedTasks.map(t => ({
             id: t.id,
             text: t.text,
             category: t.category || 'Algemeen',
             priority: 'Normaal',
-            completed: t.done || false,
+            completed: t.done || t.completed || false,
             archived: t.archived || false,
             date: t.created ? new Date().toISOString() : new Date().toISOString()
         })),
         eveningPacts: data.eveningPacts || [],
         goals: data.goals || [],
-        vitality: data.vitality || { sleep: [], steps: [], sport: [], nutrition: [], snackWaits: [] },
-        money: data.money || { balance: parseFloat(data.voldaan_bank_balance) || 0, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 41939, paid: 477.35, monthly: 477.35 } },
+        vitality: data.vitality || { sleep: [], steps: [], sport: [], sportTypes: ['Wandelen', 'Fietsen', 'Sport / Workout', 'Voetbal', 'Zaalvoetbal', 'Hardlopen', 'Rekken / Yoga'], nutrition: [], snackWaits: [] },
+        money: data.money || {
+            balance: parseFloat(data.voldaan_bank_balance) || 37.70,
+            transactions: parsedTransactions.map(tx => ({
+                id: tx.id,
+                description: tx.title || tx.description || 'Transactie',
+                amount: tx.type === 'EXPENSE' ? -Math.abs(tx.amount) : Math.abs(tx.amount),
+                category: tx.category || 'Algemeen',
+                label: tx.label || 'Geen bewustwordingslabel',
+                date: tx.datetime || tx.created || new Date().toISOString()
+            })),
+            expectedExpenses: parsedExpected.map(ex => ({
+                id: ex.id,
+                description: ex.name || 'Verwachte uitgave',
+                amount: ex.amount || 0,
+                method: ex.type || 'Automatische Incasso',
+                category: 'Geld & Aflossingen',
+                date: ex.date || new Date().toISOString().slice(0,10),
+                completed: ex.paid || false
+            })),
+            financialProjects: parsedProjects.map(p => ({
+                id: p.id,
+                title: p.title,
+                target: p.totalAmount || 0,
+                freed: p.repaidAmount || 0,
+                history: p.history || []
+            })),
+            studyDebt: {
+                total: parsedStudyDebt.total || 41939,
+                paid: parsedStudyDebt.repaid || 477.35,
+                monthly: parsedStudyDebt.monthly || 477.35
+            },
+            impulseWants: [],
+            savingsPots: []
+        },
         ideasModule: data.ideasModule || {
-            ideas: parsedIdeas.map(i => ({ id: i.id, text: i.text, category: i.category || 'Algemeen', archived: i.archived || false, date: new Date().toISOString() })),
+            ideas: parsedIdeas.map(i => ({
+                id: i.id,
+                text: i.text,
+                category: i.category || 'Algemeen',
+                archived: i.archived || false,
+                date: i.created ? new Date().toISOString() : new Date().toISOString()
+            })),
             projects: [],
             categories: ['Algemeen', 'Voldaan', 'Creatief', 'Werk / Studie', 'Privé / Thuis'],
             archivedIdeas: [],
@@ -74,7 +148,14 @@ function migrateDataStructure(data) {
         luchtig: data.luchtig || { customPlaylists: [], userLink: '' },
         plans: data.plans || {
             eveningPacts: [],
-            tasks: parsedTasks.map(t => ({ id: t.id, text: t.text, category: t.category || 'Algemeen', priority: 'Normaal', completed: t.done || false, date: new Date().toISOString() })),
+            tasks: parsedTasks.map(t => ({
+                id: t.id,
+                text: t.text,
+                category: t.category || 'Algemeen',
+                priority: 'Normaal',
+                completed: t.done || t.completed || false,
+                date: t.created ? new Date().toISOString() : new Date().toISOString()
+            })),
             goals: [],
             categories: ['Privé', 'Gezin', 'Werk', 'Klussen', 'Vrije Tijd', 'Gezondheid', 'Financieel'],
             archivedTasks: [], archivedPacts: [], archivedGoals: []
@@ -86,7 +167,6 @@ export function getInitialAppData() {
     return migrateDataStructure({});
 }
 
-// Universele datumfilter helper voor alle tabbladen
 export function checkDateFilter(dateString, filterType) {
     if (!dateString) return true;
     const itemDate = new Date(dateString);
@@ -116,7 +196,6 @@ export function checkDateFilter(dateString, filterType) {
     return true;
 }
 
-// Belonings-helper: voegt knikker toe + visuele beloning
 export function voegTrotsKnikkerToe(appData, tekst, categorie = 'Algemeen') {
     if (!appData.marbles) appData.marbles = [];
     appData.marbles.push({
