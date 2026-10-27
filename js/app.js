@@ -15,7 +15,6 @@ function switchView(viewName) {
   if (activeEl) activeEl.classList.remove('hidden');
   if (activeTab) activeTab.classList.add('active');
 
-  // Als we op het plan-tabblad komen, laden we direct de taken
   if (viewName === 'plan') {
     renderTasks();
   }
@@ -110,13 +109,62 @@ function renderTasks() {
 function selectEnergy(el, energy) {
   document.querySelectorAll('.energy-btn').forEach(btn => btn.classList.remove('selected'));
   el.classList.add('selected');
-  
-  // Opslaan in localStorage voor de volgende stap
   localStorage.setItem('voldaan_today_energy', energy);
+}
+
+// --- 5. DE TROTS-KLUIS LOGICA ---
+const marbleColors = ['#5A67D8', '#38A169', '#ED8936', '#9F7AEA', '#E53E3E', '#319795', '#D69E2E', '#ED64A6'];
+
+function addMarble(reason, category = 'Algemeen') {
+  let marbles = JSON.parse(localStorage.getItem('voldaan_marbles') || '[]');
+  const randomColor = marbleColors[Math.floor(Math.random() * marbleColors.length)];
+  const now = new Date();
+  
+  marbles.push({
+    id: Date.now(),
+    color: randomColor,
+    reason: reason || 'Kleine zege',
+    category: category || 'Algemeen',
+    date: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    timestamp: now.getTime()
+  });
+  
+  localStorage.setItem('voldaan_marbles', JSON.stringify(marbles));
+  renderMarbleJar();
+}
+
+function renderMarbleJar() {
+  let marbles = JSON.parse(localStorage.getItem('voldaan_marbles') || '[]');
+  const container = document.getElementById('marble-jar-visual');
+  const badge = document.getElementById('marble-count-badge');
+  
+  if (!container || !badge) return;
+
+  badge.innerText = `${marbles.length} Knikker${marbles.length === 1 ? '' : 's'}`;
+  container.innerHTML = '<div style="position: absolute; top: 10px; left: 12px; width: 12px; height: 140px; background: linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(255,255,255,0.05)); border-radius: 6px; pointer-events: none; z-index: 2;"></div>';
+
+  if (marbles.length === 0) return;
+
+  const marbleStyles = [
+    'radial-gradient(circle at 35% 35%, #ffeaa7, #fdcb6e, #d35400)',
+    'radial-gradient(circle at 35% 35%, #ff7675, #d63031, #801414)',
+    'radial-gradient(circle at 35% 35%, #74b9ff, #0984e3, #093463)',
+    'radial-gradient(circle at 35% 35%, #55efc4, #00b894, #004d3c)',
+    'radial-gradient(circle at 35% 35%, #a29bfe, #6c5ce7, #3b289a)'
+  ];
+
+  marbles.forEach((m, index) => {
+    const div = document.createElement('div');
+    div.className = 'marble-3d';
+    div.style.background = marbleStyles[index % marbleStyles.length];
+    div.title = `[${m.category}] ${m.reason} (${m.date})`;
+    container.appendChild(div);
+  });
 }
 
 // --- INITIALISATIE BIJ OPSTARTEN ---
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   renderTasks();
+  renderMarbleJar();
 });
