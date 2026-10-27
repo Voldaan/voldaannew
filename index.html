@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voldaan — Rust & Structuur op Jouw Tempo</title>
+  
+  <link rel="icon" type="image/jpeg" href="assets/icon.jpg">
+  <link rel="apple-touch-icon" href="assets/icon.jpg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Koppeling naar je stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    
+    <header>
+      <div>
+        <h1>Voldaan</h1>
+        <p>Geen druk. Geen schuldgevoel. Jouw tempo.</p>
+      </div>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn">🌙 Nacht</button>
+    </header>
+
+    <!-- Navigatie Tabbladen -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchView('today')" id="tab-today">🏠 Vandaag</button>
+      <button class="tab-btn" onclick="switchView('plan')" id="tab-plan">🎯 Plannen</button>
+      <button class="tab-btn" onclick="switchView('vitality')" id="tab-vitality">🌿 Vitaliteit</button>
+      <button class="tab-btn" onclick="switchView('money')" id="tab-money">💶 Geld</button>
+      <button class="tab-btn" onclick="switchView('ideas')" id="tab-ideas">📌 Ideeënkluis</button>
+      <button class="tab-btn" onclick="switchView('hacks')" id="tab-hacks">💡 Kennis & Hacks</button>
+    </nav>
+
+    <!-- PAGINA 1: VANDAAG -->
+    <div id="view-today">
+      <div class="card">
+        <h2>☀️ Mijn Dag Begint Nu</h2>
+        <p class="subtitle">Waar staat je brein op dit moment naar?</p>
+        <div class="energy-grid">
+          <button class="energy-btn" onclick="selectEnergy(this, 'Wazig / Moe')">🌫️ Wazig / Moe</button>
+          <button class="energy-btn" onclick="selectEnergy(this, 'Chaotisch')">⚡ Chaotisch / Vol</button>
+          <button class="energy-btn" onclick="selectEnergy(this, 'Oké')">☕ Rustig / Oké</button>
+          <button class="energy-btn" onclick="selectEnergy(this, 'Gefocust')">🚀 Gefocust</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGINA 2: PLANNEN -->
+    <div id="view-plan" class="hidden">
+      <div class="card">
+        <h2>🎯 Zacht Planbord</h2>
+        <p class="subtitle">Kies behapbare acties voor nu.</p>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <input type="text" id="task-input" placeholder="Kleine actie voor nu..." style="flex: 1; margin-bottom: 0;">
+          <button class="btn btn-small" onclick="addTask()">Toevoegen</button>
+        </div>
+        <div id="tasks-list" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- PAGINA 3: VITALITEIT -->
+    <div id="view-vitality" class="hidden">
+      <div class="card">
+        <h2>🌿 Vitaliteit & Gewoontes</h2>
+        <p class="subtitle">Zachte stempels voor je dagelijkse balans.</p>
+      </div>
+    </div>
+
+    <!-- PAGINA 4: GELD -->
+    <div id="view-money" class="hidden">
+      <div class="card">
+        <h2>💶 Geld-KomPAS</h2>
+        <p class="subtitle">Houd rust & overzicht in je uitgaven.</p>
+      </div>
+    </div>
+
+    <!-- PAGINA 5: IDEEËN -->
+    <div id="view-ideas" class="hidden">
+      <div class="card">
+        <h2>📌 Ideeënkluis</h2>
+        <p class="subtitle">Schrijf je gedachten van je af.</p>
+      </div>
+    </div>
+
+    <!-- PAGINA 6: KENNIS -->
+    <div id="view-hacks" class="hidden">
+      <div class="card">
+        <h2>💡 Kennis & Brein-Hacks</h2>
+        <p class="subtitle">Inzichten speciaal afgestemd op rust en focus.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Koppeling naar je JavaScript -->
+  <script src="js/app.js"></script>
+</body>
+</html>
