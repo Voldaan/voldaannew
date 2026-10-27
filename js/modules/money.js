@@ -1,7 +1,7 @@
 // js/modules/money.js
 import { saveAppData, checkDateFilter } from './storage.js';
 
-const MONEY_CATEGORIES = ['Boodschappen', 'Tanken', 'Horeca', 'Tabak', 'Onverwachte uitgave', 'Uitje', 'Cadeau', 'Aanschaflossen', 'Loon', 'Lening'];
+const MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwachte uitgaven', 'uitje', 'cadeau', 'aanschaf', 'aflossen', 'loon', 'lening', 'verwachte uitgave'];
 const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaankoop', 'Noodzakelijk/Vaste last', 'Investeer in mezelf'];
 const PERIODIC_OPTIONS = ['Eenmalig', 'Wekelijks', 'Maandelijks', 'Jaarlijks'];
 
@@ -10,7 +10,7 @@ export function initMoneyModule(appData) {
     if (!container) return;
 
     if (!appData.money) {
-        appData.money = { balance: 0, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 0, paid: 0, monthly: 0 } };
+        appData.money = { balance: 37.70, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 41939, paid: 477.35, monthly: 477.35 } };
     }
 
     container.innerHTML = `
@@ -32,7 +32,7 @@ export function initMoneyModule(appData) {
                     <p class="text-xs text-indigo-200 uppercase font-semibold mb-1">Paydayradar</p>
                     <p id="payday-countdown" class="text-xl font-bold">Aftellen naar loon...</p>
                 </div>
-                <p class="text-[11px] text-indigo-300 mt-3">Automatische telling naar de 23e om 08:00 uur.</p>
+                <p class="text-[11px] text-indigo-300 mt-3">Automatische telling naar de 23e om 08:00 uur (vrijdag ervoor indien weekend).</p>
             </div>
         </div>
 
@@ -60,7 +60,7 @@ export function initMoneyModule(appData) {
         <!-- 2. Verwachte Uitgaven -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven</h2>
+                <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
                 <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Verwachte Uitgave</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven. Vink af om ze door te zetten naar transacties & saldo.</p>
@@ -110,28 +110,13 @@ export function initMoneyModule(appData) {
                 <ul id="impulse-list" class="space-y-1.5 text-xs text-gray-600"></ul>
             </div>
         </div>
-
-        <!-- 5. Toekomst-Ankers (Spaarspotjes) -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-900">🌱 Toekomst-Ankers</h2>
-                <button id="open-savings-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Spaarpotje</button>
-            </div>
-            <p class="text-xs text-gray-500 mb-3">Spaar met een behapbaar plan en ingebouwd veiligheidsnet.</p>
-            <div id="savings-list" class="space-y-3"></div>
-        </div>
     `;
 
     initMoneyModals(appData);
     initMoneyLogic(appData);
 }
 
-// ---------------------------------------------------------
-// Modals & UI Logica voor Geld
-// ---------------------------------------------------------
-
 function initMoneyModals(appData) {
-    // 1. Transactie Modal
     const txModalHTML = `
         <div id="tx-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -183,7 +168,6 @@ function initMoneyModals(appData) {
         </div>
     `;
 
-    // 2. Verwachte Uitgave Modal
     const expectedModalHTML = `
         <div id="expected-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -194,12 +178,12 @@ function initMoneyModals(appData) {
                 <form id="expected-modal-form" class="space-y-3 text-xs">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Omschrijving</label>
-                        <input type="text" id="modal-exp-desc" placeholder="Bijv. Jaarlijkse verzekering of APK" class="w-full px-3 py-2 border rounded-xl" required>
+                        <input type="text" id="modal-exp-desc" placeholder="Bijv. Verzekering of abonnement" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block font-semibold text-gray-600 mb-1">Bedrag (€)</label>
-                            <input type="number" step="0.01" id="modal-exp-amount" placeholder="Bedrag (bijv. 120.00)" class="w-full px-3 py-2 border rounded-xl" required>
+                            <input type="number" step="0.01" id="modal-exp-amount" placeholder="Bedrag (bijv. 85.00)" class="w-full px-3 py-2 border rounded-xl" required>
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-600 mb-1">Betaalwijze</label>
@@ -224,29 +208,28 @@ function initMoneyModals(appData) {
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-expected-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
-                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen aan Verwacht ✨</button>
+                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen ✨</button>
                     </div>
                 </form>
             </div>
         </div>
     `;
 
-    // 3. Financieel Project Modal
     const projectModalHTML = `
         <div id="project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">🧭 Financieel Project / Lening Beheer</h3>
+                    <h3 class="text-base font-bold text-indigo-950">🧭 Financieel Project Beheer</h3>
                     <button id="close-project-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
                 </div>
                 <form id="project-modal-form" class="space-y-3 text-xs">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Naam Project / Lening</label>
-                        <input type="text" id="modal-proj-title" placeholder="Bijv. Auto afbetalen of schuld sanering" class="w-full px-3 py-2 border rounded-xl" required>
+                        <input type="text" id="modal-proj-title" placeholder="Bijv. Achterstand betalen" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Totaal Doelbedrag (€)</label>
-                        <input type="number" step="0.01" id="modal-proj-target" placeholder="Bijv. 1500" class="w-full px-3 py-2 border rounded-xl" required>
+                        <input type="number" step="0.01" id="modal-proj-target" placeholder="Bijv. 1000" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-project-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
@@ -259,7 +242,6 @@ function initMoneyModals(appData) {
 
     document.body.insertAdjacentHTML('beforeend', txModalHTML + expectedModalHTML + projectModalHTML);
 
-    // Koppelen event listeners voor Modals
     setupModalHandlers('tx', appData);
     setupModalHandlers('expected', appData);
     setupModalHandlers('project', appData);
@@ -331,10 +313,6 @@ function setupModalHandlers(type, appData) {
     }
 }
 
-// ---------------------------------------------------------
-// Core Logica & Rendering
-// ---------------------------------------------------------
-
 function initMoneyLogic(appData) {
     document.getElementById('edit-balance-btn').onclick = () => {
         const val = prompt("Voer je actuele banksaldo in:", appData.money.balance || 0);
@@ -348,7 +326,6 @@ function initMoneyLogic(appData) {
     document.getElementById('tx-search').oninput = () => renderMoneyViews(appData);
     document.getElementById('tx-filter-date').onchange = () => renderMoneyViews(appData);
 
-    // Impuls-Wachtkamer formulier
     document.getElementById('impulse-form').onsubmit = (e) => {
         e.preventDefault();
         const item = document.getElementById('impulse-item').value.trim();
@@ -362,7 +339,6 @@ function initMoneyLogic(appData) {
         }
     };
 
-    // Studieschuld instellen
     document.getElementById('edit-study-debt-btn').onclick = () => {
         const total = prompt("Totale studieschuld (€):", appData.money.studyDebt?.total || 0);
         const paid = prompt("Reeds afgelost (€):", appData.money.studyDebt?.paid || 0);
@@ -374,30 +350,16 @@ function initMoneyLogic(appData) {
         }
     };
 
-    // Spaarpotjes modal knop
-    document.getElementById('open-savings-modal-btn').onclick = () => {
-        const name = prompt("Naam van het spaarpotje/toekomst-anker:");
-        const target = prompt("Streefbedrag (€):");
-        if (name && target !== null && !isNaN(parseFloat(target))) {
-            if (!appData.money.savingsPots) appData.money.savingsPots = [];
-            appData.money.savingsPots.push({ id: Date.now(), name, target: parseFloat(target), saved: 0 });
-            saveAppData(appData);
-            renderMoneyViews(appData);
-        }
-    };
-
     renderMoneyViews(appData);
     initPaydayRadar();
 }
 
 function renderMoneyViews(appData) {
-    // 1. Saldo
     const balanceEl = document.getElementById('current-balance');
-    const balance = appData.money?.balance || 0;
+    const balance = appData.money?.balance || 37.70;
     balanceEl.textContent = `€ ${balance.toFixed(2)}`;
     balanceEl.className = balance < 0 ? "text-2xl font-bold text-red-600" : "text-2xl font-bold text-indigo-900";
 
-    // 2. Transacties weergave met live zoek & datumfilters
     const txList = document.getElementById('transaction-list');
     const searchTerm = document.getElementById('tx-search').value.toLowerCase();
     const dateFilter = document.getElementById('tx-filter-date').value;
@@ -416,7 +378,7 @@ function renderMoneyViews(appData) {
             </div>
             <div class="flex items-center gap-2">
                 <span class="font-bold">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
-                <button onclick="window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500">✕</button>
+                <button onclick="window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </li>
     `).join('');
@@ -424,14 +386,13 @@ function renderMoneyViews(appData) {
     window.deleteTransaction = (id) => {
         const tx = appData.money.transactions.find(x => x.id === id);
         if (tx) {
-            appData.money.balance -= tx.amount; // Saldo corrigeren
+            appData.money.balance -= tx.amount;
             appData.money.transactions = appData.money.transactions.filter(x => x.id !== id);
             saveAppData(appData);
             renderMoneyViews(appData);
         }
     };
 
-    // 3. Verwachte Uitgaven weergave
     const expList = document.getElementById('expected-expense-list');
     const expenses = appData.money?.expectedExpenses || [];
 
@@ -443,7 +404,7 @@ function renderMoneyViews(appData) {
             </div>
             <div class="flex gap-2 items-center">
                 <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-lg font-semibold">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
-                <button onclick="window.deleteExpected(${e.id})" class="text-gray-300 hover:text-red-500">✕</button>
+                <button onclick="window.deleteExpected(${e.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </div>
     `).join('');
@@ -453,7 +414,6 @@ function renderMoneyViews(appData) {
         if (exp) {
             exp.completed = !exp.completed;
             if (exp.completed) {
-                // Toevoegen aan transacties & saldo verminderen
                 if (!appData.money.transactions) appData.money.transactions = [];
                 appData.money.transactions.push({ id: Date.now(), description: `Verwacht: ${exp.description}`, amount: -exp.amount, category: exp.category, label: 'Noodzakelijk/Vaste last', date: new Date().toISOString() });
                 appData.money.balance -= exp.amount;
@@ -468,19 +428,18 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
-    // 4. Ruimte-Kompas / Financiële Projecten
     const projList = document.getElementById('financial-projects-list');
     const projects = appData.money?.financialProjects || [];
     let totalFreedGlobal = 0;
 
     projList.innerHTML = projects.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen financiële projecten of leningen ingevoerd.</p>' : projects.map(p => {
         totalFreedGlobal += p.freed;
-        const pct = Math.min(100, Math.round((p.freed / p.target) * 100));
+        const pct = p.target > 0 ? Math.min(100, Math.round((p.freed / p.target) * 100)) : 0;
         return `
             <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
                 <div class="flex justify-between items-center">
                     <span class="font-bold text-indigo-950">🎯 ${p.title}</span>
-                    <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-400 hover:text-red-500">Verwijderen</button>
+                    <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-400 hover:text-red-500 font-bold px-1">Verwijderen</button>
                 </div>
                 <div class="flex justify-between text-gray-600">
                     <span>Vrijgemaakt: € ${p.freed.toFixed(2)} / € ${p.target.toFixed(2)}</span>
@@ -515,9 +474,8 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
-    // 5. Studieschuld Kompas
     const studySummary = document.getElementById('study-debt-summary');
-    const study = appData.money?.studyDebt || { total: 0, paid: 0, monthly: 50 };
+    const study = appData.money?.studyDebt || { total: 41939, paid: 477.35, monthly: 477.35 };
     const rest = Math.max(0, study.total - study.paid);
     const monthsLeft = study.monthly > 0 ? Math.ceil(rest / study.monthly) : 0;
     const yearsLeft = (monthsLeft / 12).toFixed(1);
@@ -529,13 +487,12 @@ function renderMoneyViews(appData) {
         <div class="flex justify-between pt-1 border-t"><span>Geschatte looptijd:</span><span class="font-bold">${monthsLeft} maanden (${yearsLeft} jaar)</span></div>
     `;
 
-    // 6. Impuls-Wachtkamer
     const impulseList = document.getElementById('impulse-list');
     const impulses = appData.money?.impulseWants || [];
     impulseList.innerHTML = impulses.length === 0 ? '<p class="italic text-gray-400">Geen aankopen in de wachtkamer.</p>' : impulses.map(i => `
         <div class="flex justify-between items-center py-1.5 border-b">
             <span>⏳ ${i.item} (€ ${i.price.toFixed(2)})</span>
-            <button onclick="window.deleteImpulse(${i.id})" class="text-gray-400 hover:text-red-500">✕</button>
+            <button onclick="window.deleteImpulse(${i.id})" class="text-gray-400 hover:text-red-500 font-bold px-1">✕</button>
         </div>
     `).join('');
 
@@ -543,33 +500,6 @@ function renderMoneyViews(appData) {
         appData.money.impulseWants = appData.money.impulseWants.filter(x => x.id !== id);
         saveAppData(appData);
         renderMoneyViews(appData);
-    };
-
-    // 7. Toekomst-Ankers
-    const savingsList = document.getElementById('savings-list');
-    const pots = appData.money?.savingsPots || [];
-    savingsList.innerHTML = pots.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen spaarpotjes ingesteld.</p>' : pots.map(s => `
-        <div class="p-3 bg-gray-50 border rounded-xl text-xs space-y-1">
-            <div class="flex justify-between font-bold text-indigo-950">
-                <span>🌱 ${s.name}</span>
-                <span>€ ${s.saved.toFixed(2)} / € ${s.target.toFixed(2)}</span>
-            </div>
-            <div class="flex gap-2 pt-1">
-                <input type="number" step="0.01" id="save-input-${s.id}" placeholder="Bedrag..." class="px-2 py-1 border rounded-lg text-xs w-28">
-                <button onclick="window.addToSavings(${s.id})" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Storten</button>
-            </div>
-        </div>
-    `).join('');
-
-    window.addToSavings = (id) => {
-        const input = document.getElementById(`save-input-${id}`);
-        const val = parseFloat(input.value);
-        const pot = appData.money.savingsPots.find(x => x.id === id);
-        if (pot && !isNaN(val) && val > 0) {
-            pot.saved += val;
-            saveAppData(appData);
-            renderMoneyViews(appData);
-        }
     };
 }
 
@@ -581,8 +511,8 @@ function initPaydayRadar() {
         let payday = new Date(now.getFullYear(), now.getMonth(), 23, 8, 0, 0);
         if (now > payday) payday = new Date(now.getFullYear(), now.getMonth() + 1, 23, 8, 0, 0);
         const dayOfWeek = payday.getDay();
-        if (dayOfWeek === 6) payday.setDate(payday.getDate() - 1); // Zaterdag -> Vrijdag
-        if (dayOfWeek === 0) payday.setDate(payday.getDate() - 2); // Zondag -> Vrijdag
+        if (dayOfWeek === 6) payday.setDate(payday.getDate() - 1);
+        if (dayOfWeek === 0) payday.setDate(payday.getDate() - 2);
         const diff = payday - now;
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
