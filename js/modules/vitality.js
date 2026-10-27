@@ -30,28 +30,29 @@ export function initVitalityModule(appData) {
             <div id="steps-history" class="text-xs text-gray-500"></div>
         </div>
 
-        <!-- 3. Fitheid & Sport Log -->
+        <!-- 3. Fitheid & Sport Log (Gefixeerd onder elkaar) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">🏅 Fitheid & Sport Log</h2>
             <p class="text-xs text-gray-500 mb-3">Log je beweging op jouw eigen tempo.</p>
-            <form id="sport-form" class="flex flex-col gap-2 mb-3">
-                <select id="sport-type" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white">
+            <form id="sport-form" class="space-y-2 mb-3">
+                <select id="sport-type" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs bg-white">
                     ${SPORT_TYPES.map(s => `<option value="${s}">${s}</option>`).join('')}
                 </select>
-                <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium hover:bg-indigo-700">+ Sport Log</button>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Sport Log</button>
             </form>
             <ul id="sport-list" class="space-y-1.5 text-xs text-gray-600"></ul>
         </div>
 
-        <!-- 4. Snaai-wachtkamer -->
+        <!-- 4. Snaai-wachtkamer (Gefixeerd onder elkaar binnen de kaart) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
             <h2 class="text-base font-bold text-indigo-900 mb-1">🍿 Snaai-wachtkamer (15 min.)</h2>
             <p class="text-xs text-gray-500 mb-3">Zet de timer en kijk of de trek wegzakt.</p>
             
-            <form id="snack-form" class="flex flex-col gap-2 mb-3" onsubmit="return false;">
-                <input type="text" id="snack-craving-input" placeholder="Waar heb je trek in?" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                <button type="button" id="start-snack-timer" class="w-full py-2.5 bg-amber-600 text-white rounded-xl text-xs font-medium hover:bg-amber-700">Start 15-min Pauze</button>
-            </form>
+            <div class="space-y-2 mb-3">
+                <input type="text" id="snack-craving-input" placeholder="Waar heb je trek in? (optioneel)" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs">
+                <button type="button" id="start-snack-timer" class="w-full py-2.5 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition shadow-sm">Start 15-min Pauze</button>
+            </div>
+            
             <div id="snack-timer-display" class="text-center font-bold text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-100 mb-2 text-xs">Klaar voor de pauze?</div>
             <ul id="snack-parked-list" class="space-y-1 text-xs text-gray-500"></ul>
         </div>
@@ -109,6 +110,7 @@ function initVitalityLogic(appData) {
 
         let timeLeft = 15 * 60;
         snackBtn.disabled = true;
+        snackBtn.classList.add('opacity-50');
 
         const interval = setInterval(() => {
             const mins = Math.floor(timeLeft / 60);
@@ -120,6 +122,7 @@ function initVitalityLogic(appData) {
                 clearInterval(interval);
                 timerDisplay.textContent = "✨ 15 minuten voorbij! Voel je de trek nog steeds?";
                 snackBtn.disabled = false;
+                snackBtn.classList.remove('opacity-50');
                 cravingInput.value = '';
                 renderSnackList(appData);
             }
