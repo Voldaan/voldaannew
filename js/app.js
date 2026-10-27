@@ -1,5 +1,6 @@
 // js/app.js
 import { loadAppData, saveAppData } from './modules/storage.js';
+import { initMoneyModule } from './modules/money.js';
 
 // Laad de initiële app-data bij het opstarten
 let appData = loadAppData();
@@ -10,7 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialiseer tab-navigatie
     initNavigation();
     
-    // Hier koppelen we straks de modules aan
+    // Initialiseer de geld-module
+    initMoneyModule(appData);
+    
+    // Hier kun je later eenvoudig andere modules aan toevoegen, zoals:
+    // initTasksModule(appData);
+    // initVitalityModule(appData);
+    // initIdeasModule(appData);
 });
 
 // Functie om te wisselen tussen de verschillende schermen/tabs in de app
