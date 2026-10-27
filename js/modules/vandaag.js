@@ -12,7 +12,9 @@ export function initVandaagModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">✨ Mijn Dag Begint Nu</h2>
-                <button id="toggle-mood-history" class="text-xs text-indigo-600 hover:underline font-medium">Historie & Trends</button>
+                <button id="toggle-mood-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
+                    Historie<br><span class="text-[10px] text-gray-500">& Trends</span>
+                </button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Waar staat je brein op dit moment naar?</p>
             
@@ -83,7 +85,7 @@ export function initVandaagModule(appData) {
         <!-- 3. Actie-Hub voor Vandaag -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <h2 class="text-base font-bold text-indigo-950 mb-1">🎯 Actie-Hub voor Vandaag</h2>
-            <p class="text-xs text-gray-500 mb-3">Jouw compacte overzicht gekoppeld vanuit planning.</p>
+            <p class="text-xs text-gray-500 mb-3">Jouw compacte overzicht van openstaande focus-taken.</p>
             <div id="actie-hub-list" class="space-y-2"></div>
         </div>
 
@@ -92,7 +94,7 @@ export function initVandaagModule(appData) {
             <h2 class="text-base font-bold text-indigo-950 mb-1">💡 Idee van de Dag</h2>
             <p class="text-xs text-gray-500 mb-3">Een willekeurige vonk uit je kluis.</p>
             <div id="idea-of-day-card" class="p-3.5 bg-yellow-50/70 border border-yellow-200 rounded-xl space-y-2">
-                <p id="idea-day-text" class="text-xs text-gray-800 leading-relaxed"></p>
+                <p id="idea-day-text" class="text-xs text-gray-800 leading-relaxed font-medium"></p>
                 <div class="flex gap-2 pt-1">
                     <button id="grabbel-idea-btn" class="flex-1 py-2 bg-yellow-600 text-white rounded-xl text-xs font-medium hover:bg-yellow-700 transition">🎲 Grabbelen</button>
                     <button id="idea-to-plan-btn" class="px-3 py-2 bg-white border border-yellow-300 text-yellow-900 rounded-xl text-xs font-medium hover:bg-yellow-100 transition">Naar Planbord</button>
@@ -137,9 +139,11 @@ function initVandaagLogic(appData) {
         btn.addEventListener('click', () => {
             const mood = btn.getAttribute('data-mood');
             const icon = btn.getAttribute('data-icon');
-            appData.moods.push({ id: Date.now(), mood, icon, date: new Date().toISOString() });
+            const newMood = { id: Date.now(), mood, icon, date: new Date().toISOString() };
+            appData.moods.push(newMood);
             saveAppData(appData);
             
+            showToast(`Mood geregistreerd: ${icon} ${mood} 🪷`);
             renderMoodHistory(appData);
         });
     });
@@ -184,12 +188,12 @@ function renderTrotsKluis(appData) {
     listEl.innerHTML = filtered.length === 0 ? `<p class="text-xs text-gray-400 italic">Geen knikkers gevonden voor deze selectie.</p>` : filtered.slice(-5).reverse().map(m => `
         <div class="flex justify-between items-center p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs">
             <div>
-                <span class="font-bold text-indigo-900 px-2 py-0.5 bg-indigo-100/70 rounded-md mr-1.5">[${m.category}]</span> 
-                <span class="text-gray-800">${m.text}</span>
+                <span class="font-bold text-indigo-900 px-2 py-0.5 bg-indigo-100/70 rounded-md mr-1.5">[${m.category || 'Algemeen'}]</span> 
+                <span class="text-gray-800">${m.text || m.reason || 'Knikker'}</span>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-gray-400 text-[10px]">${new Date(m.date).toLocaleDateString('nl-NL')}</span>
-                <button onclick="window.deleteMarble(${m.id})" class="text-gray-300 hover:text-red-500">✕</button>
+                <span class="text-gray-400 text-[10px]">${new Date(m.date || Date.now()).toLocaleDateString('nl-NL')}</span>
+                <button onclick="window.deleteMarble(${m.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </div>
     `).join('');
@@ -198,6 +202,7 @@ function renderTrotsKluis(appData) {
         appData.marbles = appData.marbles.filter(x => x.id !== id);
         saveAppData(appData);
         renderTrotsKluis(appData);
+        showToast("Knikker verwijderd.");
     };
 
     document.getElementById('marble-cat-filter').onchange = () => renderTrotsKluis(appData);
@@ -260,11 +265,21 @@ function renderMoodHistory(appData) {
     const moods = (appData.moods || []).filter(m => checkDateFilter(m.date, filter));
 
     listEl.innerHTML = moods.length === 0 ? `<p class="italic text-gray-400">Geen check-ins in deze periode.</p>` : moods.slice(-6).reverse().map(m => `
-        <div class="flex justify-between py-1 border-b border-gray-100">
+        <div class="flex justify-between items-center py-1 border-b border-gray-100">
             <span class="font-medium text-gray-800">${m.icon || '✨'} ${m.mood}</span>
-            <span class="text-gray-400">${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })}</span>
+            <div class="flex items-center gap-2">
+                <span class="text-gray-400">${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                <button onclick="window.deleteMood(${m.id})" class="text-gray-300 hover:text-red-500">✕</button>
+            </div>
         </div>
     `).join('');
+
+    window.deleteMood = (id) => {
+        appData.moods = appData.moods.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderMoodHistory(appData);
+        showToast("Check-in verwijderd.");
+    };
 
     const counts = {};
     moods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
@@ -288,19 +303,22 @@ function renderMoodHistory(appData) {
 
 function renderActieHub(appData) {
     const listEl = document.getElementById('actie-hub-list');
-    const tasks = (appData.tasks || []).filter(t => !t.archived && !t.completed).slice(0, 5);
+    // Haalt taken op uit zowel de nieuwe taken als de uit de backup geïmporteerde taken
+    const allTasks = [...(appData.tasks || []), ...(appData.plans?.tasks || [])];
+    const openTasks = allTasks.filter(t => !t.archived && !t.done && !t.completed).slice(0, 5);
     
-    listEl.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande focus-taken vandaag. Mooi op tijd rust!</p>' : tasks.map(t => `
+    listEl.innerHTML = openTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande focus-taken vandaag. Mooi op tijd rust!</p>' : openTasks.map(t => `
         <div class="flex justify-between items-center p-2.5 bg-white border border-gray-100 rounded-xl text-xs">
-            <div><span class="font-bold text-indigo-700 mr-1">[${t.category}]</span> <span class="text-gray-800">${t.text}</span></div>
+            <div><span class="font-bold text-indigo-700 mr-1">[${t.category || 'Algemeen'}]</span> <span class="text-gray-800">${t.text}</span></div>
             <button onclick="window.quickCompleteTask(${t.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold hover:bg-indigo-100">Klaar ✨</button>
         </div>
     `).join('');
 
     window.quickCompleteTask = (id) => {
-        const task = appData.tasks.find(t => t.id === id);
+        const task = openTasks.find(t => t.id === id);
         if (task) {
             task.completed = true;
+            task.done = true;
             voegTrotsKnikkerToe(appData, `Taak volbracht: ${task.text}`, task.category || 'Taken');
             saveAppData(appData);
             renderActieHub(appData);
@@ -310,8 +328,9 @@ function renderActieHub(appData) {
 
 function renderIdeeVanDeDag(appData) {
     const textEl = document.getElementById('idea-day-text');
-    const ideas = (appData.ideas || []).filter(i => !i.archived);
-    const randomIdea = ideas.length > 0 ? ideas[Math.floor(Math.random() * ideas.length)] : null;
+    // Haalt ideeën op uit zowel de ideeënkluis als de oude backup
+    const allIdeas = [...(appData.ideasModule?.ideas || []), ...(appData.ideas || [])].filter(i => !i.archived);
+    const randomIdea = allIdeas.length > 0 ? allIdeas[Math.floor(Math.random() * allIdeas.length)] : null;
 
     if (!randomIdea) {
         textEl.textContent = 'Nog geen ideeën in de kluis. Voeg er eentje toe via de Ideeënkluis!';
@@ -323,7 +342,7 @@ function renderIdeeVanDeDag(appData) {
     document.getElementById('grabbel-idea-btn').onclick = () => renderIdeeVanDeDag(appData);
     document.getElementById('idea-to-plan-btn').onclick = () => {
         if (!appData.tasks) appData.tasks = [];
-        appData.tasks.push({ id: Date.now(), text: `Idee: ${randomIdea.text}`, category: 'Algemeen', completed: false, archived: false, date: new Date().toISOString() });
+        appData.tasks.push({ id: Date.now(), text: `Idee: ${randomIdea.text}`, category: randomIdea.category || 'Algemeen', completed: false, archived: false, date: new Date().toISOString() });
         saveAppData(appData);
         showToast("Idee overgebracht naar het Planbord! 🎯");
     };
