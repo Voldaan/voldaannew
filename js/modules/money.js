@@ -9,6 +9,7 @@ export function initMoneyModule(appData) {
     const container = document.getElementById('geld');
     if (!container) return;
 
+    // Zorg ervoor dat appData.money altijd correct gevuld is uit de migratie
     if (!appData.money) {
         appData.money = { balance: 37.70, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 41939, paid: 477.35, monthly: 477.35 } };
     }
