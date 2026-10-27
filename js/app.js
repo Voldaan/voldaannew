@@ -22,6 +22,9 @@ function switchView(viewName) {
     renderHabits();
     renderSnacks();
   }
+  if (viewName === 'money') {
+    renderMoney();
+  }
 }
 
 // --- 2. THEMA TOGGLE (DAG / NACHT) ---
@@ -141,7 +144,6 @@ function toggleHabit(habitName) {
   if (!habits[today]) habits[today] = {};
   habits[today][habitName] = !habits[today][habitName];
 
-  // Als de gewoonte wordt aangevinkt, belonen we dit ook met een knikker! ✨
   if (habits[today][habitName]) {
     addMarble(`Balans-stempel: ${habitName}`, 'Vitaliteit');
   }
@@ -168,7 +170,6 @@ function renderHabits() {
   });
 }
 
-// Snaai-wachtkamer logica
 function addSnackWait() {
   const input = document.getElementById('snack-input');
   if (!input || !input.value.trim()) return;
@@ -218,14 +219,117 @@ function renderSnacks() {
   });
 }
 
-// --- 5. ENERGIE SELECTIE (VANDAAG TABBLAD) ---
+// --- 5. GELD-KOMPAS LOGICA ---
+function openBalanceModal() {
+  const newBalance = prompt('Voer je huidige banksaldo in (bijv. 1250.50):');
+  if (newBalance !== null && !isNaN(parseFloat(newBalance))) {
+    localStorage.setItem('voldaan_balance', parseFloat(newBalance).toFixed(2));
+    renderMoney();
+  }
+}
+
+function addTransaction() {
+  const descInput = document.getElementById('tx-desc');
+  const amountInput = document.getElementById('tx-amount');
+  const typeSelect = document.getElementById('tx-type');
+
+  if (!descInput || !amountInput || !descInput.value.trim() || !amountInput.value) return;
+
+  const desc = descInput.value.trim();
+  const amount = parseFloat(amountInput.value);
+  const type = typeSelect.value; // 'income' of 'expense'
+
+  let transactions = JSON.parse(localStorage.getItem('voldaan_transactions') || '[]');
+  let currentBalance = parseFloat(localStorage.getItem('voldaan_balance') || '0');
+
+  if (type === 'income') {
+    currentBalance += amount;
+  } else {
+    currentBalance -= amount;
+  }
+
+  transactions.unshift({
+    id: Date.now(),
+    desc: desc,
+    amount: amount,
+    type: type,
+    date: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  });
+
+  localStorage.setItem('voldaan_balance', currentBalance.toFixed(2));
+  localStorage.setItem('voldaan_transactions', JSON.stringify(transactions));
+
+  descInput.value = '';
+  amountInput.value = '';
+  renderMoney();
+}
+
+function removeTransaction(id) {
+  let transactions = JSON.parse(localStorage.getItem('voldaan_transactions') || '[]');
+  const tx = transactions.find(t => t.id === id);
+  
+  if (tx) {
+    let currentBalance = parseFloat(localStorage.getItem('voldaan_balance') || '0');
+    // Omkeren bij verwijderen
+    if (tx.type === 'income') {
+      currentBalance -= tx.amount;
+    } else {
+      currentBalance += tx.amount;
+    }
+
+    transactions = transactions.filter(t => t.id !== id);
+    localStorage.setItem('voldaan_balance', currentBalance.toFixed(2));
+    localStorage.setItem('voldaan_transactions', JSON.stringify(transactions));
+    renderMoney();
+  }
+}
+
+function renderMoney() {
+  const balance = parseFloat(localStorage.getItem('voldaan_balance') || '0');
+  const balanceDisplay = document.getElementById('money-balance-display');
+  if (balanceDisplay) {
+    balanceDisplay.innerText = `€ ${balance.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  let transactions = JSON.parse(localStorage.getItem('voldaan_transactions') || '[]');
+  const container = document.getElementById('transactions-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  if (transactions.length === 0) {
+    container.innerHTML = '<span style="font-size:0.82rem; color:var(--text-muted); text-align:center; padding: 10px; display:block;">Nog geen transacties ingevoerd. Rustig overzicht! 💶</span>';
+    return;
+  }
+
+  transactions.forEach(tx => {
+    const isIncome = tx.type === 'income';
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.innerHTML = `
+      <div>
+        <span style="font-weight: 500;">${isIncome ? '➕' : '➖'} ${tx.desc}</span>
+        <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px;">${tx.date}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-weight: 600; color: ${isIncome ? '#38A169' : '#E53E3E'};">
+          ${isIncome ? '+' : '-'} € ${tx.amount.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+        <button style="background:none; border:none; color:#E53E3E; cursor:pointer; font-size: 0.9rem; padding: 4px;" onclick="removeTransaction(${tx.id})" title="Verwijderen">✕</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// --- 6. ENERGIE SELECTIE (VANDAAG TABBLAD) ---
 function selectEnergy(el, energy) {
   document.querySelectorAll('.energy-btn').forEach(btn => btn.classList.remove('selected'));
   el.classList.add('selected');
   localStorage.setItem('voldaan_today_energy', energy);
 }
 
-// --- 6. DE TROTS-KLUIS LOGICA ---
+// --- 7. DE TROTS-KLUIS LOGICA ---
 const marbleColors = ['#5A67D8', '#38A169', '#ED8936', '#9F7AEA', '#E53E3E', '#319795', '#D69E2E', '#ED64A6'];
 
 function addMarble(reason, category = 'Algemeen') {
@@ -282,4 +386,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMarbleJar();
   renderHabits();
   renderSnacks();
+  renderMoney();
 });
