@@ -12,6 +12,9 @@ export function initIdeasModule(appData) {
             const ideaText = ideaInput ? ideaInput.value.trim() : '';
 
             if (ideaText) {
+                // Zorg dat appData.ideas een array is
+                if (!appData.ideas) appData.ideas = [];
+
                 appData.ideas.push({
                     id: Date.now(),
                     text: ideaText,
@@ -26,17 +29,26 @@ export function initIdeasModule(appData) {
     }
 }
 
+// Toon de ideeën als post-it grid
 function renderIdeas(appData) {
     const ideaGrid = document.getElementById('idea-grid');
     if (!ideaGrid) return;
 
     ideaGrid.innerHTML = '';
-    appData.ideas.forEach(idea => {
+    const ideas = appData.ideas || [];
+
+    if (ideas.length === 0) {
+        ideaGrid.innerHTML = `<p class="text-xs text-gray-400 italic col-span-full">Nog geen ideeën vastgelegd in de kluis.</p>`;
+        return;
+    }
+
+    ideas.forEach(idea => {
         const card = document.createElement('div');
-        card.className = 'p-4 bg-yellow-50 border border-yellow-200 rounded shadow-sm relative';
+        card.className = 'p-4 bg-yellow-50/80 border border-yellow-200 rounded-xl shadow-sm relative flex flex-col justify-between gap-2';
+        
         card.innerHTML = `
-            <p class="text-gray-800">${idea.text}</p>
-            <button data-id="${idea.id}" class="delete-idea text-xs text-red-500 absolute top-2 right-2">✕</button>
+            <p class="text-sm text-gray-800 pr-6">${idea.text}</p>
+            <button data-id="${idea.id}" class="delete-idea text-xs text-gray-400 hover:text-red-500 absolute top-3 right-3 p-1">✕</button>
         `;
 
         card.querySelector('.delete-idea').addEventListener('click', () => {
