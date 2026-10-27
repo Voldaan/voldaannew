@@ -84,7 +84,6 @@
           <button class="btn btn-small" onclick="addTask()">Toevoegen</button>
         </div>
 
-        <!-- Filter knopjes voor het planbord -->
         <div style="display: flex; gap: 6px; margin-bottom: 12px;">
           <button class="tab-btn active" id="filter-all" onclick="setTaskFilter('all')" style="padding: 6px; font-size: 0.75rem;">Alles</button>
           <button class="tab-btn" id="filter-active" onclick="setTaskFilter('active')" style="padding: 6px; font-size: 0.75rem;">Open</button>
@@ -97,9 +96,27 @@
 
     <!-- PAGINA 3: VITALITEIT -->
     <div id="view-vitality" class="hidden">
-      <div class="card">
-        <h2>🌿 Vitaliteit & Gewoontes</h2>
-        <p class="subtitle">Zachte stempels voor je dagelijkse balans.</p>
+      <!-- Dagelijkse Balans Stempels -->
+      <div class="card" style="margin-bottom: 18px;">
+        <h2>🌿 Balans & Gewoontes</h2>
+        <p class="subtitle">Kleine stempels voor vandaag. Zonder moeten.</p>
+        <div class="habit-grid">
+          <button class="habit-btn" id="habit-water" onclick="toggleHabit('water')">💧 Water gedronken</button>
+          <button class="habit-btn" id="habit-walk" onclick="toggleHabit('walk')">🚶 Frisse neus / beweging</button>
+          <button class="habit-btn" id="habit-screen" onclick="toggleHabit('screen')">📵 Schermpauze gehad</button>
+          <button class="habit-btn" id="habit-rest" onclick="toggleHabit('rest')">🧘 Moment rust gepakt</button>
+        </div>
+      </div>
+
+      <!-- De Snaai-Wachtkamer / Pauze Knop -->
+      <div class="card" style="margin-bottom: 18px;">
+        <h2>🍪 De Snaai-Wachtkamer</h2>
+        <p class="subtitle">Heb jetrek in iets lekkers terwijl je eigenlijk vol of moe bent? Zet het even in de wachtkamer en geef jezelf 10 minuten.</p>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <input type="text" id="snack-input" placeholder="Waar heb je trek in? (bijv. chocola)..." style="flex: 1; margin-bottom: 0;" onkeypress="if(event.key === 'Enter') addSnackWait()">
+          <button class="btn btn-small" onclick="addSnackWait()">In de wacht</button>
+        </div>
+        <div id="snack-list" class="item-list"></div>
       </div>
     </div>
 
