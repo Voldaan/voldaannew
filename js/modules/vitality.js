@@ -13,15 +13,27 @@ export function initVitalityModule(appData) {
     if (!appData.vitality.sportTypes) appData.vitality.sportTypes = [...DEFAULT_SPORTS];
 
     container.innerHTML = `
+        <!-- Algemene Datumfilter voor Vitaliteit -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4 flex justify-between items-center">
+            <span class="text-xs font-bold text-indigo-900 uppercase">📊 Vitaliteits-Filters</span>
+            <select id="vitality-global-filter" class="text-xs bg-white border border-gray-200 rounded-xl px-3 py-1.5">
+                <option value="all">Alles</option>
+                <option value="today">Vandaag</option>
+                <option value="week">Deze week</option>
+                <option value="month">Deze maand</option>
+                <option value="year">Dit jaar</option>
+            </select>
+        </div>
+
         <!-- 1. Nachtrust & Herstel -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">🌙 Nachtrust & Herstel</h2>
-            <p class="text-xs text-gray-500 mb-3">Een goede dag begint bij een zachte nacht. Hoe voelt je herstel vanmorgen?</p>
+            <p class="text-xs text-gray-500 mb-3">Een goede dag begint bij een zachte nacht.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                 <button data-sleep="Goed / Voldoende" class="sleep-btn p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition text-center">✨ Goed / Voldoende geslapen</button>
                 <button data-sleep="Onrustig / Korter" class="sleep-btn p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs font-semibold text-amber-900 hover:bg-amber-100 transition text-center">⚡ Onrustig / Korter geslapen</button>
             </div>
-            <div id="sleep-history" class="text-xs text-gray-600 space-y-1"></div>
+            <div id="sleep-trend-box" class="space-y-2 pt-2 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 2. Beweging & Stappen-Anker -->
@@ -32,7 +44,7 @@ export function initVitalityModule(appData) {
                 <button data-steps="8000+" class="steps-btn p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs font-semibold text-indigo-900 hover:bg-indigo-100 transition text-center">🚀 Yes! 8000+ gehaald</button>
                 <button data-steps="Minder" class="steps-btn p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 transition text-center">🛋️ Vandaag wat minder stappen</button>
             </div>
-            <div id="steps-history" class="text-xs text-gray-600 space-y-1"></div>
+            <div id="steps-trend-box" class="space-y-2 pt-2 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 3. Fitheid & Sport Log -->
@@ -72,10 +84,10 @@ export function initVitalityModule(appData) {
             </div>
         </div>
 
-        <!-- 5. Snaai-wachtkamer (15 min.) -->
+        <!-- 5. Snaai-wachtkamer -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">🍿 Snaai-wachtkamer (15 min. Pauze)</h2>
-            <p class="text-xs text-gray-500 mb-3">Trek in een ondoordachte snack? Zet de 15-minuten timer en kijk of de trek wegzakt.</p>
+            <p class="text-xs text-gray-500 mb-3">Trek in een ondoordachte snack? Zet de timer.</p>
             
             <div class="space-y-2 mb-3">
                 <input type="text" id="snack-craving-input" placeholder="Waar heb je trek in? (optioneel)" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs">
@@ -83,13 +95,12 @@ export function initVitalityModule(appData) {
             </div>
             
             <div id="snack-timer-display" class="text-center font-bold text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-100 mb-2 text-xs">Klaar voor de pauze?</div>
-            <ul id="snack-parked-list" class="space-y-1 text-xs text-gray-500"></ul>
         </div>
 
         <!-- 6. Vitaliteits-Horizon -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
             <h2 class="text-base font-bold text-indigo-900 mb-1">📊 Vitaliteits-Horizon</h2>
-            <p class="text-xs text-gray-500 mb-3">Overzicht van jouw opgebouwde gezondheids-zeges over langere tijd.</p>
+            <p class="text-xs text-gray-500 mb-3">Overzicht van jouw opgebouwde gezondheids-zeges.</p>
             <div id="vitality-horizon-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs"></div>
         </div>
     `;
@@ -97,12 +108,7 @@ export function initVitalityModule(appData) {
     initVitalityLogic(appData);
 }
 
-// ---------------------------------------------------------
-// Vitaliteit Logica
-// ---------------------------------------------------------
-
 function initVitalityLogic(appData) {
-    // 1. Nachtrust
     document.querySelectorAll('.sleep-btn').forEach(btn => {
         btn.onclick = () => {
             const quality = btn.getAttribute('data-sleep');
@@ -114,7 +120,6 @@ function initVitalityLogic(appData) {
         };
     });
 
-    // 2. Stappen
     document.querySelectorAll('.steps-btn').forEach(btn => {
         btn.onclick = () => {
             const count = btn.getAttribute('data-steps');
@@ -126,7 +131,6 @@ function initVitalityLogic(appData) {
         };
     });
 
-    // 3. Sport Log & Categorie Beheer
     updateSportDropdown(appData);
     document.getElementById('sport-form').onsubmit = (e) => {
         e.preventDefault();
@@ -146,7 +150,6 @@ function initVitalityLogic(appData) {
                 appData.vitality.sportTypes.push(newSport);
                 saveAppData(appData);
                 updateSportDropdown(appData);
-                showToast("Sportcategorie toegevoegd!");
             }
         } else if (action && action.toLowerCase() === 'verwijderen') {
             const remSport = prompt(`Welke sport verwijderen? (${appData.vitality.sportTypes.join(', ')})`);
@@ -154,12 +157,10 @@ function initVitalityLogic(appData) {
                 appData.vitality.sportTypes = appData.vitality.sportTypes.filter(s => s !== remSport);
                 saveAppData(appData);
                 updateSportDropdown(appData);
-                showToast("Sportcategorie verwijderd.");
             }
         }
     };
 
-    // 4. Voeding & Balans (Alcoholvrij, Gezond gegeten, Sigaretten)
     const todayStr = new Date().toDateString();
     if (!appData.vitality.dailyLogs) appData.vitality.dailyLogs = {};
     if (!appData.vitality.dailyLogs[todayStr]) {
@@ -200,7 +201,6 @@ function initVitalityLogic(appData) {
         updateNutritionButtons();
     };
 
-    // 5. Snaai-wachtkamer timer
     const snackBtn = document.getElementById('start-snack-timer');
     const cravingInput = document.getElementById('snack-craving-input');
     const timerDisplay = document.getElementById('snack-timer-display');
@@ -232,6 +232,8 @@ function initVitalityLogic(appData) {
         }, 1000);
     };
 
+    document.getElementById('vitality-global-filter').onchange = () => renderVitalityViews(appData);
+
     renderVitalityViews(appData);
 }
 
@@ -243,32 +245,79 @@ function updateSportDropdown(appData) {
 }
 
 function renderVitalityViews(appData) {
-    // Nachtrust historie
-    const sleepBox = document.getElementById('sleep-history');
-    const sleeps = appData.vitality?.sleep || [];
-    sleepBox.innerHTML = sleeps.length === 0 ? '<p class="text-gray-400 italic">Nog geen nachtrust geregistreerd.</p>' : `Laatste registratie: <span class="font-bold text-indigo-900">${sleeps[sleeps.length - 1].quality}</span> (${new Date(sleeps[sleeps.length - 1].date).toLocaleDateString('nl-NL')})`;
+    const filter = document.getElementById('vitality-global-filter')?.value || 'all';
 
-    // Stappen historie
-    const stepsBox = document.getElementById('steps-history');
-    const steps = appData.vitality?.steps || [];
-    stepsBox.innerHTML = steps.length === 0 ? '<p class="text-gray-400 italic">Nog geen stappen-anker geregistreerd.</p>' : `Laatste anker: <span class="font-bold text-indigo-900">${steps[steps.length - 1].count}</span> (${new Date(steps[steps.length - 1].date).toLocaleDateString('nl-NL')})`;
+    // Nachtrust trend & lijst
+    const sleepBox = document.getElementById('sleep-trend-box');
+    const sleeps = (appData.vitality?.sleep || []).filter(s => checkDateFilter(s.date, filter));
+    
+    const sleepCounts = {};
+    sleeps.forEach(s => sleepCounts[s.quality] = (sleepCounts[s.quality] || 0) + 1);
+    const sleepTotal = sleeps.length;
+
+    sleepBox.innerHTML = `
+        <p class="font-bold text-indigo-900 mb-1">Nachtrust Trend (${sleepTotal} nachten)</p>
+        <div class="space-y-1 mb-2">
+            ${sleepTotal === 0 ? '<p class="text-gray-400 italic">Geen data in deze periode.</p>' : Object.entries(sleepCounts).map(([q, count]) => {
+                const pct = Math.round((count / sleepTotal) * 100);
+                return `<div><div class="flex justify-between text-[11px] font-semibold text-gray-700"><span>${q}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${pct}%"></div></div></div>`;
+            }).join('')}
+        </div>
+        <div class="space-y-1 max-h-24 overflow-y-auto">
+            ${sleeps.slice(-5).reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🌙 ${s.quality} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSleep(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
+        </div>
+    `;
+
+    window.deleteSleep = (id) => {
+        appData.vitality.sleep = appData.vitality.sleep.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderVitalityViews(appData);
+    };
+
+    // Stappen trend & lijst
+    const stepsBox = document.getElementById('steps-trend-box');
+    const steps = (appData.vitality?.steps || []).filter(s => checkDateFilter(s.date, filter));
+    
+    const stepsCounts = {};
+    steps.forEach(s => stepsCounts[s.count] = (stepsCounts[s.count] || 0) + 1);
+    const stepsTotal = steps.length;
+
+    stepsBox.innerHTML = `
+        <p class="font-bold text-indigo-900 mb-1">Stappen-Anker Trend (${stepsTotal} ankers)</p>
+        <div class="space-y-1 mb-2">
+            ${stepsTotal === 0 ? '<p class="text-gray-400 italic">Geen data in deze periode.</p>' : Object.entries(stepsCounts).map(([c, count]) => {
+                const pct = Math.round((count / stepsTotal) * 100);
+                return `<div><div class="flex justify-between text-[11px] font-semibold text-gray-700"><span>${c}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${pct}%"></div></div></div>`;
+            }).join('')}
+        </div>
+        <div class="space-y-1 max-h-24 overflow-y-auto">
+            ${steps.slice(-5).reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🚶 ${s.count} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteStep(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
+        </div>
+    `;
+
+    window.deleteStep = (id) => {
+        appData.vitality.steps = appData.vitality.steps.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderVitalityViews(appData);
+    };
 
     // Sport list
     const sportList = document.getElementById('sport-list');
-    const sports = appData.vitality?.sport || [];
-    sportList.innerHTML = sports.length === 0 ? '<p class="italic text-gray-400">Nog geen sport-logs.</p>' : sports.slice(-5).reverse().map(s => `
+    const sports = (appData.vitality?.sport || []).filter(s => checkDateFilter(s.date, filter));
+    sportList.innerHTML = sports.length === 0 ? '<p class="italic text-gray-400">Nog geen sport-logs in deze periode.</p>' : sports.slice(-5).reverse().map(s => `
         <li class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-            <span>🏅 ${s.type}</span>
-            <span class="text-gray-400 text-[10px]">${new Date(s.date).toLocaleDateString('nl-NL')}</span>
+            <span>🏅 ${s.type} <span class="text-gray-400 text-[10px]">(${new Date(s.date).toLocaleDateString('nl-NL')})</span></span>
+            <button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
         </li>
     `).join('');
 
-    // Snaai lijst
-    const snackList = document.getElementById('snack-parked-list');
-    const snacks = appData.vitality?.snackWaits || [];
-    snackList.innerHTML = snacks.length === 0 ? '' : `<p class="font-bold text-gray-700 mt-2">Totaal geparkeerde momenten: ${snacks.length}</p>`;
+    window.deleteSport = (id) => {
+        appData.vitality.sport = appData.vitality.sport.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderVitalityViews(appData);
+    };
 
-    // Vitaliteits-Horizon Stats
+    // Horizon Stats
     const statsBox = document.getElementById('vitality-horizon-stats');
     statsBox.innerHTML = `
         <div class="p-3 bg-indigo-50 rounded-xl">
@@ -276,7 +325,7 @@ function renderVitalityViews(appData) {
             <p class="text-lg font-bold text-indigo-900">${sleeps.length}</p>
         </div>
         <div class="p-3 bg-emerald-50 rounded-xl">
-            <p class="text-[10px] font-bold text-emerald-600 uppercase">Stappen-Ankers</p>
+            <p class="text-[10px] font-bold text-emerald-600 uppercase">Stappen</p>
             <p class="text-lg font-bold text-emerald-900">${steps.length}</p>
         </div>
         <div class="p-3 bg-amber-50 rounded-xl">
@@ -284,8 +333,8 @@ function renderVitalityViews(appData) {
             <p class="text-lg font-bold text-amber-900">${sports.length}</p>
         </div>
         <div class="p-3 bg-purple-50 rounded-xl">
-            <p class="text-[10px] font-bold text-purple-600 uppercase">Snaai-pauzes</p>
-            <p class="text-lg font-bold text-purple-900">${statsBox && snacks.length}</p>
+            <p class="text-[10px] font-bold text-purple-600 uppercase">Pauzes</p>
+            <p class="text-lg font-bold text-purple-900">${(appData.vitality?.snackWaits || []).length}</p>
         </div>
     `;
 }
