@@ -25,6 +25,9 @@ function switchView(viewName) {
   if (viewName === 'money') {
     renderMoney();
   }
+  if (viewName === 'ideas') {
+    renderIdeas();
+  }
 }
 
 // --- 2. THEMA TOGGLE (DAG / NACHT) ---
@@ -237,7 +240,7 @@ function addTransaction() {
 
   const desc = descInput.value.trim();
   const amount = parseFloat(amountInput.value);
-  const type = typeSelect.value; // 'income' of 'expense'
+  const type = typeSelect.value;
 
   let transactions = JSON.parse(localStorage.getItem('voldaan_transactions') || '[]');
   let currentBalance = parseFloat(localStorage.getItem('voldaan_balance') || '0');
@@ -270,7 +273,6 @@ function removeTransaction(id) {
   
   if (tx) {
     let currentBalance = parseFloat(localStorage.getItem('voldaan_balance') || '0');
-    // Omkeren bij verwijderen
     if (tx.type === 'income') {
       currentBalance -= tx.amount;
     } else {
@@ -322,14 +324,64 @@ function renderMoney() {
   });
 }
 
-// --- 6. ENERGIE SELECTIE (VANDAAG TABBLAD) ---
+// --- 6. IDEEËNKLUIS LOGICA ---
+function addIdea() {
+  const input = document.getElementById('idea-input');
+  if (!input || !input.value.trim()) return;
+
+  let ideas = JSON.parse(localStorage.getItem('voldaan_ideas') || '[]');
+  ideas.unshift({
+    id: Date.now(),
+    text: input.value.trim(),
+    date: new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  });
+
+  localStorage.setItem('voldaan_ideas', JSON.stringify(ideas));
+  input.value = '';
+  renderIdeas();
+}
+
+function removeIdea(id) {
+  let ideas = JSON.parse(localStorage.getItem('voldaan_ideas') || '[]');
+  ideas = ideas.filter(i => i.id !== id);
+  localStorage.setItem('voldaan_ideas', JSON.stringify(ideas));
+  renderIdeas();
+}
+
+function renderIdeas() {
+  let ideas = JSON.parse(localStorage.getItem('voldaan_ideas') || '[]');
+  const container = document.getElementById('ideas-list');
+  
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (ideas.length === 0) {
+    container.innerHTML = '<span style="font-size:0.82rem; color:var(--text-muted); text-align:center; padding: 10px; display:block;">Nog geen ideeën opgeslagen. Leeg hoofd! 📌</span>';
+    return;
+  }
+
+  ideas.forEach(idea => {
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.innerHTML = `
+      <div>
+        <span>💡 ${idea.text}</span>
+        <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px;">Opgeslagen: ${idea.date}</span>
+      </div>
+      <button style="background:none; border:none; color:#E53E3E; cursor:pointer; font-size: 0.9rem; padding: 4px;" onclick="removeIdea(${idea.id})" title="Verwijderen">✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// --- 7. ENERGIE SELECTIE (VANDAAG TABBLAD) ---
 function selectEnergy(el, energy) {
   document.querySelectorAll('.energy-btn').forEach(btn => btn.classList.remove('selected'));
   el.classList.add('selected');
   localStorage.setItem('voldaan_today_energy', energy);
 }
 
-// --- 7. DE TROTS-KLUIS LOGICA ---
+// --- 8. DE TROTS-KLUIS LOGICA ---
 const marbleColors = ['#5A67D8', '#38A169', '#ED8936', '#9F7AEA', '#E53E3E', '#319795', '#D69E2E', '#ED64A6'];
 
 function addMarble(reason, category = 'Algemeen') {
@@ -387,4 +439,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHabits();
   renderSnacks();
   renderMoney();
+  renderIdeas();
 });
