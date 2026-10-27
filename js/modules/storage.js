@@ -20,35 +20,66 @@ export function saveAppData(appData) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
 }
 
-// Zorgt ervoor dat oude en nieuwe back-ups naadloos passen en geen lege schermen geven
+// Slimme migratie die jouw oude backup-formaat (met losse voldaan_ sleutels) feilloos omzet
 function migrateDataStructure(data) {
     if (!data) return getInitialAppData();
 
-    if (!data.moods) data.moods = [];
-    if (!data.marbles) data.marbles = [];
-    if (!data.tasks) data.tasks = [];
-    if (!data.eveningPacts) data.eveningPacts = [];
-    
-    if (!data.money) {
-        data.money = { balance: 0, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 0, paid: 0, monthly: 50 } };
-    }
-    if (!data.vitality) {
-        data.vitality = { sleep: [], steps: [], sport: [], sportTypes: ['Wandelen', 'Fietsen', 'Sport / Workout', 'Voetbal', 'Zaalvoetbal', 'Hardlopen', 'Rekken / Yoga'], nutrition: [], snackWaits: [] };
-    }
-    if (!data.plans) {
-        data.plans = { eveningPacts: [], tasks: data.tasks || [], goals: [], categories: ['Privé', 'Gezin', 'Werk', 'Klussen', 'Vrije Tijd', 'Gezondheid', 'Financieel'], archivedTasks: [], archivedPacts: [], archivedGoals: [] };
-    }
-    if (!data.ideasModule) {
-        data.ideasModule = { ideas: data.ideas || [], projects: [], categories: ['Algemeen', 'Voldaan', 'Creatief', 'Werk / Studie', 'Privé / Thuis'], archivedIdeas: [], archivedProjects: [] };
-    }
-    if (!data.knowledge) {
-        data.knowledge = { savedTips: [] };
-    }
-    if (!data.luchtig) {
-        data.luchtig = { customPlaylists: [], userLink: '' };
+    // Als het een platte export is van jouw oude app, converteren we hem hier direct:
+    let parsedTasks = [];
+    let parsedMarbles = [];
+    let parsedMoods = [];
+    let parsedIdeas = [];
+
+    try {
+        if (data.voldaan_tasks) parsedTasks = JSON.parse(data.voldaan_tasks);
+        if (data.voldaan_marbles) parsedMarbles = JSON.parse(data.voldaan_marbles);
+        if (data.voldaan_energy_logs) {
+            parsedMoods = JSON.parse(data.voldaan_energy_logs).map(e => ({
+                id: e.id || Date.now(),
+                mood: e.energy || 'Oké',
+                icon: e.energy === 'Gefocust' ? '🚀' : e.energy === 'Wazig / Moe' ? '🌫️' : '🪨',
+                date: e.displayTime ? new Date().toISOString() : new Date(e.timestamp).toISOString()
+            }));
+        }
+        if (data.voldaan_ideas) parsedIdeas = JSON.parse(data.voldaan_ideas);
+    } catch (err) {
+        console.error("Kon oude tabellendata niet parsen:", err);
     }
 
-    return data;
+    return {
+        settings: data.settings || { darkMode: false },
+        moods: data.moods && data.moods.length > 0 ? data.moods : parsedMoods,
+        marbles: data.marbles && data.marbles.length > 0 ? data.marbles : parsedMarbles,
+        tasks: data.tasks && data.tasks.length > 0 ? data.tasks : parsedTasks.map(t => ({
+            id: t.id,
+            text: t.text,
+            category: t.category || 'Algemeen',
+            priority: 'Normaal',
+            completed: t.done || false,
+            archived: t.archived || false,
+            date: t.created ? new Date().toISOString() : new Date().toISOString()
+        })),
+        eveningPacts: data.eveningPacts || [],
+        goals: data.goals || [],
+        vitality: data.vitality || { sleep: [], steps: [], sport: [], nutrition: [], snackWaits: [] },
+        money: data.money || { balance: parseFloat(data.voldaan_bank_balance) || 0, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 41939, paid: 477.35, monthly: 477.35 } },
+        ideasModule: data.ideasModule || {
+            ideas: parsedIdeas.map(i => ({ id: i.id, text: i.text, category: i.category || 'Algemeen', archived: i.archived || false, date: new Date().toISOString() })),
+            projects: [],
+            categories: ['Algemeen', 'Voldaan', 'Creatief', 'Werk / Studie', 'Privé / Thuis'],
+            archivedIdeas: [],
+            archivedProjects: []
+        },
+        knowledge: data.knowledge || { savedTips: [] },
+        luchtig: data.luchtig || { customPlaylists: [], userLink: '' },
+        plans: data.plans || {
+            eveningPacts: [],
+            tasks: parsedTasks.map(t => ({ id: t.id, text: t.text, category: t.category || 'Algemeen', priority: 'Normaal', completed: t.done || false, date: new Date().toISOString() })),
+            goals: [],
+            categories: ['Privé', 'Gezin', 'Werk', 'Klussen', 'Vrije Tijd', 'Gezondheid', 'Financieel'],
+            archivedTasks: [], archivedPacts: [], archivedGoals: []
+        }
+    };
 }
 
 export function getInitialAppData() {
@@ -85,7 +116,7 @@ export function checkDateFilter(dateString, filterType) {
     return true;
 }
 
-// Universele belonings-helper: voegt automatisch een knikker toe aan de Trots-Kluis bij acties + confetti
+// Belonings-helper: voegt knikker toe + visuele beloning
 export function voegTrotsKnikkerToe(appData, tekst, categorie = 'Algemeen') {
     if (!appData.marbles) appData.marbles = [];
     appData.marbles.push({
@@ -96,13 +127,11 @@ export function voegTrotsKnikkerToe(appData, tekst, categorie = 'Algemeen') {
     });
     saveAppData(appData);
     
-    // Visuele beloning (flash/confetti effect)
     const flash = document.createElement('div');
     flash.className = 'fixed inset-0 bg-indigo-500/15 z-50 pointer-events-none transition duration-300';
     document.body.appendChild(flash);
     setTimeout(() => flash.remove(), 400);
 
-    // Toast melding
     const toast = document.createElement('div');
     toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-950 text-white px-4 py-2.5 rounded-xl text-xs font-medium shadow-lg z-50 transition transform duration-300';
     toast.textContent = `🏺 +1 Knikker in je Trots-Kluis! (${tekst})`;
