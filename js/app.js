@@ -40,7 +40,9 @@ function initTheme() {
   }
 }
 
-// --- 3. SIMPELE TAKEN / PLANBORD LOGICA ---
+// --- 3. ZACHT PLANBORD & TAKEN LOGICA ---
+let currentTaskFilter = 'all';
+
 function addTask() {
   const input = document.getElementById('task-input');
   if (!input || !input.value.trim()) return;
@@ -65,6 +67,12 @@ function toggleTask(id) {
   
   if (task) {
     task.done = !task.done;
+    
+    // Automatische knikker-beloning als een taak wordt afgevinkt! ✨
+    if (task.done) {
+      addMarble(`Taak volbracht: "${task.text}"`, 'Planbord');
+    }
+
     localStorage.setItem('voldaan_tasks', JSON.stringify(tasks));
     renderTasks();
   }
@@ -77,6 +85,14 @@ function removeTask(id) {
   renderTasks();
 }
 
+function setTaskFilter(filter) {
+  currentTaskFilter = filter;
+  document.querySelectorAll('#view-plan .tab-btn').forEach(btn => btn.classList.remove('active'));
+  const filterBtn = document.getElementById(`filter-${filter}`);
+  if (filterBtn) filterBtn.classList.add('active');
+  renderTasks();
+}
+
 function renderTasks() {
   let tasks = JSON.parse(localStorage.getItem('voldaan_tasks') || '[]');
   const container = document.getElementById('tasks-list');
@@ -84,22 +100,29 @@ function renderTasks() {
   if (!container) return;
   container.innerHTML = '';
 
-  if (tasks.length === 0) {
-    container.innerHTML = '<span style="font-size:0.82rem; color:var(--text-muted);">Nog geen actieve taken. Rustig aan! 🎉</span>';
+  let filteredTasks = tasks.filter(t => {
+    if (currentTaskFilter === 'active') return !t.done;
+    if (currentTaskFilter === 'done') return t.done;
+    return true;
+  });
+
+  if (filteredTasks.length === 0) {
+    container.innerHTML = '<span style="font-size:0.82rem; color:var(--text-muted); text-align:center; padding: 10px; display:block;">Geen taken in deze categorie. Rustig aan! 🎉</span>';
     return;
   }
 
-  tasks.forEach(task => {
+  filteredTasks.forEach(task => {
     const div = document.createElement('div');
     div.className = `item-card ${task.done ? 'done' : ''}`;
     div.innerHTML = `
-      <div>
-        <span style="cursor:pointer; ${task.done ? 'text-decoration: line-through; opacity: 0.6;' : ''}" onclick="toggleTask(${task.id})">
-          ${task.done ? '✅' : '⚪'} ${task.text}
-        </span>
-        <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px;">Aangemaakt: ${task.created}</span>
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="toggleTask(${task.id})">
+        <span style="font-size: 1.1rem;">${task.done ? '✅' : '⚪'}</span>
+        <div>
+          <span style="${task.done ? 'text-decoration: line-through; opacity: 0.5;' : ''}">${task.text}</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 2px;">Aangemaakt: ${task.created}</span>
+        </div>
       </div>
-      <button style="background:none; border:none; color:#E53E3E; cursor:pointer; font-size: 0.9rem;" onclick="removeTask(${task.id})" title="Verwijderen">✕</button>
+      <button style="background:none; border:none; color:#E53E3E; cursor:pointer; font-size: 0.9rem; padding: 4px;" onclick="removeTask(${task.id})" title="Verwijderen">✕</button>
     `;
     container.appendChild(div);
   });
