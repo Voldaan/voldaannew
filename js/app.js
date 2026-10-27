@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initIdeasModule(appData);
 });
 
+// Functie om te wisselen tussen de verschillende schermen/tabs via data-attributes
 function initNavigation() {
     const navButtons = document.querySelectorAll('[data-view-target]');
     const views = document.querySelectorAll('.view-section');
@@ -27,19 +28,25 @@ function initNavigation() {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             const targetView = button.getAttribute('data-view-target');
+            switchView(targetView);
 
-            views.forEach(view => {
-                if (view.id === targetView) {
-                    view.classList.remove('hidden');
-                } else {
-                    view.classList.add('hidden');
-                }
-            });
-
+            // Actieve knop styling bijwerken
             navButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
         });
     });
 }
+
+// Globaal beschikbaar gemaakt zodat oude HTML onclick="switchView(...)" attributen blijven werken
+window.switchView = function(targetView) {
+    const views = document.querySelectorAll('.view-section');
+    views.forEach(view => {
+        if (view.id === targetView) {
+            view.classList.remove('hidden');
+        } else {
+            view.classList.add('hidden');
+        }
+    });
+};
 
 export { appData, saveAppData };
