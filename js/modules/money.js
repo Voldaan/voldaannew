@@ -25,7 +25,7 @@ export function initMoneyModule(appData) {
                     <p class="text-xs text-indigo-200 uppercase font-semibold mb-1">Paydayradar</p>
                     <p id="payday-countdown" class="text-xl font-bold">Aftellen naar loon...</p>
                 </div>
-                <p class="text-[11px] text-indigo-300 mt-3">Automatische telling naar de 23e om 08:00.</p>
+                <p class="text-[11px] text-indigo-300 mt-3">Automatische telling naar de 23e om 08:00 uur[cite: 2].</p>
             </div>
         </div>
 
@@ -39,7 +39,7 @@ export function initMoneyModule(appData) {
                         ${MONEY_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
                     </select>
                 </div>
-                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-medium">Transactie Toevoegen</button>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Transactie Toevoegen</button>
             </form>
 
             <div class="flex justify-between items-center mb-2">
@@ -60,7 +60,7 @@ export function initMoneyModule(appData) {
                 <p class="text-xs text-gray-500 mb-3">Zet aankoopwensen 24 uur in de wacht.</p>
                 <form id="impulse-form" class="flex flex-col gap-2 mb-3">
                     <input type="text" id="impulse-item" placeholder="Wat wil je kopen?" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                    <button type="submit" class="w-full py-2 bg-amber-600 text-white rounded-xl text-xs">Parkeren</button>
+                    <button type="submit" class="w-full py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition">Parkeren</button>
                 </form>
                 <ul id="impulse-list" class="space-y-1 text-xs text-gray-600"></ul>
             </div>
@@ -70,7 +70,7 @@ export function initMoneyModule(appData) {
                 <p class="text-xs text-gray-500 mb-3">Spaar met een behapbaar plan.</p>
                 <form id="savings-form" class="flex flex-col gap-2 mb-3">
                     <input type="text" id="savings-name" placeholder="Naam potje..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                    <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs">+ Potje</button>
+                    <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">+ Potje</button>
                 </form>
                 <ul id="savings-list" class="space-y-1 text-xs text-gray-600"></ul>
             </div>
