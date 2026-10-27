@@ -1,7 +1,6 @@
 // js/modules/tasks.js
 import { saveAppData } from './storage.js';
 
-// Functie om de taken- en avond-pact module te initialiseren
 export function initTasksModule(appData) {
     renderTasks(appData);
     renderEveningPact(appData);
@@ -15,6 +14,9 @@ export function initTasksModule(appData) {
             const taskText = taskInput ? taskInput.value.trim() : '';
 
             if (taskText) {
+                // Zorg dat appData.tasks een array is
+                if (!appData.tasks) appData.tasks = [];
+
                 appData.tasks.push({
                     id: Date.now(),
                     text: taskText,
@@ -38,10 +40,13 @@ export function initTasksModule(appData) {
             const pactText = pactInput ? pactInput.value.trim() : '';
 
             if (pactText) {
+                if (!appData.eveningPact) appData.eveningPact = [];
+
                 appData.eveningPact.push({
                     id: Date.now(),
                     text: pactText,
-                    achieved: false
+                    achieved: false,
+                    date: new Date().toISOString()
                 });
 
                 saveAppData(appData);
@@ -52,20 +57,31 @@ export function initTasksModule(appData) {
     }
 }
 
-// Render de takenlijst / actie-hub
+// Render de takenlijst / actie-hub met Tailwind styling
 function renderTasks(appData) {
     const taskList = document.getElementById('task-list');
     if (!taskList) return;
 
     taskList.innerHTML = '';
-    appData.tasks.forEach(task => {
+    const tasks = appData.tasks || [];
+
+    if (tasks.length === 0) {
+        taskList.innerHTML = `<p class="text-xs text-gray-400 italic">Nog geen taken toegevoegd voor vandaag.</p>`;
+        return;
+    }
+
+    tasks.forEach(task => {
         const li = document.createElement('li');
-        li.className = `flex items-center justify-between p-2 my-1 rounded border ${task.completed ? 'bg-gray-100 line-through text-gray-500' : 'bg-white'}`;
+        li.className = `flex items-center justify-between p-3 rounded-xl border transition ${
+            task.completed ? 'bg-gray-50 line-through text-gray-400 border-gray-100' : 'bg-white text-gray-700 border-gray-200 shadow-sm'
+        }`;
         
         li.innerHTML = `
-            <span>${task.text}</span>
-            <button data-id="${task.id}" class="toggle-task text-xs px-2 py-1 bg-blue-500 text-white rounded">
-                ${task.completed ? 'Herstel' : 'Klaar'}
+            <span class="text-sm">${task.text}</span>
+            <button data-id="${task.id}" class="toggle-task text-xs px-3 py-1.5 rounded-lg font-medium transition ${
+                task.completed ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+            }">
+                ${task.completed ? 'Herstel' : 'Klaar ✨'}
             </button>
         `;
 
@@ -86,10 +102,27 @@ function renderEveningPact(appData) {
     if (!pactList) return;
 
     pactList.innerHTML = '';
-    appData.eveningPact.forEach(pact => {
+    const eveningPacts = appData.eveningPact || [];
+
+    if (eveningPacts.length === 0) {
+        pactList.innerHTML = `<p class="text-xs text-gray-400 italic">Geen avond-pact vastgelegd voor vandaag.</p>`;
+        return;
+    }
+
+    eveningPacts.forEach(pact => {
         const li = document.createElement('li');
-        li.className = `p-2 my-1 rounded border ${pact.achieved ? 'bg-green-50 text-green-800' : 'bg-white'}`;
-        li.textContent = pact.text;
+        li.className = `p-3 rounded-xl border bg-indigo-50/50 border-indigo-100 text-indigo-900 text-sm flex justify-between items-center`;
+        li.innerHTML = `
+            <span>🌙 ${pact.text}</span>
+            <button data-id="${pact.id}" class="delete-pact text-xs text-gray-400 hover:text-red-500">✕</button>
+        `;
+
+        li.querySelector('.delete-pact').addEventListener('click', () => {
+            appData.eveningPact = appData.eveningPact.filter(p => p.id !== pact.id);
+            saveAppData(appData);
+            renderEveningPact(appData);
+        });
+
         pactList.appendChild(li);
     });
 }
