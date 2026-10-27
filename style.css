@@ -99,3 +99,16 @@ input[type="text"]:focus { border-color: var(--accent-primary); }
 }
 
 .hidden { display: none !important; }
+
+/* --- DE TROTS-KLUIS 3D KNIKKERS --- */
+.marble-3d {
+  width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  position: relative; box-shadow: inset -4px -4px 6px rgba(0,0,0,0.4), 2px 4px 6px rgba(0,0,0,0.2);
+  animation: dropMarble 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; transition: transform 0.2s ease;
+}
+.marble-3d:hover { transform: scale(1.3); z-index: 10; }
+.marble-3d::after {
+  content: ''; position: absolute; top: 4px; left: 5px; width: 7px; height: 7px;
+  border-radius: 50%; background: rgba(255, 255, 255, 0.85);
+}
+@keyframes dropMarble { 0% { transform: translateY(-30px) scale(1.3); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
