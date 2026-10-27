@@ -1,15 +1,7 @@
-// Zet deze variabele BOVEN de functie:
-let snackTimerRunning = false;
-
-function startSnackTimer(appData) {
-    if (snackTimerRunning) return;
-    snackTimerRunning = true;
-    
-    const timerDisplay = document.getElementById('snack-timer-display');
-    if (timerDisplay) // js/modules/vitality.js
+// js/modules/vitality.js
 import { saveAppData } from './storage.js';
 
-// Correct gedefinieerde variabele voor de timer status
+// Juiste declaratie van de variabele (zonder 'function' ervoor)
 let snackTimerRunning = false;
 
 export function initVitalityModule(appData) {
@@ -54,7 +46,7 @@ function renderVitalityStats(appData) {
     }
 }
 
-// Simuleer de 15-minuten wachttijd logica
+// Simuleer de wachttijd logica
 function startSnackTimer(appData) {
     if (snackTimerRunning) return;
     snackTimerRunning = true;
@@ -74,18 +66,4 @@ function startSnackTimer(appData) {
         }
         snackTimerRunning = false;
     }, 5000); 
-}
-        timerDisplay.textContent = "Wachtkamer actief (15 min)...";
-    }
-
-    setTimeout(() => {
-        appData.vitality.snackWaitCount = (appData.vitality.snackWaitCount || 0) + 1;
-        saveAppData(appData);
-        renderVitalityStats(appData);
-        
-        if (timerDisplay) {
-            timerDisplay.textContent = "Wachttijd voltooid! Voel je het nog steeds?";
-        }
-        snackTimerRunning = false;
-    }, 5000);
 }
