@@ -47,7 +47,7 @@ export function initIdeasModule(appData) {
                 <h2 class="text-base font-bold text-indigo-900">🚀 Projecten-Hub</h2>
                 <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Nieuw Project</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Zet spontane post-its of wilde ideeën om in gestructureerde projecten.</p>
+            <p class="text-xs text-gray-500 mb-3">Zet spontane post-its om in gestructureerde projecten.</p>
             
             <div id="project-list" class="space-y-3"></div>
         </div>
@@ -57,12 +57,8 @@ export function initIdeasModule(appData) {
     initIdeasLogic(appData);
 }
 
-// ---------------------------------------------------------
-// Modals & Pop-ups voor Ideeën en Projecten
-// ---------------------------------------------------------
-
 function initIdeasModals(appData) {
-    // 1. Modal voor "Alle Post-its bekijken / doorzoeken / archief"
+    // 1. Modal voor Alle Post-its / Archief
     const allIdeasModalHTML = `
         <div id="all-ideas-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -118,9 +114,35 @@ function initIdeasModals(appData) {
         </div>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', allIdeasModalHTML + projectModalHTML);
+    // 3. Modal voor Post-it Bewerken
+    const editIdeaModalHTML = `
+        <div id="edit-idea-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-bold text-indigo-950">✏️ Post-it Bewerken</h3>
+                    <button id="close-edit-idea-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                </div>
+                <form id="edit-idea-form" class="space-y-3 text-xs">
+                    <input type="hidden" id="edit-idea-id">
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Tekst</label>
+                        <textarea id="edit-idea-text" rows="4" class="w-full px-3 py-2 border rounded-xl" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Categorie</label>
+                        <select id="edit-idea-cat" class="w-full px-3 py-2 border rounded-xl bg-white"></select>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" id="cancel-edit-idea-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
+                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Opslaan ✨</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
 
-    // Event handlers voor modals
+    document.body.insertAdjacentHTML('beforeend', allIdeasModalHTML + projectModalHTML + editIdeaModalHTML);
+
     const allModal = document.getElementById('all-ideas-modal');
     document.getElementById('open-all-ideas-modal').onclick = () => {
         allModal.classList.remove('hidden');
@@ -133,7 +155,10 @@ function initIdeasModals(appData) {
     document.getElementById('close-idea-project-modal').onclick = () => projModal.classList.add('hidden');
     document.getElementById('cancel-idea-project-modal').onclick = () => projModal.classList.add('hidden');
 
-    // Project formulier submit
+    const editModal = document.getElementById('edit-idea-modal');
+    document.getElementById('close-edit-idea-modal').onclick = () => editModal.classList.add('hidden');
+    document.getElementById('cancel-edit-idea-modal').onclick = () => editModal.classList.add('hidden');
+
     document.getElementById('idea-project-form').onsubmit = (e) => {
         e.preventDefault();
         const title = document.getElementById('modal-proj-title').value.trim();
@@ -152,18 +177,29 @@ function initIdeasModals(appData) {
             showToast("Project succesvol aangemaakt! 🚀");
         }
     };
-}
 
-// ---------------------------------------------------------
-// Core Logica & Rendering
-// ---------------------------------------------------------
+    document.getElementById('edit-idea-form').onsubmit = (e) => {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('edit-idea-id').value);
+        const text = document.getElementById('edit-idea-text').value.trim();
+        const category = document.getElementById('edit-idea-cat').value;
+
+        const item = appData.ideasModule.ideas.find(i => i.id === id);
+        if (item && text) {
+            item.text = text;
+            item.category = category;
+            saveAppData(appData);
+            editModal.classList.add('hidden');
+            renderIdeasView(appData);
+            showToast("Post-it bijgewerkt! ✏️");
+        }
+    };
+}
 
 function initIdeasLogic(appData) {
     const ideasMod = appData.ideasModule;
-
     updateIdeaCategoryDropdowns(ideasMod);
 
-    // Categorieën beheren
     document.getElementById('manage-idea-categories-btn').onclick = () => {
         const action = prompt("Wil je een categorie Toevoegen of Verwijderen? Typ 'toevoegen' of 'verwijderen':");
         if (action && action.toLowerCase() === 'toevoegen') {
@@ -172,7 +208,6 @@ function initIdeasLogic(appData) {
                 ideasMod.categories.push(cat);
                 saveAppData(appData);
                 updateIdeaCategoryDropdowns(ideasMod);
-                showToast("Categorie toegevoegd!");
             }
         } else if (action && action.toLowerCase() === 'verwijderen') {
             const cat = prompt(`Welke categorie verwijderen? (${ideasMod.categories.join(', ')})`);
@@ -180,12 +215,10 @@ function initIdeasLogic(appData) {
                 ideasMod.categories = ideasMod.categories.filter(c => c !== cat);
                 saveAppData(appData);
                 updateIdeaCategoryDropdowns(ideasMod);
-                showToast("Categorie verwijderd.");
             }
         }
     };
 
-    // Idee toevoegen via hoofdformulier
     document.getElementById('idea-form').onsubmit = (e) => {
         e.preventDefault();
         const text = document.getElementById('idea-text').value.trim();
@@ -195,7 +228,6 @@ function initIdeasLogic(appData) {
             saveAppData(appData);
             e.target.reset();
             renderIdeasView(appData);
-            showToast("Post-it geprikt op het bord! 📌");
         }
     };
 
@@ -206,6 +238,7 @@ function initIdeasLogic(appData) {
 function updateIdeaCategoryDropdowns(ideasMod) {
     const catSelect = document.getElementById('idea-cat');
     const modalCatFilter = document.getElementById('modal-idea-cat-filter');
+    const editCatSelect = document.getElementById('edit-idea-cat');
     if (!catSelect) return;
 
     const cats = ideasMod.categories || DEFAULT_IDEA_CATEGORIES;
@@ -213,26 +246,57 @@ function updateIdeaCategoryDropdowns(ideasMod) {
     if (modalCatFilter) {
         modalCatFilter.innerHTML = `<option value="Alle">Alle categorieën</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
+    if (editCatSelect) {
+        editCatSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
 }
 
 function renderIdeasView(appData) {
     const grid = document.getElementById('idea-grid');
     const ideas = (appData.ideasModule.ideas || []).filter(i => !i.archived);
 
-    // Maximaal 5 post-its tonen op het hoofdscherm
-    grid.innerHTML = ideas.length === 0 ? '<p class="text-xs text-gray-400 italic">Nog geen post-its op het bord.</p>' : ideas.slice(-5).reverse().map(i => `
-        <div class="p-3.5 bg-yellow-50/90 border border-yellow-200 rounded-xl relative flex flex-col gap-1.5 shadow-sm">
-            <div class="flex justify-between items-start">
-                <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">[${i.category}]</span>
-                <span class="text-[10px] text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
+    grid.innerHTML = ideas.length === 0 ? '<p class="text-xs text-gray-400 italic">Nog geen post-its op het bord.</p>' : ideas.slice(-5).reverse().map(i => {
+        const isLong = i.text.length > 90;
+        const shortText = isLong ? i.text.slice(0, 90) + '...' : i.text;
+        return `
+            <div id="idea-card-${i.id}" class="p-3.5 bg-yellow-50/90 border border-yellow-200 rounded-xl relative flex flex-col gap-1.5 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">[${i.category}]</span>
+                    <span class="text-[10px] text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
+                </div>
+                <p id="idea-text-content-${i.id}" class="text-xs text-gray-800 leading-relaxed">${shortText}</p>
+                ${isLong ? `<button onclick="window.toggleExpandIdea(${i.id}, \`${encodeURIComponent(i.text)}\`)" id="expand-btn-${i.id}" class="text-[11px] font-semibold text-amber-900 underline text-left">Uitvouwen</button>` : ''}
+                <div class="flex gap-3 pt-1 text-[11px] font-semibold text-indigo-700">
+                    <button onclick="window.ideaToPlan(${i.id})" class="hover:underline">Naar Planbord</button>
+                    <button onclick="window.openEditIdeaModal(${i.id})" class="hover:underline">Bewerken</button>
+                    <button onclick="window.archiveIdea(${i.id})" class="text-gray-400 hover:text-red-500 ml-auto">Archiveren</button>
+                </div>
             </div>
-            <p class="text-xs text-gray-800 leading-relaxed">${i.text}</p>
-            <div class="flex gap-2 pt-1 text-[11px] font-semibold text-indigo-700">
-                <button onclick="window.ideaToPlan(${i.id})" class="hover:underline">Naar Planbord</button>
-                <button onclick="window.archiveIdea(${i.id})" class="text-gray-400 hover:text-red-500 ml-auto">Archiveren</button>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
+
+    window.toggleExpandIdea = (id, encodedText) => {
+        const textEl = document.getElementById(`idea-text-content-${id}`);
+        const btnEl = document.getElementById(`expand-btn-${id}`);
+        const fullText = decodeURIComponent(encodedText);
+        if (btnEl.textContent === 'Uitvouwen') {
+            textEl.textContent = fullText;
+            btnEl.textContent = 'Inklappen';
+        } else {
+            textEl.textContent = fullText.slice(0, 90) + '...';
+            btnEl.textContent = 'Uitvouwen';
+        }
+    };
+
+    window.openEditIdeaModal = (id) => {
+        const item = appData.ideasModule.ideas.find(x => x.id === id);
+        if (item) {
+            document.getElementById('edit-idea-id').value = item.id;
+            document.getElementById('edit-idea-text').value = item.text;
+            document.getElementById('edit-idea-cat').value = item.category;
+            document.getElementById('edit-idea-modal').classList.remove('hidden');
+        }
+    };
 
     window.ideaToPlan = (id) => {
         const item = appData.ideasModule.ideas.find(x => x.id === id);
