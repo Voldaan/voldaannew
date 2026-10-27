@@ -1,5 +1,5 @@
 // js/modules/plannen.js
-import { saveAppData, checkDateFilter } from './storage.js';
+import { saveAppData, checkDateFilter, voegTrotsKnikkerToe } from './storage.js';
 
 const DEFAULT_PLAN_CATEGORIES = ['Privé', 'Gezin', 'Werk', 'Klussen', 'Vrije Tijd', 'Gezondheid', 'Financieel'];
 const PRIORITIES = ['Laag', 'Normaal', 'Hoog'];
@@ -106,14 +106,9 @@ export function initPlannenModule(appData) {
     initPlannenLogic(appData);
 }
 
-// ---------------------------------------------------------
-// Planbord Logica
-// ---------------------------------------------------------
-
 function initPlannenLogic(appData) {
     const plans = appData.plans;
 
-    // Categorieën dropdowns vullen
     updateCategoryDropdowns(plans);
 
     document.getElementById('manage-plan-categories-btn').onclick = () => {
@@ -124,7 +119,6 @@ function initPlannenLogic(appData) {
                 plans.categories.push(cat);
                 saveAppData(appData);
                 updateCategoryDropdowns(plans);
-                showToast("Categorie toegevoegd!");
             }
         } else if (action && action.toLowerCase() === 'verwijderen') {
             const cat = prompt(`Welke categorie verwijderen? (${plans.categories.join(', ')})`);
@@ -132,12 +126,10 @@ function initPlannenLogic(appData) {
                 plans.categories = plans.categories.filter(c => c !== cat);
                 saveAppData(appData);
                 updateCategoryDropdowns(plans);
-                showToast("Categorie verwijderd.");
             }
         }
     };
 
-    // 1. Avond-Pact logica
     const pactForm = document.getElementById('evening-pact-form');
     pactForm.onsubmit = (e) => {
         e.preventDefault();
@@ -147,7 +139,6 @@ function initPlannenLogic(appData) {
             saveAppData(appData);
             e.target.reset();
             renderPacts(appData);
-            showToast("Avond-pact vastgelegd 🌙");
         }
     };
 
@@ -155,7 +146,6 @@ function initPlannenLogic(appData) {
         document.getElementById('pact-archief-box').classList.toggle('hidden');
     };
 
-    // 2. Taken logica
     const taskForm = document.getElementById('task-form');
     taskForm.onsubmit = (e) => {
         e.preventDefault();
@@ -167,7 +157,6 @@ function initPlannenLogic(appData) {
             saveAppData(appData);
             e.target.reset();
             renderTasks(appData);
-            showToast("Taak toegevoegd 🎯");
         }
     };
 
@@ -178,7 +167,6 @@ function initPlannenLogic(appData) {
         document.getElementById('task-archief-box').classList.toggle('hidden');
     };
 
-    // 3. Doelen logica
     const goalForm = document.getElementById('goal-form');
     goalForm.onsubmit = (e) => {
         e.preventDefault();
@@ -190,7 +178,6 @@ function initPlannenLogic(appData) {
             saveAppData(appData);
             e.target.reset();
             renderGoals(appData);
-            showToast("Doel toegevoegd 🧭");
         }
     };
 
@@ -224,12 +211,15 @@ function renderPacts(appData) {
     list.innerHTML = active.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen actief avond-pact.</p>' : active.map(p => `
         <li class="flex justify-between items-center p-2.5 bg-indigo-50/50 border border-indigo-100 rounded-xl text-xs">
             <span>🌙 ${p.text}</span>
-            <button onclick="window.archivePact(${p.id})" class="text-gray-400 hover:text-red-500">Archiveren</button>
+            <div class="flex gap-2">
+                <button onclick="window.archivePact(${p.id})" class="text-indigo-600 hover:underline font-semibold">Archiveren</button>
+                <button onclick="window.deletePact(${p.id})" class="text-gray-300 hover:text-red-500 font-bold">✕</button>
+            </div>
         </li>
     `).join('');
 
     archiefList.innerHTML = archived.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen archief.</p>' : archived.map(p => `
-        <li class="flex justify-between items-center py-1"><span>${p.text}</span><button onclick="window.restorePact(${p.id})" class="text-indigo-600">Terugzetten</button></li>
+        <li class="flex justify-between items-center py-1"><span>${p.text}</span><button onclick="window.restorePact(${p.id})" class="text-indigo-600 font-semibold">Terugzetten</button></li>
     `).join('');
 
     window.archivePact = (id) => {
@@ -250,6 +240,11 @@ function renderPacts(appData) {
             renderPacts(appData);
         }
     };
+    window.deletePact = (id) => {
+        plans.eveningPacts = plans.eveningPacts.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderPacts(appData);
+    };
 }
 
 function renderTasks(appData) {
@@ -267,7 +262,7 @@ function renderTasks(appData) {
         return matchSearch && matchCat && matchDate;
     });
 
-    list.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen taken gevonden.</p>' : tasks.slice(-10).reverse().map(t => `
+    list.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen taken gevonden.</p>' : tasks.slice(-15).reverse().map(t => `
         <li class="flex justify-between items-center p-2.5 border rounded-xl text-xs ${t.completed ? 'bg-gray-50 line-through text-gray-400' : 'bg-white text-gray-800 shadow-sm'}">
             <div>
                 <span class="font-bold text-indigo-700 mr-1">[${t.category}]</span> 
@@ -276,23 +271,25 @@ function renderTasks(appData) {
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="window.toggleTaskComplete(${t.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold">${t.completed ? 'Herstel' : 'Klaar ✨'}</button>
-                <button onclick="window.archiveTask(${t.id})" class="text-gray-300 hover:text-red-500">✕</button>
+                <button onclick="window.archiveTask(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </li>
     `).join('');
 
     const archived = plans.archivedTasks || [];
     archiefList.innerHTML = archived.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen archief.</p>' : archived.map(t => `
-        <li class="flex justify-between items-center py-1"><span>${t.text}</span><button onclick="window.restoreTask(${t.id})" class="text-indigo-600">Terugzetten</button></li>
+        <li class="flex justify-between items-center py-1"><span>${t.text}</span><button onclick="window.restoreTask(${t.id})" class="text-indigo-600 font-semibold">Terugzetten</button></li>
     `).join('');
 
     window.toggleTaskComplete = (id) => {
         const t = plans.tasks.find(x => x.id === id);
         if (t) {
             t.completed = !t.completed;
+            if (t.completed) {
+                voegTrotsKnikkerToe(appData, `Taak volbracht: ${t.text}`, t.category || 'Taken');
+            }
             saveAppData(appData);
             renderTasks(appData);
-            if (t.completed) showToast("Taak volbracht! 🎯");
         }
     };
     window.archiveTask = (id) => {
@@ -327,7 +324,7 @@ function renderGoals(appData) {
         <div class="p-3.5 bg-gray-50 border border-gray-100 rounded-xl space-y-2 text-xs">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-indigo-950">🎯 ${g.title}</span>
-                <button onclick="window.archiveGoal(${g.id})" class="text-gray-400 hover:text-red-500">Archiveren</button>
+                <button onclick="window.archiveGoal(${g.id})" class="text-gray-400 hover:text-red-500 font-bold px-1">Archiveren</button>
             </div>
             <p class="text-gray-500">🛡️ Veiligheidsschild: ${g.shield}</p>
             <div class="flex gap-1.5 pt-1">
@@ -339,13 +336,16 @@ function renderGoals(appData) {
     `).join('');
 
     archiefList.innerHTML = archived.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen archief.</p>' : archived.map(g => `
-        <li class="flex justify-between items-center py-1"><span>${g.title}</span><button onclick="window.restoreGoal(${g.id})" class="text-indigo-600">Terugzetten</button></li>
+        <li class="flex justify-between items-center py-1"><span>${g.title}</span><button onclick="window.restoreGoal(${g.id})" class="text-indigo-600 font-semibold">Terugzetten</button></li>
     `).join('');
 
     window.setGoalStatus = (id, status) => {
         const g = plans.goals.find(x => x.id === id);
         if (g) {
             g.status = status;
+            if (status === 'volledig') {
+                voegTrotsKnikkerToe(appData, `Doel volbracht: ${g.title}`, 'Doelen');
+            }
             saveAppData(appData);
             renderGoals(appData);
         }
@@ -368,15 +368,4 @@ function renderGoals(appData) {
             renderGoals(appData);
         }
     };
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-950 text-white px-4 py-2.5 rounded-xl text-xs font-medium shadow-lg z-50 transition transform duration-300';
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
 }
