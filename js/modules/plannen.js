@@ -38,11 +38,21 @@ export function initPlannenModule(appData) {
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🎯 Het Zachte Planbord</h2>
                 <div class="flex gap-2">
-                    <button id="manage-plan-categories-btn" class="text-xs text-indigo-600 hover:underline">Categorieën</button>
+                    <button id="open-cat-manager-btn" class="text-xs text-indigo-600 hover:underline">Categorieën</button>
                     <button id="toggle-task-archief" class="text-xs text-indigo-600 hover:underline font-medium">Archief</button>
                 </div>
             </div>
             <p class="text-xs text-gray-500 mb-3">Taken structureren op jouw tempo.</p>
+
+            <!-- Inline Categorie Beheer Box (Geen lelijke pop-ups) -->
+            <div id="category-manager-box" class="hidden mb-3 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2 text-xs">
+                <p class="font-bold text-indigo-950">Categorieën Beheren</p>
+                <div class="flex gap-2">
+                    <input type="text" id="new-cat-input" placeholder="Nieuwe categorie..." class="flex-1 px-3 py-1.5 bg-white border rounded-xl">
+                    <button id="add-cat-submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen</button>
+                </div>
+                <div id="category-chips-list" class="flex flex-wrap gap-1.5 pt-1"></div>
+            </div>
 
             <form id="task-form" class="flex flex-col gap-2 mb-3">
                 <input type="text" id="task-input" placeholder="Nieuwe taak..." class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs" required>
@@ -111,22 +121,22 @@ function initPlannenLogic(appData) {
 
     updateCategoryDropdowns(plans);
 
-    document.getElementById('manage-plan-categories-btn').onclick = () => {
-        const action = prompt("Wil je een categorie Toevoegen of Verwijderen? Typ 'toevoegen' of 'verwijderen':");
-        if (action && action.toLowerCase() === 'toevoegen') {
-            const cat = prompt("Naam van nieuwe categorie:");
-            if (cat && !plans.categories.includes(cat)) {
-                plans.categories.push(cat);
-                saveAppData(appData);
-                updateCategoryDropdowns(plans);
-            }
-        } else if (action && action.toLowerCase() === 'verwijderen') {
-            const cat = prompt(`Welke categorie verwijderen? (${plans.categories.join(', ')})`);
-            if (cat && plans.categories.includes(cat)) {
-                plans.categories = plans.categories.filter(c => c !== cat);
-                saveAppData(appData);
-                updateCategoryDropdowns(plans);
-            }
+    // Inline Categorie Manager toggle (geen lelijke pop-ups)
+    const catManagerBox = document.getElementById('category-manager-box');
+    document.getElementById('open-cat-manager-btn').onclick = () => {
+        catManagerBox.classList.toggle('hidden');
+        renderCategoryChips(appData);
+    };
+
+    document.getElementById('add-cat-submit').onclick = () => {
+        const input = document.getElementById('new-cat-input');
+        const val = input.value.trim();
+        if (val && !plans.categories.includes(val)) {
+            plans.categories.push(val);
+            saveAppData(appData);
+            updateCategoryDropdowns(plans);
+            renderCategoryChips(appData);
+            input.value = '';
         }
     };
 
@@ -200,6 +210,26 @@ function updateCategoryDropdowns(plans) {
     filterCat.innerHTML = `<option value="Alle">Alle categorieën</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
+function renderCategoryChips(appData) {
+    const chipsList = document.getElementById('category-chips-list');
+    if (!chipsList) return;
+    const cats = appData.plans.categories || DEFAULT_PLAN_CATEGORIES;
+
+    chipsList.innerHTML = cats.map(c => `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-indigo-900 font-medium text-[11px]">
+            ${c}
+            ${cats.length > 1 ? `<button onclick="window.removePlanCategory('${c}')" class="text-red-400 hover:text-red-600 font-bold ml-1">✕</button>` : ''}
+        </span>
+    `).join('');
+
+    window.removePlanCategory = (catName) => {
+        appData.plans.categories = appData.plans.categories.filter(c => c !== catName);
+        saveAppData(appData);
+        updateCategoryDropdowns(appData.plans);
+        renderCategoryChips(appData);
+    };
+}
+
 function renderPacts(appData) {
     const plans = appData.plans;
     const list = document.getElementById('evening-pact-list');
@@ -259,24 +289,24 @@ function renderTasks(appData) {
         const matchSearch = t.text.toLowerCase().includes(searchVal);
         const matchCat = catVal === 'Alle' || t.category === catVal;
         const matchDate = checkDateFilter(t.date, dateVal);
-        return matchSearch && matchCat && matchDate;
+        return matchSearch && matchCat && !t.completed && !t.archived;
     });
 
-    list.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen taken gevonden.</p>' : tasks.slice(-15).reverse().map(t => `
-        <li class="flex justify-between items-center p-2.5 border rounded-xl text-xs ${t.completed ? 'bg-gray-50 line-through text-gray-400' : 'bg-white text-gray-800 shadow-sm'}">
+    list.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken gevonden.</p>' : tasks.slice(-15).reverse().map(t => `
+        <li class="flex justify-between items-center p-2.5 border rounded-xl text-xs bg-white text-gray-800 shadow-sm">
             <div>
                 <span class="font-bold text-indigo-700 mr-1">[${t.category}]</span> 
                 <span>${t.text}</span>
                 <span class="text-[10px] text-gray-400 block">Prioriteit: ${t.priority || 'Normaal'}</span>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="window.toggleTaskComplete(${t.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold">${t.completed ? 'Herstel' : 'Klaar ✨'}</button>
+                <button onclick="window.toggleTaskComplete(${t.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold">Klaar ✨</button>
                 <button onclick="window.archiveTask(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </li>
     `).join('');
 
-    const archived = plans.archivedTasks || [];
+    const archived = (plans.archivedTasks || []).concat((plans.tasks || []).filter(t => t.completed || t.archived));
     archiefList.innerHTML = archived.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen archief.</p>' : archived.map(t => `
         <li class="flex justify-between items-center py-1"><span>${t.text}</span><button onclick="window.restoreTask(${t.id})" class="text-indigo-600 font-semibold">Terugzetten</button></li>
     `).join('');
@@ -284,10 +314,8 @@ function renderTasks(appData) {
     window.toggleTaskComplete = (id) => {
         const t = plans.tasks.find(x => x.id === id);
         if (t) {
-            t.completed = !t.completed;
-            if (t.completed) {
-                voegTrotsKnikkerToe(appData, `Taak volbracht: ${t.text}`, t.category || 'Taken');
-            }
+            t.completed = true;
+            voegTrotsKnikkerToe(appData, `Taak volbracht: ${t.text}`, t.category || 'Taken');
             saveAppData(appData);
             renderTasks(appData);
         }
@@ -296,15 +324,18 @@ function renderTasks(appData) {
         const t = plans.tasks.find(x => x.id === id);
         if (t) {
             plans.tasks = plans.tasks.filter(x => x.id !== id);
+            if (!plans.archivedTasks) plans.archivedTasks = [];
             plans.archivedTasks.push(t);
             saveAppData(appData);
             renderTasks(appData);
         }
     };
     window.restoreTask = (id) => {
-        const t = plans.archivedTasks.find(x => x.id === id);
+        let t = (plans.archivedTasks || []).find(x => x.id === id);
         if (t) {
             plans.archivedTasks = plans.archivedTasks.filter(x => x.id !== id);
+            t.completed = false;
+            t.archived = false;
             plans.tasks.push(t);
             saveAppData(appData);
             renderTasks(appData);
