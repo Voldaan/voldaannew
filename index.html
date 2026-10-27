@@ -1,201 +1,154 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voldaan — Rust & Structuur op Jouw Tempo</title>
-  
-  <link rel="icon" type="image/jpeg" href="assets/icon.jpg">
-  <link rel="apple-touch-icon" href="assets/icon.jpg">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Koppeling naar je stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-
-  <canvas id="confetti-canvas"></canvas>
-
-  <div class="container">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voldaan – Rust & Structuur op Jouw Tempo</title>
     
-    <header>
-      <div>
-        <h1>Voldaan</h1>
-        <p>Geen druk. Geen schuldgevoel. Jouw tempo.</p>
-      </div>
-      <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn">🌙 Nacht</button>
-    </header>
+    <link rel="icon" type="image/jpeg" href="assets/icon.jpg">
+    <link rel="apple-touch-icon" href="assets/icon.jpg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Koppeling naar je stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
 
-    <!-- Navigatie Tabbladen -->
-    <nav class="nav-tabs">
-      <button class="tab-btn active" onclick="switchView('today')" id="tab-today">🏠 Vandaag</button>
-      <button class="tab-btn" onclick="switchView('plan')" id="tab-plan">🎯 Plannen</button>
-      <button class="tab-btn" onclick="switchView('vitality')" id="tab-vitality">🌿 Vitaliteit</button>
-      <button class="tab-btn" onclick="switchView('money')" id="tab-money">💶 Geld</button>
-      <button class="tab-btn" onclick="switchView('ideas')" id="tab-ideas">📌 Ideeënkluis</button>
-      <button class="tab-btn" onclick="switchView('hacks')" id="tab-hacks">💡 Kennis & Hacks</button>
-    </nav>
-
-    <!-- PAGINA 1: VANDAAG -->
-    <div id="view-today">
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>☀️ Mijn Dag Begint Nu</h2>
-        <p class="subtitle">Waar staat je brein op dit moment naar?</p>
-        <div class="energy-grid">
-          <button class="energy-btn" onclick="selectEnergy(this, 'Wazig / Moe')">🌫️ Wazig / Moe</button>
-          <button class="energy-btn" onclick="selectEnergy(this, 'Chaotisch')">⚡ Chaotisch / Vol</button>
-          <button class="energy-btn" onclick="selectEnergy(this, 'Oké')">☕ Rustig / Oké</button>
-          <button class="energy-btn" onclick="selectEnergy(this, 'Gefocust')">🚀 Gefocust</button>
-        </div>
-      </div>
-
-      <!-- DE TROTS-KLUIS -->
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>
-          🏺 De Trots-Kluis
-          <span id="marble-count-badge" style="font-size:0.82rem; background:var(--accent-primary); color:white; padding:3px 10px; border-radius:12px; font-weight:600;">0 Knikkers</span>
-        </h2>
-        <p class="subtitle">Elke kleine overwinning vult jouw virtuele glazen pot.</p>
-
-        <button class="btn btn-small" style="margin-bottom: 14px;" onclick="addMarble('Handmatige knikker ✨', 'Algemeen')">+ Knikker erbij ✨</button>
-
-        <div style="display: flex; justify-content: center; margin: 1.2rem 0;">
-          <div style="position: relative; width: 180px; height: 210px;">
-            <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 16px; background: linear-gradient(to right, #b2bec3, #dfe6e9, #b2bec3); border-radius: 8px 8px 3px 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 3;"></div>
-            <div id="marble-jar-visual" style="position: absolute; top: 14px; width: 100%; height: 195px; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(2px); border: 3px solid rgba(255, 255, 255, 0.6); border-radius: 20px 20px 45px 45px; box-shadow: inset 0 0 15px rgba(255,255,255,0.4), 0 8px 25px rgba(0,0,0,0.08); overflow-y: auto; display: flex; flex-wrap: wrap-reverse; align-content: flex-start; justify-content: center; gap: 6px; padding: 12px 14px 18px 14px;">
-              <div style="position: absolute; top: 10px; left: 12px; width: 12px; height: 140px; background: linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(255,255,255,0.05)); border-radius: 6px; pointer-events: none; z-index: 2;"></div>
+    <div class="max-w-4xl mx-auto p-4 md:p-6">
+        
+        <!-- Header -->
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-900">Voldaan</h1>
+                <p class="text-sm text-gray-500">Geen druk. Geen schuldgevoel. Jouw tempo.</p>
             </div>
-          </div>
-        </div>
-      </div>
+            <button id="dark-mode-toggle" class="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm shadow-sm">
+                🌙 Nacht
+            </button>
+        </header>
+
+        <!-- Hoofdnavigatie (Tabbladen) -->
+        <nav class="flex flex-wrap gap-2 mb-6 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+            <button onclick="switchView('vandaag')" class="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white transition">🏠 Vandaag</button>
+            <button onclick="switchView('plannen')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">🎯 Plannen</button>
+            <button onclick="switchView('vitality')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">🌿 Vitaliteit</button>
+            <button onclick="switchView('geld')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">💶 Geld</button>
+            <button onclick="switchView('ideeen')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">📌 Ideeënkluis</button>
+            <button onclick="switchView('kennis')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">💡 Kennis & Hacks</button>
+        </nav>
+
+        <!-- ================= VIEW SECTIES ================= -->
+
+        <!-- 1. Vandaag (Standaard zichtbaar) -->
+        <section id="vandaag" class="view-section space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-2">✨ Mijn Dag Begint Nu</h2>
+                <p class="text-sm text-gray-500 mb-4">Waar staat je brein op dit moment naar?</p>
+                <!-- Energie toestand knoppen kunnen hier -->
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
+                    <span id="marble-count-badge" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">0 Knikkers</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">Elke kleine overwinning vult jouw virtuele glazen pot.</p>
+                <button id="add-marble-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition">
+                    + Knikker erbij ✨
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. Plannen -->
+        <section id="plannen" class="view-section hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-4">🎯 Plannen & Actie-Hub</h2>
+                <form id="task-form" class="flex gap-2 mb-4">
+                    <input type="text" id="task-input" placeholder="Wat wil je vandaag zachtjes aanpakken?" class="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium">Toevoegen</button>
+                </form>
+                <ul id="task-list" class="space-y-2"></ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-md font-bold text-indigo-900 mb-3">🌙 Het Avond-Pact</h3>
+                <form id="evening-pact-form" class="flex gap-2 mb-4">
+                    <input type="text" id="evening-pact-input" placeholder="Wat laat je vandaag achter?" class="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium">Vastleggen</button>
+                </form>
+                <ul id="evening-pact-list" class="space-y-2"></ul>
+            </div>
+        </section>
+
+        <!-- 3. Vitaliteit -->
+        <section id="vitality" class="view-section hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-4">🌿 Vitaliteit & Snaai-wachtkamer</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="p-4 bg-indigo-50 rounded-xl">
+                        <p class="text-xs text-indigo-600 font-semibold uppercase">Stappen vandaag</p>
+                        <p id="current-steps" class="text-2xl font-bold text-indigo-900">0</p>
+                        <form id="vitality-form" class="mt-2 flex gap-2">
+                            <input type="number" id="steps-input" placeholder="Aantal stappen" class="w-full px-3 py-1 text-sm border rounded-lg">
+                            <button type="submit" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded-lg">Log</button>
+                        </form>
+                    </div>
+                    <div class="p-4 bg-amber-50 rounded-xl">
+                        <p class="text-xs text-amber-600 font-semibold uppercase">Snaai-wachtkamer</p>
+                        <p id="snack-timer-display" class="text-sm font-medium text-amber-900 my-2">Klaar voor de pauze?</p>
+                        <p class="text-xs text-gray-500 mb-2">Voltooid: <span id="snack-wait-count">0</span> keer</p>
+                        <button id="start-snack-timer" class="px-3 py-1 bg-amber-600 text-white text-sm rounded-lg">Start 15-min pauze</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Geld -->
+        <section id="geld" class="view-section hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-2">💶 Geld-KomPAS</h2>
+                <div class="mb-4">
+                    <p class="text-xs text-gray-500 uppercase font-semibold">Actueel Banksaldo</p>
+                    <p id="current-balance" class="text-3xl font-bold text-indigo-900">€ 0.00</p>
+                </div>
+
+                <form id="transaction-form" class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+                    <input type="text" id="transaction-desc" placeholder="Omschrijving (bijv. Boodschappen)" class="px-3 py-2 border rounded-xl text-sm">
+                    <input type="number" step="0.01" id="transaction-amount" placeholder="Bedrag (bijv. -15.50 of 100)" class="px-3 py-2 border rounded-xl text-sm">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium">Transactie toevoegen</button>
+                </form>
+
+                <h3 class="text-sm font-bold text-gray-700 mb-2">Recente Transacties</h3>
+                <ul id="transaction-list" class="space-y-1 text-sm"></ul>
+            </div>
+        </section>
+
+        <!-- 5. Ideeënkluis -->
+        <section id="ideeen" class="view-section hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-4">📌 Ideeënkluis</h2>
+                <form id="idea-form" class="flex gap-2 mb-4">
+                    <input type="text" id="idea-input" placeholder="Vang een nieuw idee..." class="flex-1 px-4 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium">Bewaar</button>
+                </form>
+                <div id="idea-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- 6. Kennis & Hacks -->
+        <section id="kennis" class="view-section hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-2">💡 Kennis, Hacks & Backups</h2>
+                <p class="text-sm text-gray-500">Hier vind je jouw opgeslagen brein-hacks en kun je data exporteren/importeren.</p>
+            </div>
+        </section>
+
     </div>
 
-    <!-- PAGINA 2: PLANNEN -->
-    <div id="view-plan" class="hidden">
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>🎯 Zacht Planbord</h2>
-        <p class="subtitle">Kies behapbare acties voor nu. Geen stapel-stress.</p>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-          <input type="text" id="task-input" placeholder="Wat is één kleine stap..." style="flex: 1; margin-bottom: 0;" onkeypress="if(event.key === 'Enter') addTask()">
-          <button class="btn btn-small" onclick="addTask()">Toevoegen</button>
-        </div>
-
-        <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-          <button class="tab-btn active" id="filter-all" onclick="setTaskFilter('all')" style="padding: 6px; font-size: 0.75rem;">Alles</button>
-          <button class="tab-btn" id="filter-active" onclick="setTaskFilter('active')" style="padding: 6px; font-size: 0.75rem;">Open</button>
-          <button class="tab-btn" id="filter-done" onclick="setTaskFilter('done')" style="padding: 6px; font-size: 0.75rem;">Klaar</button>
-        </div>
-
-        <div id="tasks-list" class="item-list"></div>
-      </div>
-    </div>
-
-    <!-- PAGINA 3: VITALITEIT -->
-    <div id="view-vitality" class="hidden">
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>🌿 Balans & Gewoontes</h2>
-        <p class="subtitle">Kleine stempels voor vandaag. Zonder moeten.</p>
-        <div class="habit-grid">
-          <button class="habit-btn" id="habit-water" onclick="toggleHabit('water')">💧 Water gedronken</button>
-          <button class="habit-btn" id="habit-walk" onclick="toggleHabit('walk')">🚶 Frisse neus / beweging</button>
-          <button class="habit-btn" id="habit-screen" onclick="toggleHabit('screen')">📵 Schermpauze gehad</button>
-          <button class="habit-btn" id="habit-rest" onclick="toggleHabit('rest')">🧘 Moment rust gepakt</button>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>🍪 De Snaai-Wachtkamer</h2>
-        <p class="subtitle">Heb je trek in iets lekkers terwijl je eigenlijk vol of moe bent? Zet het even in de wachtkamer en geef jezelf 10 minuten.</p>
-        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-          <input type="text" id="snack-input" placeholder="Waar heb je trek in? (bijv. chocola)..." style="flex: 1; margin-bottom: 0;" onkeypress="if(event.key === 'Enter') addSnackWait()">
-          <button class="btn btn-small" onclick="addSnackWait()">In de wacht</button>
-        </div>
-        <div id="snack-list" class="item-list"></div>
-      </div>
-    </div>
-
-    <!-- PAGINA 4: GELD -->
-    <div id="view-money" class="hidden">
-      <div class="card" style="margin-bottom: 18px; background: linear-gradient(135deg, var(--card-bg), var(--item-bg)); border-left: 5px solid var(--accent-primary);">
-        <h2>💶 Geld-KomPAS</h2>
-        <p class="subtitle">Rust en overzicht in je financiën op jouw tempo.</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 14px; border-radius: 12px; border: 1.5px solid var(--input-border); margin-top: 10px;">
-          <div>
-            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Huidig Saldo</span>
-            <span id="money-balance-display" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-primary);">€ 0,00</span>
-          </div>
-          <button class="btn btn-small" onclick="openBalanceModal()">Saldo Aanpassen</button>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>➕ Transactie Toevoegen</h2>
-        <p class="subtitle">Voeg snel een inkomsten- of uitgavenpost toe.</p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <input type="text" id="tx-desc" placeholder="Omschrijving (bijv. Boodschappen)..." style="margin-bottom: 0;">
-          <div style="display: flex; gap: 8px;">
-            <input type="number" id="tx-amount" step="0.01" placeholder="Bedrag in €..." style="flex: 1; background: var(--input-bg); color: var(--text-main); border: 1.5px solid var(--input-border); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; outline: none;">
-            <select id="tx-type" style="background: var(--input-bg); color: var(--text-main); border: 1.5px solid var(--input-border); border-radius: 10px; padding: 10px; font-size: 0.9rem; outline: none;">
-              <option value="expense">➖ Uitgave</option>
-              <option value="income">➕ Inkomst</option>
-            </select>
-          </div>
-          <button class="btn" style="margin-top: 6px;" onclick="addTransaction()">Transactie Opslaan</button>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>📜 Recente Transacties</h2>
-        <p class="subtitle">Je laatste geldstromen op een rij.</p>
-        <div id="transactions-list" class="item-list"></div>
-      </div>
-    </div>
-
-    <!-- PAGINA 5: IDEEËN -->
-    <div id="view-ideas" class="hidden">
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>📌 Ideeënkluis</h2>
-        <p class="subtitle">Schrijf losse gedachten, plannen of ideeën van je af zodat je hoofd leeg blijft.</p>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-          <input type="text" id="idea-input" placeholder="Nieuw idee of gedachte..." style="flex: 1; margin-bottom: 0;" onkeypress="if(event.key === 'Enter') addIdea()">
-          <button class="btn btn-small" onclick="addIdea()">Opslaan</button>
-        </div>
-
-        <div id="ideas-list" class="item-list"></div>
-      </div>
-    </div>
-
-    <!-- PAGINA 6: KENNIS -->
-    <div id="view-hacks" class="hidden">
-      <div class="card" style="margin-bottom: 18px;">
-        <h2>💡 Kennis & Brein-Hacks</h2>
-        <p class="subtitle">Inzichten speciaal afgestemd op rust, focus en het doorbreken van startuitstel.</p>
-        
-        <div class="item-list" style="gap: 12px;">
-          <div class="item-card" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-            <span style="font-weight: 600; color: var(--accent-primary);">🧠 De 5-minuten regel</span>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Spreek met jezelf af dat je slechts 5 minuten iets probeert te doen. Vaak is starten het moeilijkste stukje.</span>
-          </div>
-          <div class="item-card" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-            <span style="font-weight: 600; color: var(--accent-primary);">🏺 Focus op micro-stappen</span>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Grote bergen voelen overweldigend. Hak ze in micro-stapjes en verdien je knikkers in de Trots-Kluis.</span>
-          </div>
-          <div class="item-card" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-            <span style="font-weight: 600; color: var(--accent-primary);">🌿 Geen schuldgevoel</span>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Een rustige dag of even niks doen is geen falen, maar noodzakelijk om op te laden voor morgen.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Koppeling naar je JavaScript -->
-  <script type="module" src="js/app.js"></script>
+    <!-- Modulaire Hoofdscript -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
