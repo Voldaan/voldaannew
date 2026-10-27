@@ -8,6 +8,7 @@ const defaultData = {
     tasks: [],
     eveningPact: [],
     ideas: [],
+    marbles: 0, // <-- Voeg deze toe
     vitality: {
         sleep: [],
         steps: 0,
