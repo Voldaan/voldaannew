@@ -1,18 +1,22 @@
-// js/app.js (bijgewerkt)
+// js/app.js
 import { loadAppData, saveAppData } from './modules/storage.js';
 import { initMoneyModule } from './modules/money.js';
-import { initTasksModule } from './modules/tasks.js'; // <-- Geïmporteerd
+import { initTasksModule } from './modules/tasks.js';
+import { initVitalityModule } from './modules/vitality.js';
+import { initIdeasModule } from './modules/ideas.js';
 
 let appData = loadAppData();
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Voldaan app is geladen en klaar voor actie!");
+    console.log("Voldaan app is modulair geladen en klaar voor actie!");
     
     initNavigation();
     
-    // Initialiseer de modules
+    // Initialiseer al je modules
     initMoneyModule(appData);
-    initTasksModule(appData); // <-- Aangeroepen
+    initTasksModule(appData);
+    initVitalityModule(appData);
+    initIdeasModule(appData);
 });
 
 function initNavigation() {
