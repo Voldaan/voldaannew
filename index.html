@@ -6,7 +6,98 @@
     <title>Voldaan - Rust & Structuur</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voldaan - Rust & Structuur</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Verberg scrollbar voor een strakke mobiele look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Zorg dat knoppen en inputs op mobiel niet inzoomen en lekker wegtikken */
+        input, select, textarea, button {
+            font-size: 16px !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="max-w-4xl mx-auto px-4 pt-6 pb-4">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black text-indigo-950 tracking-tight">Voldaan</h1>
+                <p class="text-xs text-gray-500">Geen druk. Geen schuldgevoel. Jouw tempo.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigatie Tabbladen (Horizontaal scrollbaar op mobiel) -->
+    <nav class="max-w-4xl mx-auto px-4 mb-6">
+        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 border-b border-gray-100">
+            <button onclick="switchView('vandaag')" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-sm transition">✨ Vandaag</button>
+            <button onclick="switchView('plannen')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">🎯 Plannen</button>
+            <button onclick="switchView('vitality')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">🌿 Vitaliteit</button>
+            <button onclick="switchView('geld')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">💶 Geld</button>
+            <button onclick="switchView('ideeen')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">📌 Ideeënkluis</button>
+            <button onclick="switchView('kennis')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">💡 Kennis & Hacks</button>
+            <button onclick="switchView('inzichten')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">📊 Inzichten</button>
+        </div>
+    </nav>
+
+    <!-- Hoofdcontainer voor alle Tabbladen -->
+    <main class="max-w-4xl mx-auto px-4">
+        
+        <!-- 1. Vandaag Tabblad -->
+        <section id="vandaag" class="view-section space-y-6">
+            <!-- Wordt dynamisch gevuld door vandaag.js -->
+        </section>
+
+        <!-- 2. Plannen Tabblad -->
+        <section id="plannen" class="view-section hidden space-y-6">
+            <!-- Wordt dynamisch gevuld door plannen.js -->
+        </section>
+
+        <!-- 3. Vitaliteit Tabblad -->
+        <section id="vitality" class="view-section hidden space-y-6">
+            <!-- Wordt dynamisch gevuld door vitality.js -->
+        </section>
+
+        <!-- 4. Geld Tabblad -->
+        <section id="geld" class="view-section hidden space-y-6">
+            <!-- Wordt dynamisch gevuld door money.js -->
+        </section>
+
+        <!-- 5. Ideeënkluis Tabblad -->
+        <section id="ideeen" class="view-section hidden space-y-6">
+            <!-- Wordt dynamisch gevuld door ideas.js -->
+        </section>
+
+        <!-- 6. Kennis & Hacks Tabblad -->
+        <section id="kennis" class="view-section hidden space-y-6">
+            <!-- Wordt dynamisch gevuld door knowledge.js -->
+        </section>
+
+        <!-- 7. Inzichten Tabblad -->
+        <section id="inzichten" class="view-section hidden space-y-6">
+            <!-- Wordt dynamisch gevuld door insights.js -->
+        </section>
+
+    </main>
+
+    <!-- Laad de hoofdapplicatie als ES Module -->
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
         /* Verberg scrollbar voor een strakke mobiele look */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
