@@ -86,7 +86,6 @@ header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
 }
 .energy-btn.selected { border-color: var(--accent-primary); background-color: rgba(90, 103, 216, 0.15); font-weight: 600; }
 
-/* --- VITALITEIT / HABIT GRID --- */
 .habit-grid { 
   display: grid; 
   grid-template-columns: repeat(2, 1fr); 
@@ -139,7 +138,6 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus { border-colo
 }
 @keyframes dropMarble { 0% { transform: translateY(-30px) scale(1.3); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
 
-/* --- PLANBORD EXTRA STYLING --- */
 .item-card.done span {
   text-decoration: line-through;
   opacity: 0.5;
