@@ -18,7 +18,7 @@ export function initPlannenModule(appData) {
             
             <form id="evening-pact-form" class="flex flex-col gap-2 mb-3">
                 <input type="text" id="evening-pact-input" placeholder="Bijv. Loslaten wat vandaag niet af is..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-medium hover:bg-indigo-700">Vastleggen</button>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Vastleggen</button>
             </form>
             <ul id="evening-pact-list" class="space-y-2"></ul>
             <div id="pact-archief-box" class="hidden mt-3 pt-3 border-t border-gray-100">
@@ -41,7 +41,7 @@ export function initPlannenModule(appData) {
                     <select id="task-category" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white">
                         ${PLAN_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
                     </select>
-                    <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium">+ Taak</button>
+                    <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">+ Taak</button>
                 </div>
             </form>
 
@@ -78,7 +78,7 @@ export function initPlannenModule(appData) {
             <form id="goal-form" class="flex flex-col gap-2 mb-3">
                 <input type="text" id="goal-title" placeholder="Doel (bijv. 10 min gitaar)..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
                 <input type="text" id="goal-shield" placeholder="Zacht schild (als het tegenzit)..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-medium">+ Doel toevoegen</button>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Doel toevoegen</button>
             </form>
 
             <div id="goal-list" class="space-y-3"></div>
