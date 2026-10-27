@@ -49,7 +49,7 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. De Trots-Kluis -->
+        <!-- 2. De Trots-Kluis (Visuele Knikkerpot) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
@@ -57,6 +57,13 @@ export function initVandaagModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Elke kleine overwinning vult jouw virtuele glazen pot met gekleurde knikkers.</p>
             
+            <!-- Visuele Knikkerpot Container -->
+            <div class="p-4 bg-gradient-to-b from-indigo-50/80 to-indigo-100/50 border border-indigo-200/60 rounded-2xl mb-3 flex flex-col items-center text-center shadow-inner">
+                <div class="text-2xl mb-1">🏺✨</div>
+                <p class="text-xs font-bold text-indigo-950 mb-1">Jouw Gevulde Knikkerpot</p>
+                <div id="marble-visual-pot" class="flex flex-wrap gap-1.5 justify-center max-h-28 overflow-y-auto p-2 w-full"></div>
+            </div>
+
             <div class="flex flex-col gap-2 mb-3">
                 <div class="grid grid-cols-2 gap-2">
                     <select id="marble-cat-filter" class="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-xl">
@@ -141,10 +148,14 @@ function initVandaagLogic(appData) {
             const icon = btn.getAttribute('data-icon');
             const newMood = { id: Date.now(), mood, icon, date: new Date().toISOString() };
             appData.moods.push(newMood);
+            
+            // Automatisch knikker erbij voor dagstart check-in
+            voegTrotsKnikkerToe(appData, `Dagstart check-in: ${mood}`, 'Dagstart');
             saveAppData(appData);
             
             showToast(`Mood geregistreerd: ${icon} ${mood} 🪷`);
             renderMoodHistory(appData);
+            renderTrotsKluis(appData);
         });
     });
 
@@ -166,6 +177,7 @@ function initVandaagLogic(appData) {
 function renderTrotsKluis(appData) {
     const listEl = document.getElementById('marble-list');
     const countBadge = document.getElementById('marble-count-badge');
+    const visualPot = document.getElementById('marble-visual-pot');
     const catFilter = document.getElementById('marble-cat-filter').value;
     const dateFilter = document.getElementById('marble-date-filter').value;
     const specificDateInput = document.getElementById('marble-specific-date').value;
@@ -176,8 +188,15 @@ function renderTrotsKluis(appData) {
     const marbles = appData.marbles || [];
     countBadge.textContent = `${marbles.length} Knikkers`;
 
+    // Visuele knikkerpot vullen met gekleurde knikkers
+    const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-rose-500', 'bg-teal-500'];
+    visualPot.innerHTML = marbles.length === 0 ? '<p class="text-[11px] text-indigo-400 italic">Nog geen knikkers in de pot. Voltooi taken of check-ins!</p>' : marbles.map((m, idx) => {
+        const colorClass = colors[idx % colors.length];
+        return `<div class="w-6 h-6 rounded-full ${colorClass} shadow-sm border border-white/80 flex items-center justify-center text-[10px] text-white font-bold cursor-pointer transition transform hover:scale-110" title="[${m.category || 'Algemeen'}] ${m.text || m.reason || 'Knikker'}">✨</div>`;
+    }).join('');
+
     const filtered = marbles.filter(m => {
-        const matchCat = catFilter === 'Alle' || m.category === catFilter;
+        const matchCat = catFilter === 'Alle' || (m.category || 'Algemeen') === catFilter;
         let matchDate = checkDateFilter(m.date, dateFilter);
         if (dateFilter === 'specific' && specificDateInput) {
             matchDate = new Date(m.date).toDateString() === new Date(specificDateInput).toDateString();
@@ -185,7 +204,7 @@ function renderTrotsKluis(appData) {
         return matchCat && matchDate;
     });
 
-    listEl.innerHTML = filtered.length === 0 ? `<p class="text-xs text-gray-400 italic">Geen knikkers gevonden voor deze selectie.</p>` : filtered.slice(-5).reverse().map(m => `
+    listEl.innerHTML = filtered.length === 0 ? `<p class="text-xs text-gray-400 italic">Geen knikkers gevonden voor deze selectie.</p>` : filtered.slice(-6).reverse().map(m => `
         <div class="flex justify-between items-center p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs">
             <div>
                 <span class="font-bold text-indigo-900 px-2 py-0.5 bg-indigo-100/70 rounded-md mr-1.5">[${m.category || 'Algemeen'}]</span> 
@@ -303,7 +322,6 @@ function renderMoodHistory(appData) {
 
 function renderActieHub(appData) {
     const listEl = document.getElementById('actie-hub-list');
-    // Haalt taken op uit zowel de nieuwe taken als de uit de backup geïmporteerde taken
     const allTasks = [...(appData.tasks || []), ...(appData.plans?.tasks || [])];
     const openTasks = allTasks.filter(t => !t.archived && !t.done && !t.completed).slice(0, 5);
     
@@ -322,13 +340,13 @@ function renderActieHub(appData) {
             voegTrotsKnikkerToe(appData, `Taak volbracht: ${task.text}`, task.category || 'Taken');
             saveAppData(appData);
             renderActieHub(appData);
+            renderTrotsKluis(appData);
         }
     };
 }
 
 function renderIdeeVanDeDag(appData) {
     const textEl = document.getElementById('idea-day-text');
-    // Haalt ideeën op uit zowel de ideeënkluis als de oude backup
     const allIdeas = [...(appData.ideasModule?.ideas || []), ...(appData.ideas || [])].filter(i => !i.archived);
     const randomIdea = allIdeas.length > 0 ? allIdeas[Math.floor(Math.random() * allIdeas.length)] : null;
 
