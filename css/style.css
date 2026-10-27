@@ -86,13 +86,31 @@ header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
 }
 .energy-btn.selected { border-color: var(--accent-primary); background-color: rgba(90, 103, 216, 0.15); font-weight: 600; }
 
-/* --- VITALITEIT / HABIT GRID --- */
-.habit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
-.habit-btn {
-  background: var(--item-bg); border: 1.5px solid var(--input-border); color: var(--text-main);
-  border-radius: 10px; padding: 12px 10px; font-size: 0.82rem; cursor: pointer; text-align: center; transition: all 0.2s;
+/* --- VITALITEIT / HABIT GRID (GECORRIGEERD) --- */
+.habit-grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 8px; 
+  margin-top: 8px; 
 }
-.habit-btn.completed { border-color: #38A169; background-color: rgba(56, 161, 105, 0.15); font-weight: 600; color: #38A169; }
+.habit-btn {
+  background: var(--item-bg); 
+  border: 1.5px solid var(--input-border); 
+  color: var(--text-main);
+  border-radius: 10px; 
+  padding: 12px 10px; 
+  font-size: 0.82rem; 
+  cursor: pointer; 
+  text-align: center; 
+  transition: all 0.2s;
+  width: 100%;
+}
+.habit-btn.completed { 
+  border-color: #38A169; 
+  background-color: rgba(56, 161, 105, 0.15); 
+  font-weight: 600; 
+  color: #38A169; 
+}
 
 input[type="text"] {
   width: 100%; background: var(--input-bg); color: var(--text-main); border: 1.5px solid var(--input-border);
