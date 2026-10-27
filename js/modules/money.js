@@ -9,9 +9,69 @@ export function initMoneyModule(appData) {
     const container = document.getElementById('geld');
     if (!container) return;
 
-    // Zorg ervoor dat appData.money altijd correct gevuld is uit de migratie
-    if (!appData.money) {
-        appData.money = { balance: 37.70, transactions: [], expectedExpenses: [], impulseWants: [], savingsPots: [], financialProjects: [], studyDebt: { total: 41939, paid: 477.35, monthly: 477.35 } };
+    // Directe fallback en inlezen van zowel geneste appData als oude backup sleutels uit localStorage
+    if (!appData.money) appData.money = {};
+
+    let rawBalance = localStorage.getItem('voldaan_bank_balance');
+    let rawTransactions = localStorage.getItem('voldaan_transactions');
+    let rawBills = localStorage.getItem('voldaan_fixed_bills');
+    let rawProjects = localStorage.getItem('voldaan_ruimte_projects');
+    let rawStudy = localStorage.getItem('voldaan_study_debt');
+
+    if (rawBalance && (!appData.money.balance || appData.money.balance === 0)) {
+        appData.money.balance = parseFloat(rawBalance) || 37.70;
+    }
+
+    if ((!appData.money.transactions || appData.money.transactions.length === 0) && rawTransactions) {
+        try {
+            const parsedTx = JSON.parse(rawTransactions);
+            appData.money.transactions = parsedTx.map(tx => ({
+                id: tx.id || Date.now(),
+                description: tx.title || tx.description || 'Transactie',
+                amount: tx.type === 'EXPENSE' ? -Math.abs(tx.amount) : Math.abs(tx.amount),
+                category: tx.category || 'Algemeen',
+                label: tx.label || 'Geen bewustwordingslabel',
+                date: tx.datetime || tx.created || new Date().toISOString()
+            }));
+        } catch (e) { console.error("Fout bij inlezen oude transacties:", e); }
+    }
+
+    if ((!appData.money.expectedExpenses || appData.money.expectedExpenses.length === 0) && rawBills) {
+        try {
+            const parsedBills = JSON.parse(rawBills);
+            appData.money.expectedExpenses = parsedBills.map(ex => ({
+                id: ex.id || Date.now(),
+                description: ex.name || 'Verwachte uitgave',
+                amount: ex.amount || ex.rawAmount || 0,
+                method: ex.type || 'Automatische Incasso',
+                category: 'Geld & Aflossingen',
+                date: ex.date || new Date().toISOString().slice(0,10),
+                completed: ex.paid || false
+            }));
+        } catch (e) { console.error("Fout bij inlezen oude vaste lasten:", e); }
+    }
+
+    if ((!appData.money.financialProjects || appData.money.financialProjects.length === 0) && rawProjects) {
+        try {
+            const parsedProj = JSON.parse(rawProjects);
+            appData.money.financialProjects = parsedProj.map(p => ({
+                id: p.id || Date.now(),
+                title: p.title,
+                target: p.totalAmount || 0,
+                freed: p.repaidAmount || 0,
+                history: p.history || []
+            }));
+        } catch (e) { console.error("Fout bij inlezen oude ruimte projecten:", e); }
+    }
+
+    if (!appData.money.studyDebt && rawStudy) {
+        try {
+            appData.money.studyDebt = JSON.parse(rawStudy);
+        } catch (e) { console.error("Fout bij inlezen studieschuld:", e); }
+    }
+
+    if (!appData.money.studyDebt) {
+        appData.money.studyDebt = { total: 41939, paid: 477.35, monthly: 477.35 };
     }
 
     container.innerHTML = `
