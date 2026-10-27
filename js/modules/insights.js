@@ -10,7 +10,7 @@ export function initInsightsModule(appData) {
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900 mb-1">📊 Jouw Reis in Cijfers & Inzichten</h2>
-                    <p class="text-xs text-gray-500">Gepersonaliseerde inzichten op basis van data uit jouw eigen app.</p>
+                    <p class="text-xs text-gray-500">Gepersonaliseerde inzichten en verbanden op basis van data uit jouw eigen app.</p>
                 </div>
                 <select id="insights-date-filter" class="text-xs bg-white border border-gray-200 rounded-xl px-3 py-2">
                     <option value="all">Alles</option>
@@ -26,10 +26,10 @@ export function initInsightsModule(appData) {
                 <!-- Wordt dynamisch gevuld -->
             </div>
 
-            <!-- Visuele Trend & Zacht Inzicht -->
+            <!-- Visuele Trend & Verbanden -->
             <div class="space-y-3">
                 <div class="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl">
-                    <p class="text-[11px] text-indigo-600 font-bold uppercase mb-1">📈 Live Trend-Analyse</p>
+                    <p class="text-[11px] text-indigo-600 font-bold uppercase mb-1">📈 Live Verbanden & Trend-Analyse</p>
                     <p id="insights-trend-text" class="text-xs text-indigo-950 font-medium leading-relaxed"></p>
                 </div>
 
@@ -44,10 +44,6 @@ export function initInsightsModule(appData) {
     initInsightsLogic(appData);
 }
 
-// ---------------------------------------------------------
-// Inzichten Logica & Filtering
-// ---------------------------------------------------------
-
 function initInsightsLogic(appData) {
     const filterSelect = document.getElementById('insights-date-filter');
     filterSelect.onchange = () => renderInsightsData(appData);
@@ -61,7 +57,7 @@ function renderInsightsData(appData) {
 
     // Filter datasets op basis van geselecteerde datumfilter
     const marbles = (appData.marbles || []).filter(m => checkDateFilter(m.date, filter));
-    const tasks = (appData.tasks || []).filter(t => t.completed && checkDateFilter(t.date, filter));
+    const tasks = [...(appData.tasks || []), ...(appData.plans?.tasks || [])].filter(t => (t.completed || t.done) && checkDateFilter(t.date || t.doneAt, filter));
     const pacts = (appData.eveningPacts || []).filter(p => !p.archived && checkDateFilter(p.date, filter));
     const sports = (appData.vitality?.sport || []).filter(s => checkDateFilter(s.date, filter));
     const moods = (appData.moods || []).filter(m => checkDateFilter(m.date, filter));
@@ -94,12 +90,18 @@ function renderInsightsData(appData) {
         </div>
     `;
 
-    // Dynamische trend tekst genereren op basis van data
-    if (marbles.length > 5 || tasks.length > 5) {
-        trendText.textContent = `Geweldige voortgang! In de geselecteerde periode heb je ${marbles.length} trotse knikkers verzameld en ${tasks.length} taken voltooid. Je houdt een mooie balans vast.`;
-    } else if (moods.length > 0) {
-        trendText.textContent = `Je hebt ${moods.length} momenten ingecheckt. Bewust stilstaan bij je mood is de eerste stap naar rust in je hoofd.`;
+    // Dynamische trend en verbanden tekst genereren
+    const focusMoods = moods.filter(m => m.mood === 'Gefocust').length;
+    const tiredMoods = moods.filter(m => m.mood === 'Wazig / Moe').length;
+
+    let verbandMsg = "";
+    if (focusMoods > tiredMoods) {
+        verbandMsg = `In deze periode zie je een mooie lijn van focus (${focusMoods}x ingecheckt). Dit correleert direct met je ${tasks.length} voltooide taken; wanneer je helder van start gaat, vloeien de acties vanzelf mee.`;
+    } else if (tiredMoods > 0) {
+        verbandMsg = `Er zijn ${tiredMoods} momenten van "Wazig / Moe" geregistreerd. De app laat zien dat rust nemen en je avond-pacten je helpen om de balans te bewaken zonder jezelf te overvragen.`;
     } else {
-        trendText.textContent = `Er is voor deze periode nog niet heel veel data geregistreerd. Voeg knikkers of taken toe om live trends te ontdekken!`;
+        verbandMsg = `Je hebt ${marbles.length} trotse knikkers verzameld en ${tasks.length} taken voltooid in deze selectie. Blijf in je eigen tempo bouwen aan je zachte kompas!`;
     }
+
+    trendText.textContent = verbandMsg;
 }
