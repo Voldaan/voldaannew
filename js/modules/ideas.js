@@ -24,12 +24,22 @@ export function initIdeasModule(appData) {
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">📌 Ideeënkluis & Post-its</h2>
                 <div class="flex gap-2">
-                    <button id="manage-idea-categories-btn" class="text-xs text-indigo-600 hover:underline">Categorieën</button>
+                    <button id="open-idea-cat-manager" class="text-xs text-indigo-600 hover:underline">Categorieën</button>
                     <button id="open-all-ideas-modal" class="text-xs text-indigo-600 hover:underline font-medium">Alle Post-its</button>
                 </div>
             </div>
             <p class="text-xs text-gray-500 mb-3">Schrijf je gedachten van je af en laat ze rustig sudderen.</p>
             
+            <!-- Inline Categorie Beheer Box -->
+            <div id="idea-cat-manager-box" class="hidden mb-3 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2 text-xs">
+                <p class="font-bold text-indigo-950">Categorieën Beheren</p>
+                <div class="flex gap-2">
+                    <input type="text" id="new-idea-cat-input" placeholder="Nieuwe categorie..." class="flex-1 px-3 py-1.5 bg-white border rounded-xl">
+                    <button id="add-idea-cat-submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen</button>
+                </div>
+                <div id="idea-category-chips-list" class="flex flex-wrap gap-1.5 pt-1"></div>
+            </div>
+
             <form id="idea-form" class="space-y-2 mb-3">
                 <textarea id="idea-text" rows="3" placeholder="Typ een willekeurig idee of wilde gedachte..." class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500" required></textarea>
                 <div class="grid grid-cols-2 gap-2">
@@ -58,7 +68,6 @@ export function initIdeasModule(appData) {
 }
 
 function initIdeasModals(appData) {
-    // 1. Modal voor Alle Post-its / Archief
     const allIdeasModalHTML = `
         <div id="all-ideas-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -80,7 +89,6 @@ function initIdeasModals(appData) {
         </div>
     `;
 
-    // 2. Modal voor Project toevoegen
     const projectModalHTML = `
         <div id="idea-project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -114,7 +122,6 @@ function initIdeasModals(appData) {
         </div>
     `;
 
-    // 3. Modal voor Post-it Bewerken
     const editIdeaModalHTML = `
         <div id="edit-idea-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
@@ -200,22 +207,21 @@ function initIdeasLogic(appData) {
     const ideasMod = appData.ideasModule;
     updateIdeaCategoryDropdowns(ideasMod);
 
-    document.getElementById('manage-idea-categories-btn').onclick = () => {
-        const action = prompt("Wil je een categorie Toevoegen of Verwijderen? Typ 'toevoegen' of 'verwijderen':");
-        if (action && action.toLowerCase() === 'toevoegen') {
-            const cat = prompt("Naam van nieuwe categorie:");
-            if (cat && !ideasMod.categories.includes(cat)) {
-                ideasMod.categories.push(cat);
-                saveAppData(appData);
-                updateIdeaCategoryDropdowns(ideasMod);
-            }
-        } else if (action && action.toLowerCase() === 'verwijderen') {
-            const cat = prompt(`Welke categorie verwijderen? (${ideasMod.categories.join(', ')})`);
-            if (cat && ideasMod.categories.includes(cat)) {
-                ideasMod.categories = ideasMod.categories.filter(c => c !== cat);
-                saveAppData(appData);
-                updateIdeaCategoryDropdowns(ideasMod);
-            }
+    const catBox = document.getElementById('idea-cat-manager-box');
+    document.getElementById('open-idea-cat-manager').onclick = () => {
+        catBox.classList.toggle('hidden');
+        renderIdeaCategoryChips(appData);
+    };
+
+    document.getElementById('add-idea-cat-submit').onclick = () => {
+        const input = document.getElementById('new-idea-cat-input');
+        const val = input.value.trim();
+        if (val && !ideasMod.categories.includes(val)) {
+            ideasMod.categories.push(val);
+            saveAppData(appData);
+            updateIdeaCategoryDropdowns(ideasMod);
+            renderIdeaCategoryChips(appData);
+            input.value = '';
         }
     };
 
@@ -249,6 +255,26 @@ function updateIdeaCategoryDropdowns(ideasMod) {
     if (editCatSelect) {
         editCatSelect.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
+}
+
+function renderIdeaCategoryChips(appData) {
+    const chipsList = document.getElementById('idea-category-chips-list');
+    if (!chipsList) return;
+    const cats = appData.ideasModule.categories || DEFAULT_IDEA_CATEGORIES;
+
+    chipsList.innerHTML = cats.map(c => `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-indigo-900 font-medium text-[11px]">
+            ${c}
+            ${cats.length > 1 ? `<button onclick="window.removeIdeaCategory('${c}')" class="text-red-400 hover:text-red-600 font-bold ml-1">✕</button>` : ''}
+        </span>
+    `).join('');
+
+    window.removeIdeaCategory = (catName) => {
+        appData.ideasModule.categories = appData.ideasModule.categories.filter(c => c !== catName);
+        saveAppData(appData);
+        updateIdeaCategoryDropdowns(appData.ideasModule);
+        renderIdeaCategoryChips(appData);
+    };
 }
 
 function renderIdeasView(appData) {
