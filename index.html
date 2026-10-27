@@ -3,90 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voldaan - Rust & Structuur</title>
+    <title>Voldaan — Jouw Zachte Kompas</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Verberg scrollbar voor een strakke mobiele look */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        /* Zorg dat knoppen en inputs op mobiel niet inzoomen en lekker wegtikken */
-        input, select, textarea, button {
-            font-size: 16px !important;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input, select, textarea, button { font-size: 16px !important; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen pb-12">
+<body class="bg-slate-50 text-gray-800 antialiased min-h-screen flex flex-col pb-24">
 
     <!-- Header -->
-    <header class="max-w-4xl mx-auto px-4 pt-6 pb-4">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-black text-indigo-950 tracking-tight">Voldaan</h1>
-                <p class="text-xs text-gray-500">Geen druk. Geen schuldgevoel. Jouw tempo.</p>
-            </div>
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-40 px-4 py-3 shadow-sm">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <h1 class="text-lg font-bold text-indigo-950 flex items-center gap-2">
+                <span>🪷</span> Voldaan
+            </h1>
+            <span class="text-xs text-indigo-600 font-medium bg-indigo-50 px-2.5 py-1 rounded-full">Zacht & Zonder Oordeel</span>
         </div>
     </header>
 
-    <!-- Navigatie Tabbladen (Horizontaal scrollbaar op mobiel) -->
-    <nav class="max-w-4xl mx-auto px-4 mb-6">
-        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 border-b border-gray-100">
-            <button onclick="switchView('vandaag')" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-sm transition">✨ Vandaag</button>
-            <button onclick="switchView('plannen')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">🎯 Plannen</button>
-            <button onclick="switchView('vitality')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">🌿 Vitaliteit</button>
-            <button onclick="switchView('geld')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">💶 Geld</button>
-            <button onclick="switchView('ideeen')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">📌 Ideeënkluis</button>
-            <button onclick="switchView('kennis')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">💡 Kennis & Hacks</button>
-            <button onclick="switchView('inzichten')" class="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-xl text-xs font-bold whitespace-nowrap hover:bg-gray-50 transition">📊 Inzichten</button>
+    <!-- Main Content Container -->
+    <main class="max-w-3xl w-full mx-auto p-4 flex-1">
+        <!-- 1. Vandaag -->
+        <section id="vandaag" class="view-section"></section>
+        <!-- 2. Planbord -->
+        <section id="plannen" class="view-section hidden"></section>
+        <!-- 3. Vitaliteit -->
+        <section id="vitality" class="view-section hidden"></section>
+        <!-- 4. Geld -->
+        <section id="geld" class="view-section hidden"></section>
+        <!-- 5. Ideeënkluis -->
+        <section id="ideeen" class="view-section hidden"></section>
+        <!-- 6. Kennis & Hacks -->
+        <section id="kennis" class="view-section hidden"></section>
+        <!-- 7. Inzichten -->
+        <section id="inzichten" class="view-section hidden"></section>
+        <!-- 8. Luchtig -->
+        <section id="luchtig" class="view-section hidden"></section>
+    </main>
+
+    <!-- Meescrollende Onderste Navigatiebalk (Mobiel geoptimaliseerd) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg">
+        <div class="max-w-3xl mx-auto flex overflow-x-auto no-scrollbar py-2 px-2 gap-1 justify-start sm:justify-center">
+            <button data-target="vandaag" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap bg-indigo-600 text-white shadow-sm">
+                <span>✨</span><span>Vandaag</span>
+            </button>
+            <button data-target="plannen" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>🎯</span><span>Planbord</span>
+            </button>
+            <button data-target="vitality" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>⚡</span><span>Vitaliteit</span>
+            </button>
+            <button data-target="geld" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>💶</span><span>Geld</span>
+            </button>
+            <button data-target="ideeen" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>💡</span><span>Ideeën</span>
+            </button>
+            <button data-target="kennis" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>🧠</span><span>Kennis</span>
+            </button>
+            <button data-target="inzichten" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>📊</span><span>Inzichten</span>
+            </button>
+            <button data-target="luchtig" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
+                <span>🎈</span><span>Luchtig</span>
+            </button>
         </div>
     </nav>
 
-    <!-- Hoofdcontainer voor alle Tabbladen -->
-    <main class="max-w-4xl mx-auto px-4">
-        
-        <!-- 1. Vandaag Tabblad -->
-        <section id="vandaag" class="view-section space-y-6">
-            <!-- Wordt dynamisch gevuld door vandaag.js -->
-        </section>
-
-        <!-- 2. Plannen Tabblad -->
-        <section id="plannen" class="view-section hidden space-y-6">
-            <!-- Wordt dynamisch gevuld door plannen.js -->
-        </section>
-
-        <!-- 3. Vitaliteit Tabblad -->
-        <section id="vitality" class="view-section hidden space-y-6">
-            <!-- Wordt dynamisch gevuld door vitality.js -->
-        </section>
-
-        <!-- 4. Geld Tabblad -->
-        <section id="geld" class="view-section hidden space-y-6">
-            <!-- Wordt dynamisch gevuld door money.js -->
-        </section>
-
-        <!-- 5. Ideeënkluis Tabblad -->
-        <section id="ideeen" class="view-section hidden space-y-6">
-            <!-- Wordt dynamisch gevuld door ideas.js -->
-        </section>
-
-        <!-- 6. Kennis & Hacks Tabblad -->
-        <section id="kennis" class="view-section hidden space-y-6">
-            <!-- Wordt dynamisch gevuld door knowledge.js -->
-        </section>
-
-        <!-- 7. Inzichten Tabblad -->
-        <section id="inzichten" class="view-section hidden space-y-6">
-            <!-- Wordt dynamisch gevuld door insights.js -->
-        </section>
-
-    </main>
-
-    <!-- Laad de hoofdapplicatie als ES Module -->
+    <!-- App Entry Script -->
     <script type="module" src="./js/app.js"></script>
 </body>
 </html>
