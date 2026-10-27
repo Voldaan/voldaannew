@@ -60,7 +60,7 @@
         </h2>
         <p class="subtitle">Elke kleine overwinning vult jouw virtuele glazen pot.</p>
 
-        <button class="btn btn-small" style="margin-bottom: 14px;" onclick="addMarble('Eerste test knikker!', 'Algemeen')">+ Knikker erbij ✨</button>
+        <button class="btn btn-small" style="margin-bottom: 14px;" onclick="addMarble('Handmatige knikker ✨', 'Algemeen')">+ Knikker erbij ✨</button>
 
         <div style="display: flex; justify-content: center; margin: 1.2rem 0;">
           <div style="position: relative; width: 180px; height: 210px;">
@@ -75,13 +75,22 @@
 
     <!-- PAGINA 2: PLANNEN -->
     <div id="view-plan" class="hidden">
-      <div class="card">
+      <div class="card" style="margin-bottom: 18px;">
         <h2>🎯 Zacht Planbord</h2>
-        <p class="subtitle">Kies behapbare acties voor nu.</p>
-        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-          <input type="text" id="task-input" placeholder="Kleine actie voor nu..." style="flex: 1; margin-bottom: 0;">
+        <p class="subtitle">Kies behapbare acties voor nu. Geen stapel-stress.</p>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <input type="text" id="task-input" placeholder="Wat is één kleine stap..." style="flex: 1; margin-bottom: 0;" onkeypress="if(event.key === 'Enter') addTask()">
           <button class="btn btn-small" onclick="addTask()">Toevoegen</button>
         </div>
+
+        <!-- Filter knopjes voor het planbord -->
+        <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+          <button class="tab-btn active" id="filter-all" onclick="setTaskFilter('all')" style="padding: 6px; font-size: 0.75rem;">Alles</button>
+          <button class="tab-btn" id="filter-active" onclick="setTaskFilter('active')" style="padding: 6px; font-size: 0.75rem;">Open</button>
+          <button class="tab-btn" id="filter-done" onclick="setTaskFilter('done')" style="padding: 6px; font-size: 0.75rem;">Klaar</button>
+        </div>
+
         <div id="tasks-list" class="item-list"></div>
       </div>
     </div>
