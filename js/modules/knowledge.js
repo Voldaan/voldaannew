@@ -11,21 +11,19 @@ export function initKnowledgeModule(appData) {
     ];
 
     container.innerHTML = `
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
-            <h2 class="text-lg font-bold text-indigo-900 mb-1">💡 Kennis, Hacks & Backups</h2>
-            <p class="text-sm text-gray-500 mb-4">Live stroom van inzichten afgestemd op focus en zachte keuzen.</p>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+            <h2 class="text-base font-bold text-indigo-900 mb-1">💡 Kennis, Hacks & Backups</h2>
+            <p class="text-xs text-gray-500 mb-3">Live stroom van inzichten afgestemd op focus en zachte keuzen.</p>
             
-            <div id="tip-card" class="p-5 bg-indigo-50/60 border border-indigo-100 rounded-2xl mb-4 text-sm text-indigo-950 font-medium">
+            <div id="tip-card" class="p-4 bg-indigo-50/60 border border-indigo-100 rounded-xl mb-3 text-xs text-indigo-950 font-medium leading-relaxed">
                 ${tips[0]}
             </div>
-            <button id="next-tip-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition mb-6">Andere tip ✨</button>
+            <button id="next-tip-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition mb-5">Andere tip ✨</button>
 
             <div class="pt-4 border-t border-gray-100">
-                <h3 class="text-sm font-bold text-indigo-900 mb-2">Gegevensbeheer & Backup</h3>
+                <h3 class="text-xs font-bold text-indigo-900 mb-1">Gegevensbeheer & Backup</h3>
                 <p class="text-xs text-gray-500 mb-3">Bewaar je opgebouwde progressie veilig op je eigen toestel.</p>
-                <div class="flex gap-2">
-                    <button id="export-backup-btn" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold">Exporteer Backup (JSON)</button>
-                </div>
+                <button id="export-backup-btn" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition">Exporteer Backup (JSON)</button>
             </div>
         </div>
     `;
