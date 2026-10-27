@@ -31,7 +31,7 @@ export function initVandaagModule(appData) {
         <div class="grid grid-cols-2 gap-2 mb-3">
             ${moods.map(m => `
                 <button data-mood="${m.label}" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5">
-                    <span>${m.icon}</span>${m.label}
+                    <span>${m.icon}</span> ${m.label}
                 </button>
             `).join('')}
         </div>
@@ -97,7 +97,6 @@ function renderTrotsKluis(appData) {
         </div>
         <p class="text-xs text-gray-500 mb-3">Elke kleine overwinning vult jouw virtuele pot.</p>
         
-        <!-- Mobielvriendelijke gestapelde filters en knop -->
         <div class="flex flex-col gap-2 mb-3">
             <div class="grid grid-cols-2 gap-2">
                 <select id="marble-cat-filter" class="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-xl">
