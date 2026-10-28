@@ -390,6 +390,7 @@ function initVandaagLogic(appData) {
         renderMoodHistory(appData);
     });
 
+    // Categorie en datum filter voor De Trots-Kluis
     document.getElementById('marble-cat-filter').addEventListener('change', () => renderTrotsKluis(appData));
     setupDateFilterListeners('marble', () => renderTrotsKluis(appData));
 
@@ -424,13 +425,16 @@ function setupDateFilterListeners(prefix, callback) {
     if (!dateFilterSelect) return;
 
     dateFilterSelect.addEventListener('change', () => {
+        // Verberg alle specifieke invoervelden eerst
         if (customBox) customBox.classList.add('hidden');
-        if (dateInput) dateInput.classList.add('hidden');
-        if (monthInput) monthInput.classList.add('hidden');
-        if (yearInput) yearInput.classList.add('hidden');
-        if (weekInput) weekInput.classList.add('hidden');
+        if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
+        if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
+        if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
+        if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
 
         const val = dateFilterSelect.value;
+        
+        // Als er een specifieke optie wordt gekozen, klap het hoofdboxje en het juiste invoerveld open
         if (val.startsWith('specific-')) {
             if (customBox) customBox.classList.remove('hidden');
             if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
@@ -441,6 +445,7 @@ function setupDateFilterListeners(prefix, callback) {
         callback();
     });
 
+    // Luister naar wijzigingen in de ingevulde specifieke datums/maanden/jaren/weken
     [dateInput, monthInput, yearInput, weekInput].forEach(inp => {
         if (inp) {
             inp.addEventListener('change', callback);
