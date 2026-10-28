@@ -1,9 +1,26 @@
 // js/app.js
 import { loadAppData } from './modules/storage.js';
 import { initVandaagModule } from './modules/vandaag.js';
+import { initPlannenModule } from './modules/plannen.js';
+import { initMoneyModule } from './modules/money.js';
+import { initVitalityModule } from './modules/vitality.js';
+import { initIdeasModule } from './modules/ideas.js';
+import { initKnowledgeModule } from './modules/knowledge.js';
+import { initLuchtigModule } from './modules/luchtig.js';
+import { initInsightsModule } from './modules/insights.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let appData = loadAppData();
+
+    // Initialiseer alle modules direct bij opstarten zodat de DOM-elementen bestaan
+    try { initVandaagModule(appData); } catch (e) { console.error("Fout Vandaag:", e); }
+    try { initPlannenModule(appData); } catch (e) { console.error("Fout Plannen:", e); }
+    try { initMoneyModule(appData); } catch (e) { console.error("Fout Geld:", e); }
+    try { initVitalityModule(appData); } catch (e) { console.error("Fout Vitaliteit:", e); }
+    try { initIdeasModule(appData); } catch (e) { console.error("Fout Ideeën:", e); }
+    try { initKnowledgeModule(appData); } catch (e) { console.error("Fout Kennis:", e); }
+    try { initLuchtigModule(appData); } catch (e) { console.error("Fout Luchtig:", e); }
+    try { initInsightsModule(appData); } catch (e) { console.error("Fout Inzichten:", e); }
 
     // Globale switchTab functie
     window.switchTab = function(tabId) {
@@ -15,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) {
             target.classList.remove('hidden');
         } else {
-            // Fallback als container mist: toon Vandaag
             const fallback = document.getElementById('vandaag');
             if (fallback) fallback.classList.remove('hidden');
         }
@@ -42,11 +58,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
-    // Start de Vandaag module veilig
-    try {
-        initVandaagModule(appData);
-    } catch (e) {
-        console.error("Fout bij laden Vandaag module:", e);
-    }
 });
