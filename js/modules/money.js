@@ -20,7 +20,7 @@ export function initMoneyModule(appData) {
     container.innerHTML = `
         <!-- Bovenste Grid: Saldo & Paydayradar -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 flex flex-col justify-between">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Actueel Banksaldo</p>
@@ -39,8 +39,8 @@ export function initMoneyModule(appData) {
             </div>
         </div>
 
-        <!-- 1. Transacties (Inkomsten & Uitgaven) -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <!-- 1. Transacties & Overzicht -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">💶 Transacties & Overzicht</h2>
                 <button id="open-tx-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Transactie</button>
@@ -79,7 +79,7 @@ export function initMoneyModule(appData) {
         </div>
 
         <!-- 2. Verwachte Uitgaven -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
@@ -91,26 +91,31 @@ export function initMoneyModule(appData) {
             <ul id="expected-expense-list" class="space-y-2"></ul>
         </div>
 
-        <!-- 3. Het Ruimte-Kompas (Financiële Projecten) -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <!-- 3. Het Ruimte-Kompas (Financiële Projecten & Vrijheids-Horizon) -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-900">🧭 Het Ruimte-Kompas</h2>
-                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Financieel Project</button>
+                <h2 class="text-base font-bold text-indigo-900">🧭 Het Ruimte-Kompas (Vrijheids-Horizon)</h2>
+                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Financieel Doel</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Herstel en breng financiële afspraken & leningen rustig in balans.</p>
+            <p class="text-xs text-gray-500 mb-2">Herstel en breng financiële afspraken & leningen rustig in balans.</p>
             
-            <div class="bg-indigo-50/60 p-3.5 rounded-xl mb-3 text-xs text-indigo-950 flex justify-between items-center border border-indigo-100">
-                <div>
-                    <p class="font-bold text-sm" id="space-total-freed">€ 0.00 <span class="text-[11px] font-normal text-gray-600">Vrijgemaakt</span></p>
-                    <p class="text-[11px] text-gray-500 mt-0.5">Vrijheids-Horizon: groeit naarmate je aflost.</p>
+            <div class="bg-indigo-50/70 p-3.5 rounded-xl mb-3 text-xs text-indigo-950 border border-indigo-100 flex flex-col gap-1">
+                <div class="flex justify-between items-center font-bold text-sm">
+                    <span id="space-total-freed">€ 0.00 Vrijgemaakt</span>
+                    <span id="space-total-target" class="text-indigo-700">Doel: € 0.00</span>
                 </div>
+                <div class="w-full bg-indigo-200 rounded-full h-2.5 overflow-hidden my-1">
+                    <div id="space-progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p class="text-[11px] text-gray-600">Vrijheids-Horizon: groeit naarmate je leningen aflost en doelen bereikt.</p>
             </div>
+            
             <div id="financial-projects-list" class="space-y-3"></div>
         </div>
 
         <!-- 4. Studieschuld-Kompas & Impuls-Wachtkamer Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
                 <div class="flex justify-between items-center mb-2">
                     <h2 class="text-base font-bold text-indigo-900">🎓 Studieschuld Kompas</h2>
                     <button id="edit-study-debt-btn" class="text-xs text-indigo-600 hover:underline">Instellen</button>
@@ -118,13 +123,13 @@ export function initMoneyModule(appData) {
                 <p class="text-xs text-gray-500 mb-3">Houd in jouw eigen tempo overzicht.</p>
                 <div id="study-debt-summary" class="space-y-2 text-xs text-gray-700"></div>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
                 <h2 class="text-base font-bold text-indigo-900 mb-1">🛡️ Impuls-Wachtkamer</h2>
                 <p class="text-xs text-gray-500 mb-3">Zet aankoopwensen 24 uur in de wacht.</p>
                 <form id="impulse-form" class="flex flex-col gap-2 mb-3">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="impulse-item" placeholder="Wat wil je kopen?" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs" required>
-                        <input type="number" step="0.01" id="impulse-price" placeholder="Prijs (€)" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs" required>
+                        <input type="text" id="impulse-item" placeholder="Wat wil je kopen?" class="w-full px-3 py-2 border rounded-xl text-xs" required>
+                        <input type="number" step="0.01" id="impulse-price" placeholder="Prijs (€)" class="w-full px-3 py-2 border rounded-xl text-xs" required>
                     </div>
                     <button type="submit" class="w-full py-2 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition">Parkeren in Wachtkamer</button>
                 </form>
@@ -242,17 +247,24 @@ function initMoneyModals(appData) {
         <div id="project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">🧭 Financieel Project Beheer</h3>
+                    <h3 id="project-modal-title" class="text-sm font-bold text-indigo-950">🧭 Financieel Doel / Lening Beheren</h3>
                     <button id="close-project-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 <form id="project-modal-form" class="space-y-3">
+                    <input type="hidden" id="modal-proj-id">
                     <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Naam Project / Lening</label>
+                        <label class="block font-semibold text-gray-600 mb-1">Naam Lening / Doel</label>
                         <input type="text" id="modal-proj-title" placeholder="Bijv. Achterstand betalen" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
-                    <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Totaal Doelbedrag (€)</label>
-                        <input type="number" step="0.01" id="modal-proj-target" placeholder="Bijv. 1000" class="w-full px-3 py-2 border rounded-xl" required>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Totaal Doelbedrag (€)</label>
+                            <input type="number" step="0.01" id="modal-proj-target" placeholder="Bijv. 1000" class="w-full px-3 py-2 border rounded-xl" required>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Reeds Vrijgemaakt (€)</label>
+                            <input type="number" step="0.01" id="modal-proj-freed" placeholder="Bijv. 200" class="w-full px-3 py-2 border rounded-xl">
+                        </div>
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-project-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
@@ -286,6 +298,10 @@ function setupModalHandlers(type, appData) {
             document.getElementById('modal-exp-id').value = '';
             document.getElementById('expected-modal-form').reset();
             document.getElementById('expected-modal-title').textContent = '📅 Nieuwe Verwachte Uitgave';
+        } else if (type === 'project') {
+            document.getElementById('modal-proj-id').value = '';
+            document.getElementById('project-modal-form').reset();
+            document.getElementById('project-modal-title').textContent = '🧭 Nieuw Financieel Doel';
         }
         modal.classList.remove('hidden');
     };
@@ -360,16 +376,28 @@ function setupModalHandlers(type, appData) {
                     showToast("Verwachte uitgave bijgewerkt! 📅");
                 }
             } else if (type === 'project') {
+                const id = document.getElementById('modal-proj-id').value;
                 const title = document.getElementById('modal-proj-title').value.trim();
                 const target = parseFloat(document.getElementById('modal-proj-target').value);
+                const freed = parseFloat(document.getElementById('modal-proj-freed').value) || 0;
+
                 if (title && !isNaN(target)) {
                     if (!appData.money.financialProjects) appData.money.financialProjects = [];
-                    appData.money.financialProjects.push({ id: Date.now(), title, target, freed: 0, history: [] });
+                    if (id) {
+                        const proj = appData.money.financialProjects.find(x => x.id == id);
+                        if (proj) {
+                            proj.title = title;
+                            proj.target = target;
+                            proj.freed = freed;
+                        }
+                    } else {
+                        appData.money.financialProjects.push({ id: Date.now(), title, target, freed, history: [] });
+                    }
                     saveAppData(appData);
                     modal.classList.add('hidden');
                     form.reset();
                     renderMoneyViews(appData);
-                    showToast("Financieel project aangemaakt! 🧭");
+                    showToast("Financieel doel opgeslagen! 🧭");
                 }
             }
         };
@@ -527,6 +555,7 @@ function renderMoneyViews(appData) {
         }
     };
 
+    // Verwachte uitgaven & dynamisch totaal
     const expList = document.getElementById('expected-expense-list');
     const expenses = appData.money?.expectedExpenses || [];
     let totalExpectedAmount = 0;
@@ -540,8 +569,8 @@ function renderMoneyViews(appData) {
     expList.innerHTML = expenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen verwachte uitgaven ingesteld.</p>' : expenses.map(e => `
         <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs ${e.completed ? 'opacity-50 line-through' : ''}">
             <div onclick="window.openEditExpectedModal(${e.id})" class="cursor-pointer flex-1">
-                <span class="font-bold text-indigo-900">[${e.category}]</span> <span class="font-medium text-gray-800 text-sm">${e.description}</span> - <span class="font-bold">€ ${e.amount.toFixed(2)}</span>
-                <span class="text-[10px] text-gray-500 block">Betaalwijze: ${e.method} • Datum: ${e.date}</span>
+                <span class="font-bold text-indigo-950 text-xs">[${e.category}]</span> <span class="font-medium text-gray-900 text-sm">${e.description}</span> - <span class="font-bold text-sm">€ ${e.amount.toFixed(2)}</span>
+                <span class="text-[11px] text-gray-500 block mt-0.5">Betaalwijze: ${e.method} • Datum: ${e.date}</span>
             </div>
             <div class="flex gap-2 items-center">
                 <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
@@ -584,18 +613,24 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
+    // Ruimte-Kompas (Financiële Projecten & Vrijheids-Horizon totaal)
     const projList = document.getElementById('financial-projects-list');
     const projects = appData.money?.financialProjects || [];
     let totalFreedGlobal = 0;
+    let totalTargetGlobal = 0;
 
     projList.innerHTML = projects.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen financiële projecten of leningen ingevoerd.</p>' : projects.map(p => {
         totalFreedGlobal += p.freed;
+        totalTargetGlobal += p.target;
         const pct = p.target > 0 ? Math.min(100, Math.round((p.freed / p.target) * 100)) : 0;
         return `
             <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
                 <div class="flex justify-between items-center">
-                    <span class="font-bold text-indigo-950 text-sm">🎯 ${p.title} (Doel: € ${p.target.toFixed(2)})</span>
-                    <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-400 hover:text-red-500 font-bold px-1">Verwijderen</button>
+                    <span onclick="window.openEditProjectModal(${p.id})" class="font-bold text-indigo-950 text-sm cursor-pointer hover:underline">🎯 ${p.title} (Doel: € ${p.target.toFixed(2)})</span>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="window.openEditProjectModal(${p.id})" class="text-indigo-600 font-semibold">Bewerken</button>
+                        <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+                    </div>
                 </div>
                 <div class="flex justify-between text-gray-600">
                     <span>Vrijgemaakt: € ${p.freed.toFixed(2)}</span>
@@ -612,7 +647,22 @@ function renderMoneyViews(appData) {
         `;
     }).join('');
 
-    document.getElementById('space-total-freed').innerHTML = `€ ${totalFreedGlobal.toFixed(2)} <span class="text-[11px] font-normal text-gray-600">Totaal Vrijgemaakt</span>`;
+    const globalPct = totalTargetGlobal > 0 ? Math.min(100, Math.round((totalFreedGlobal / totalTargetGlobal) * 100)) : 0;
+    document.getElementById('space-total-freed').textContent = `€ ${totalFreedGlobal.toFixed(2)} Vrijgemaakt`;
+    document.getElementById('space-total-target').textContent = `Doel: € ${totalTargetGlobal.toFixed(2)}`;
+    document.getElementById('space-progress-bar').style.width = `${globalPct}%`;
+
+    window.openEditProjectModal = (id) => {
+        const p = appData.money.financialProjects.find(x => x.id === id);
+        if (p) {
+            document.getElementById('modal-proj-id').value = p.id;
+            document.getElementById('modal-proj-title').value = p.title;
+            document.getElementById('modal-proj-target').value = p.target;
+            document.getElementById('modal-proj-freed').value = p.freed;
+            document.getElementById('project-modal-title').textContent = '🧭 Financieel Doel Bewerken';
+            document.getElementById('project-modal').classList.remove('hidden');
+        }
+    };
 
     window.repayProject = (id) => {
         const input = document.getElementById(`repay-input-${id}`);
@@ -632,6 +682,7 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
+    // Studieschuld
     const studySummary = document.getElementById('study-debt-summary');
     const study = appData.money?.studyDebt || { total: 41939, paid: 477.35, monthly: 477.35 };
     const rest = Math.max(0, study.total - study.paid);
@@ -645,12 +696,13 @@ function renderMoneyViews(appData) {
         <div class="flex justify-between pt-1 border-t"><span>Geschatte looptijd:</span><span class="font-bold">${monthsLeft} maanden (${yearsLeft} jaar)</span></div>
     `;
 
+    // Impuls Wachtkamer
     const impulseList = document.getElementById('impulse-list');
     const impulses = appData.money?.impulseWants || [];
     impulseList.innerHTML = impulses.length === 0 ? '<p class="italic text-gray-400">Geen aankopen in de wachtkamer.</p>' : impulses.map(i => `
         <div class="flex justify-between items-center py-1.5 border-b">
             <span>⏳ ${i.item} (€ ${i.price.toFixed(2)})</span>
-            <button onclick="window.deleteImpulse(${i.id})" class="text-gray-400 hover:text-red-500 font-bold px-1">✕</button>
+            <button onclick="window.deleteImpulse(${i.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
         </div>
     `).join('');
 
