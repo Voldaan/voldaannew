@@ -116,7 +116,7 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
-                    <!-- Specifieke invoervelden die direct openklappen bij selectie -->
+                    <!-- Dit vakje klapt nu netjes open bij selectie -->
                     <div id="marble-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -425,7 +425,7 @@ function setupDateFilterListeners(prefix, callback) {
     if (!dateFilterSelect) return;
 
     dateFilterSelect.addEventListener('change', () => {
-        customBox.classList.add('hidden');
+        if (customBox) customBox.classList.add('hidden');
         if (dateInput) dateInput.classList.add('hidden');
         if (monthInput) monthInput.classList.add('hidden');
         if (yearInput) yearInput.classList.add('hidden');
@@ -433,7 +433,7 @@ function setupDateFilterListeners(prefix, callback) {
 
         const val = dateFilterSelect.value;
         if (val.startsWith('specific-')) {
-            customBox.classList.remove('hidden');
+            if (customBox) customBox.classList.remove('hidden');
             if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
             if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
             if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
