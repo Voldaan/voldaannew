@@ -1,144 +1,52 @@
-:root {
-  --bg-color: #F8F6F0;
-  --card-bg: #FFFFFF;
-  --text-main: #2D3748;
-  --text-muted: #718096;
-  --accent-primary: #5A67D8;
-  --accent-hover: #4C51BF;
-  --input-bg: #FFFFFF;
-  --input-border: #CBD5E0;
-  --item-bg: #F7FAFC;
-  --radius: 16px;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+/* css/style.css */
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
-body.dark-theme {
-  --bg-color: #1A202C;
-  --card-bg: #2D3748;
-  --text-main: #EDF2F7;
-  --text-muted: #A0AEC0;
-  --accent-primary: #7F9CF5;
-  --accent-hover: #667EEA;
-  --input-bg: #1A202C;
-  --input-border: #4A5568;
-  --item-bg: #1A202C;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: #f4f6f9; /* Subtiele warme pastel-ondertoon i.p.v. fel wit */
+    color: #1e293b;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-
-body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 16px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* Strakke, rustige kaarten met duidelijke, subtiele randen en lichte pasteltint */
+.bg-white {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important; /* Duidelijkere randen voor betere onderscheiding */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
 }
 
-#confetti-canvas {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;
+/* Hoofdcontainer optimalisatie */
+main {
+    width: 100%;
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 12px;
 }
 
-.container { width: 100%; max-width: 580px; display: flex; flex-direction: column; gap: 18px; padding-bottom: 40px; }
-header { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: 2px; }
-header h1 { font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); letter-spacing: -0.5px; }
-header p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
-
-.nav-tabs {
-  display: flex; background: var(--card-bg); padding: 6px; border-radius: 14px;
-  border: 1.5px solid var(--input-border); box-shadow: var(--shadow); gap: 4px; margin-bottom: 6px; overflow-x: auto;
+header, nav {
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.tab-btn {
-  flex: 1; padding: 10px 6px; border: none; background: none; color: var(--text-muted);
-  font-weight: 600; font-size: 0.8rem; border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
-  text-align: center; white-space: nowrap;
+/* Subtiele knoppen en invoer verhoudingen */
+input, select, textarea {
+    font-size: 12px !important;
+    color: #1e293b;
 }
 
-.tab-btn.active { background-color: var(--accent-primary); color: white; box-shadow: 0 2px 8px rgba(90, 103, 216, 0.25); }
-
-.theme-toggle-btn {
-  background: var(--card-bg); border: 1.5px solid var(--input-border); color: var(--text-main);
-  padding: 8px 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; box-shadow: var(--shadow);
+button {
+    cursor: pointer;
 }
 
-.card {
-  background: var(--card-bg); border-radius: var(--radius); padding: 20px;
-  box-shadow: var(--shadow); border: 1.5px solid var(--input-border); transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.card h2 { font-size: 1.1rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4; }
-
-.btn {
-  background-color: var(--accent-primary); color: white; border: none; border-radius: 12px;
-  padding: 12px 18px; font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%; transition: all 0.2s ease;
-}
-.btn:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
-.btn-small { padding: 6px 12px; font-size: 0.8rem; width: auto; border-radius: 8px; }
-
-.energy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
-.energy-btn {
-  background: var(--item-bg); border: 1.5px solid var(--input-border); color: var(--text-main);
-  border-radius: 10px; padding: 10px; font-size: 0.85rem; cursor: pointer; text-align: center; transition: all 0.2s;
-}
-.energy-btn.selected { border-color: var(--accent-primary); background-color: rgba(90, 103, 216, 0.15); font-weight: 600; }
-
-.habit-grid { 
-  display: grid; 
-  grid-template-columns: repeat(2, 1fr); 
-  gap: 8px; 
-  margin-top: 8px; 
-}
-.habit-btn {
-  background: var(--item-bg); 
-  border: 1.5px solid var(--input-border); 
-  color: var(--text-main);
-  border-radius: 10px; 
-  padding: 12px 10px; 
-  font-size: 0.82rem; 
-  cursor: pointer; 
-  text-align: center; 
-  transition: all 0.2s;
-  width: 100%;
-}
-.habit-btn.completed { 
-  border-color: #38A169; 
-  background-color: rgba(56, 161, 105, 0.15); 
-  font-weight: 600; 
-  color: #38A169; 
-}
-
-input[type="text"], input[type="number"], select {
-  width: 100%; background: var(--input-bg); color: var(--text-main); border: 1.5px solid var(--input-border);
-  border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; margin-bottom: 10px; outline: none;
-}
-input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--accent-primary); }
-
-.item-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.item-card {
-  background: var(--item-bg); padding: 12px; border-radius: 12px; font-size: 0.9rem;
-  display: flex; justify-content: space-between; align-items: center; border: 1.5px solid var(--input-border);
-}
-
-.hidden { display: none !important; }
-
-/* --- DE TROTS-KLUIS 3D KNIKKERS --- */
-.marble-3d {
-  width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  position: relative; box-shadow: inset -4px -4px 6px rgba(0,0,0,0.4), 2px 4px 6px rgba(0,0,0,0.2);
-  animation: dropMarble 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; transition: transform 0.2s ease;
-}
-.marble-3d:hover { transform: scale(1.3); z-index: 10; }
-.marble-3d::after {
-  content: ''; position: absolute; top: 4px; left: 5px; width: 7px; height: 7px;
-  border-radius: 50%; background: rgba(255, 255, 255, 0.85);
-}
-@keyframes dropMarble { 0% { transform: translateY(-30px) scale(1.3); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
-
-.item-card.done span {
-  text-decoration: line-through;
-  opacity: 0.5;
+/* Toast meldingen container styling */
+#toast-container {
+    z-index: 9999;
 }
