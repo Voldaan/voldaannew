@@ -9,6 +9,15 @@ const DEFAULT_BUDDY_BUTTONS = [
     { id: 4, label: '🛋️ Even rust', text: 'Alles oké, ik rust even uit.' }
 ];
 
+const MOOD_TYPES = [
+    { label: 'Wazig / Moe', icon: '🌫️' },
+    { label: 'Rustig / Okay', icon: '🪨' },
+    { label: 'Energiek', icon: '⚡' },
+    { label: 'Chaotisch', icon: '🌀' },
+    { label: 'Hyperfocus', icon: '🎯' },
+    { label: 'Kan beter', icon: '🌧️' }
+];
+
 export function initVandaagModule(appData) {
     const container = document.getElementById('vandaag');
     if (!container) return;
@@ -27,34 +36,49 @@ export function initVandaagModule(appData) {
                     Historie<br><span class="text-[10px] text-gray-500">& Trends</span>
                 </button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Waar staat je brein op dit moment naar?</p>
+            <p class="text-xs text-gray-500 mb-3">Hoe voelt je brein op dit moment?</p>
             
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <button data-mood="Wazig / Moe" data-icon="🌫️" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
-                    <span>🌫️</span> Wazig / Moe
-                </button>
-                <button data-mood="Chaotisch / Vol" data-icon="⚡" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
-                    <span>⚡</span> Chaotisch / Vol
-                </button>
-                <button data-mood="Rustig / Oké" data-icon="🪨" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
-                    <span>🪨</span> Rustig / Oké
-                </button>
-                <button data-mood="Gefocust" data-icon="🚀" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
-                    <span>🚀</span> Gefocust
-                </button>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                ${MOOD_TYPES.map(m => `
+                    <button data-mood="${m.label}" data-icon="${m.icon}" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm text-center">
+                        <span class="text-sm">${m.icon}</span> <span class="truncate">${m.label}</span>
+                    </button>
+                `).join('')}
             </div>
 
             <div id="mood-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-indigo-900 uppercase">Mood Verloop & Trends</span>
-                    <select id="mood-filter-date" class="text-[11px] bg-white border border-gray-200 rounded-lg px-2 py-1">
-                        <option value="today">Vandaag</option>
-                        <option value="week">Deze week</option>
-                        <option value="month">Deze maand</option>
-                        <option value="all">Alles</option>
-                    </select>
+                <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="mood-filter-item" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                            <option value="Alle">Alle stemmingen</option>
+                            ${MOOD_TYPES.map(m => `<option value="${m.label}">${m.label}</option>`).join('')}
+                        </select>
+                        <select id="mood-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                            <option value="all">Alle data</option>
+                            <option value="today">Vandaag</option>
+                            <option value="week">Deze week</option>
+                            <option value="specific-week">Specifieke week...</option>
+                            <option value="month">Deze maand</option>
+                            <option value="specific-month">Specifieke maand...</option>
+                            <option value="year">Dit jaar</option>
+                            <option value="specific-year">Specifiek jaar...</option>
+                            <option value="specific-day">Specifieke dag...</option>
+                        </select>
+                    </div>
+                    <div id="mood-custom-filter-box" class="hidden">
+                        <input type="date" id="mood-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                        <input type="month" id="mood-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                        <input type="number" id="mood-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                        <input type="week" id="mood-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                    </div>
                 </div>
-                <div id="mood-chart-bars" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
+
+                <div class="flex justify-end gap-2 text-xs">
+                    <button id="mood-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Percentages</button>
+                    <button id="mood-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Lijngrafiek</button>
+                </div>
+
+                <div id="mood-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
                 <div id="mood-history-list" class="space-y-1 text-xs text-gray-600 max-h-32 overflow-y-auto"></div>
             </div>
         </div>
@@ -106,27 +130,56 @@ export function initVandaagModule(appData) {
             <div id="marble-list" class="space-y-2"></div>
         </div>
 
-        <!-- 3. Actie-Hub voor Vandaag -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <h2 class="text-base font-bold text-indigo-950 mb-1">🎯 Actie-Hub voor Vandaag</h2>
-            <p class="text-xs text-gray-500 mb-3">Jouw compacte overzicht van openstaande focus-taken.</p>
-            <div id="actie-hub-list" class="space-y-2"></div>
+        <!-- 3. Actie-Hub voor Vandaag (Precies zoals in jouw originele app-voorbeeld) -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 space-y-4 text-xs">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-indigo-950">📋 Actie-Hub voor Vandaag</h2>
+                <span class="px-3 py-1 bg-indigo-600 text-white rounded-xl font-semibold shadow-sm">Direct Afvinken</span>
+            </div>
+            <p class="text-gray-500">Hier verzamelen we de belangrijkste zaken van jouw andere tabbladen. Vink ze hier direct af!</p>
+
+            <!-- Jouw Avond-pact voor vandaag -->
+            <div class="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1">
+                <p class="font-bold text-indigo-950">🌙 JOUW AVOND-PACT VOOR VANDAAG:</p>
+                <div id="actie-hub-pact-container" class="text-gray-700 font-medium">Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!</div>
+            </div>
+
+            <!-- Focus-taken -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="font-bold text-indigo-950">🎯 FOCUS-TAKEN (NIEUWSTE EERST):</p>
+                    <a href="#plannen" onclick="window.switchTab && window.switchTab('plannen')" class="px-2.5 py-1 bg-white border rounded-lg text-indigo-700 font-semibold hover:bg-gray-50">Beheer op Plannen-tab →</a>
+                </div>
+                <div id="actie-hub-tasks-list" class="space-y-2"></div>
+            </div>
+
+            <!-- Doelen check-in -->
+            <div class="space-y-2 pt-2 border-t border-gray-100">
+                <div class="flex justify-between items-center">
+                    <p class="font-bold text-indigo-950">🧭 DOELEN CHECK-IN:</p>
+                    <a href="#plannen" onclick="window.switchTab && window.switchTab('plannen')" class="px-2.5 py-1 bg-white border rounded-lg text-indigo-700 font-semibold hover:bg-gray-50">Beheer op Plannen-tab →</a>
+                </div>
+                <div id="actie-hub-goals-list" class="space-y-2"></div>
+            </div>
         </div>
 
         <!-- 4. Idee van de Dag -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <h2 class="text-base font-bold text-indigo-950 mb-1">💡 Idee van de Dag</h2>
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-base font-bold text-indigo-950">💡 Idee van de Dag</h2>
+                <button id="grabbel-idea-btn" class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold hover:bg-amber-200 transition">🎲 Grabbelen</button>
+            </div>
             <p class="text-xs text-gray-500 mb-3">Een willekeurige vonk uit je kluis.</p>
-            <div id="idea-of-day-card" class="p-3.5 bg-yellow-50/70 border border-yellow-200 rounded-xl space-y-2">
+            <div id="idea-of-day-card" class="p-3 bg-yellow-50/70 border border-yellow-200 rounded-xl space-y-2">
                 <p id="idea-day-text" class="text-xs text-gray-800 leading-relaxed font-medium"></p>
                 <div class="flex gap-2 pt-1">
-                    <button id="grabbel-idea-btn" class="flex-1 py-2 bg-yellow-600 text-white rounded-xl text-xs font-medium hover:bg-yellow-700 transition">🎲 Grabbelen</button>
-                    <button id="idea-to-plan-btn" class="px-3 py-2 bg-white border border-yellow-300 text-yellow-900 rounded-xl text-xs font-medium hover:bg-yellow-100 transition">Naar Planbord</button>
+                    <button id="idea-to-plan-btn" class="flex-1 py-1.5 bg-white border border-yellow-300 text-yellow-900 rounded-lg text-xs font-medium hover:bg-yellow-100 transition text-center">Naar Planbord</button>
+                    <button id="idea-to-project-btn" class="flex-1 py-1.5 bg-yellow-600 text-white rounded-lg text-xs font-medium hover:bg-yellow-700 transition text-center">Naar Project</button>
                 </div>
             </div>
         </div>
 
-        <!-- 5. Zachte Buddy-Lijn (Met Beheer Menu) -->
+        <!-- 5. Zachte Buddy-Lijn -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-950">💬 Zachte Buddy-Lijn</h2>
@@ -211,6 +264,8 @@ function renderBuddyButtons(appData) {
     `).join('');
 }
 
+let currentMoodViewMode = 'bars';
+
 function initVandaagLogic(appData) {
     if (!appData.moods) appData.moods = [];
     if (!appData.marbles) appData.marbles = [];
@@ -233,7 +288,49 @@ function initVandaagLogic(appData) {
         historyBox.classList.toggle('hidden');
         if (!historyBox.classList.contains('hidden')) renderMoodHistory(appData);
     });
-    document.getElementById('mood-filter-date').addEventListener('change', () => renderMoodHistory(appData));
+
+    document.getElementById('mood-filter-item').addEventListener('change', () => renderMoodHistory(appData));
+    
+    const dateFilterSelect = document.getElementById('mood-filter-date');
+    const customBox = document.getElementById('mood-custom-filter-box');
+    const dateInput = document.getElementById('mood-custom-date');
+    const monthInput = document.getElementById('mood-custom-month');
+    const yearInput = document.getElementById('mood-custom-year');
+    const weekInput = document.getElementById('mood-custom-week');
+
+    dateFilterSelect.addEventListener('change', () => {
+        customBox.classList.add('hidden');
+        dateInput.classList.add('hidden');
+        monthInput.classList.add('hidden');
+        yearInput.classList.add('hidden');
+        weekInput.classList.add('hidden');
+
+        if (dateFilterSelect.value.startsWith('specific-')) {
+            customBox.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-day') dateInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-month') monthInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-year') yearInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-week') weekInput.classList.remove('hidden');
+        }
+        renderMoodHistory(appData);
+    });
+
+    [dateInput, monthInput, yearInput, weekInput].forEach(inp => inp.addEventListener('change', () => renderMoodHistory(appData)));
+    yearInput.addEventListener('input', () => renderMoodHistory(appData));
+
+    document.getElementById('mood-view-bars').addEventListener('click', () => {
+        currentMoodViewMode = 'bars';
+        document.getElementById('mood-view-bars').className = 'px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold';
+        document.getElementById('mood-view-chart').className = 'px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold';
+        renderMoodHistory(appData);
+    });
+
+    document.getElementById('mood-view-chart').addEventListener('click', () => {
+        currentMoodViewMode = 'chart';
+        document.getElementById('mood-view-chart').className = 'px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold';
+        document.getElementById('mood-view-bars').className = 'px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold';
+        renderMoodHistory(appData);
+    });
 
     renderTrotsKluis(appData);
     renderActieHub(appData);
@@ -306,60 +403,34 @@ function renderTrotsKluis(appData) {
     weekInput.onchange = () => renderTrotsKluis(appData);
 }
 
-function initMarbleModal(appData) {
-    const modalHTML = `
-        <div id="marble-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">🏺 Voeg Knikker Toe</h3>
-                    <button id="close-marble-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
-                </div>
-                <form id="marble-modal-form" class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Waar ben je trots op?</label>
-                        <textarea id="modal-marble-text" rows="2" placeholder="Bijv. Rustig gebleven..." class="w-full px-3 py-2 border rounded-xl text-xs" required></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Categorie</label>
-                        <select id="modal-marble-cat" class="w-full px-3 py-2 border rounded-xl text-xs bg-white">
-                            ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="flex gap-2 pt-2">
-                        <button type="button" id="cancel-marble-modal" class="flex-1 py-2 bg-gray-100 rounded-xl text-xs font-semibold">Annuleren</button>
-                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">Toevoegen ✨</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    const modal = document.getElementById('marble-modal');
-    document.getElementById('open-marble-modal-btn').onclick = () => modal.classList.remove('hidden');
-    document.getElementById('close-marble-modal').onclick = () => modal.classList.add('hidden');
-    document.getElementById('cancel-marble-modal').onclick = () => modal.classList.add('hidden');
-    document.getElementById('marble-modal-form').onsubmit = (e) => {
-        e.preventDefault();
-        const text = document.getElementById('modal-marble-text').value.trim();
-        const category = document.getElementById('modal-marble-cat').value;
-        if (text) {
-            voegTrotsKnikkerToe(appData, text, category);
-            modal.classList.add('hidden');
-            e.target.reset();
-            renderTrotsKluis(appData);
-        }
-    };
-}
-
 function renderMoodHistory(appData) {
     const listEl = document.getElementById('mood-history-list');
-    const barsEl = document.getElementById('mood-chart-bars');
-    const filter = document.getElementById('mood-filter-date').value;
-    const moods = (appData.moods || []).filter(m => checkDateFilter(m.date, filter));
+    const containerEl = document.getElementById('mood-chart-container');
+    const itemFilter = document.getElementById('mood-filter-item').value;
+    const dateFilter = document.getElementById('mood-filter-date').value;
 
-    listEl.innerHTML = moods.length === 0 ? `<p class="italic text-gray-400">Geen check-ins.</p>` : moods.slice(-6).reverse().map(m => `
+    const customBox = document.getElementById('mood-custom-filter-box');
+    const dateInput = document.getElementById('mood-custom-date');
+    const monthInput = document.getElementById('mood-custom-month');
+    const yearInput = document.getElementById('mood-custom-year');
+    const weekInput = document.getElementById('mood-custom-week');
+
+    let customVal = null;
+    if (dateFilter === 'specific-day') customVal = dateInput.value;
+    else if (dateFilter === 'specific-month') customVal = monthInput.value;
+    else if (dateFilter === 'specific-year') customVal = yearInput.value;
+    else if (dateFilter === 'specific-week') customVal = weekInput.value;
+
+    const allMoods = appData.moods || [];
+    const filteredMoods = allMoods.filter(m => {
+        const matchItem = itemFilter === 'Alle' || m.mood === itemFilter;
+        const matchDate = checkDateFilter(m.date, dateFilter, customVal);
+        return matchItem && matchDate;
+    });
+
+    listEl.innerHTML = filteredMoods.length === 0 ? `<p class="italic text-gray-400">Geen check-ins gevonden.</p>` : filteredMoods.slice(-6).reverse().map(m => `
         <div class="flex justify-between items-center py-1 border-b">
-            <span class="font-medium text-gray-800">${m.icon || '✨'} ${m.mood}</span>
+            <span class="font-medium text-gray-800">${m.icon || '✨'} ${m.mood} <span class="text-[10px] text-gray-400">(${new Date(m.date).toLocaleDateString('nl-NL')})</span></span>
             <button onclick="window.deleteMood(${m.id})" class="text-gray-300 hover:text-red-500">✕</button>
         </div>
     `).join('');
@@ -370,25 +441,53 @@ function renderMoodHistory(appData) {
         renderMoodHistory(appData);
     };
 
-    const counts = {};
-    moods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
-    const total = moods.length;
+    if (currentMoodViewMode === 'bars') {
+        const counts = {};
+        filteredMoods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
+        const total = filteredMoods.length;
 
-    barsEl.innerHTML = total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen trenddata.</p>' : Object.entries(counts).map(([mood, count]) => {
-        const pct = Math.round((count / total) * 100);
-        return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${mood}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
-    }).join('');
+        containerEl.innerHTML = total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen trenddata in deze selectie.</p>' : Object.entries(counts).map(([mood, count]) => {
+            const pct = Math.round((count / total) * 100);
+            return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${mood}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
+        }).join('');
+    } else {
+        containerEl.innerHTML = filteredMoods.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor lijngrafiek.</p>' : `
+            <p class="text-[11px] font-bold text-indigo-900 mb-1">Tijdlijn van selectie (${filteredMoods.length} metingen):</p>
+            <div class="flex items-end gap-1 h-24 pt-4 border-b border-indigo-200">
+                ${filteredMoods.map((m, i) => {
+                    const heightPct = Math.min(100, Math.max(20, (i + 1) * 15));
+                    return `<div class="flex-1 bg-indigo-500 rounded-t hover:bg-indigo-700 transition relative group" style="height: ${heightPct}%"><span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] bg-indigo-950 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">${m.mood}</span></div>`;
+                }).join('')}
+            </div>
+        `;
+    }
 }
 
 function renderActieHub(appData) {
-    const listEl = document.getElementById('actie-hub-list');
+    const pactContainer = document.getElementById('actie-hub-pact-container');
+    const tasksListEl = document.getElementById('actie-hub-tasks-list');
+    const goalsListEl = document.getElementById('actie-hub-goals-list');
+
+    // Avond-pact inladen
+    const activePacts = appData.plans?.eveningPacts || [];
+    if (activePacts.length > 0) {
+        pactContainer.innerHTML = activePacts[activePacts.length - 1].text;
+    } else {
+        pactContainer.innerHTML = 'Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!';
+    }
+
     const allTasks = [...(appData.tasks || []), ...(appData.plans?.tasks || [])];
     const openTasks = allTasks.filter(t => !t.archived && !t.done && !t.completed).slice(0, 5);
     
-    listEl.innerHTML = openTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken vandaag. Rust!</p>' : openTasks.map(t => `
+    tasksListEl.innerHTML = openTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken gevonden.</p>' : openTasks.map(t => `
         <div class="flex justify-between items-center p-3 bg-white border rounded-xl text-xs shadow-sm">
-            <div><span class="font-bold text-indigo-700 mr-1">[${t.category || 'Algemeen'}]</span> <span class="text-gray-800 font-medium">${t.text}</span></div>
-            <button onclick="window.quickCompleteTask(${t.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">Klaar ✨</button>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" disabled class="w-4 h-4 rounded text-indigo-600">
+                <div><span class="font-bold text-indigo-900 mr-1">[${t.category || 'Algemeen'}]</span> <span class="text-gray-900 text-sm font-medium">${t.text}</span></div>
+            </div>
+            <button onclick="window.quickCompleteTask(${t.id})" class="px-3.5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center gap-1">
+                <span>✓</span> Afvinken
+            </button>
         </div>
     `).join('');
 
@@ -400,6 +499,32 @@ function renderActieHub(appData) {
             voegTrotsKnikkerToe(appData, `Taak volbracht: ${task.text}`, task.category || 'Taken');
             saveAppData(appData);
             renderActieHub(appData);
+            showToast("Taak afgev ಈrd! ✨");
+        }
+    };
+
+    const goals = appData.plans?.goals || [];
+    goalsListEl.innerHTML = goals.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen doelen ingesteld.</p>' : goals.slice(0, 3).map(g => `
+        <div class="flex justify-between items-center p-3 bg-white border rounded-xl text-xs shadow-sm">
+            <div>
+                <span class="font-bold text-indigo-950 text-sm">🎯 ${g.title}</span>
+                <span class="text-[10px] text-gray-500 block">Schild: ${g.shield || 'Geen'}</span>
+            </div>
+            <div class="flex gap-1.5 items-center">
+                <button onclick="window.quickGoalStatus(${g.id}, 'volledig')" class="p-1.5 bg-emerald-600 text-white rounded-lg shadow-sm" title="Volledig">✓</button>
+                <button onclick="window.quickGoalStatus(${g.id}, 'schild')" class="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm" title="Schild">🛡️</button>
+            </div>
+        </div>
+    `).join('');
+
+    window.quickGoalStatus = (id, status) => {
+        const g = goals.find(x => x.id === id);
+        if (g) {
+            g.status = status;
+            if (status === 'volledig') voegTrotsKnikkerToe(appData, `Doel volbracht: ${g.title}`, 'Doelen');
+            saveAppData(appData);
+            renderActieHub(appData);
+            showToast("Doel-status bijgewerkt! 🎯");
         }
     };
 }
@@ -417,9 +542,18 @@ function renderIdeeVanDeDag(appData) {
 
     document.getElementById('grabbel-idea-btn').onclick = () => renderIdeeVanDeDag(appData);
     document.getElementById('idea-to-plan-btn').onclick = () => {
+        if (!appData.plans) appData.plans = { tasks: [] };
         if (!appData.plans.tasks) appData.plans.tasks = [];
         appData.plans.tasks.push({ id: Date.now(), text: `Idee: ${randomIdea.text}`, category: randomIdea.category || 'Algemeen', completed: false, archived: false, date: new Date().toISOString() });
         saveAppData(appData);
         showToast("Idee overgebracht naar het Planbord! 🎯");
+    };
+
+    document.getElementById('idea-to-project-btn').onclick = () => {
+        if (!appData.ideasModule) appData.ideasModule = { projects: [] };
+        if (!appData.ideasModule.projects) appData.ideasModule.projects = [];
+        appData.ideasModule.projects.push({ id: Date.now(), title: randomIdea.text.slice(0, 40), description: randomIdea.text, timeGoal: 'Binnenkort', subtasks: [], date: new Date().toISOString() });
+        saveAppData(appData);
+        showToast("Idee omgezet naar een Project! 🚀");
     };
 }
