@@ -14,7 +14,7 @@ export function initVitalityModule(appData) {
 
     container.innerHTML = `
         <!-- 1. Nachtrust & Herstel -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🌙 Nachtrust & Herstel</h2>
                 <button id="toggle-sleep-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
@@ -31,7 +31,7 @@ export function initVitalityModule(appData) {
         </div>
 
         <!-- 2. Beweging & Stappen-Anker -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🚶 Beweging & Stappen-Anker</h2>
                 <button id="toggle-steps-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
@@ -48,7 +48,7 @@ export function initVitalityModule(appData) {
         </div>
 
         <!-- 3. Fitheid & Sport Log -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🏅 Fitheid & Sport Log</h2>
                 <button id="manage-sports-btn" class="text-xs text-indigo-600 hover:underline">Sporten Beheren</button>
@@ -63,7 +63,7 @@ export function initVitalityModule(appData) {
         </div>
 
         <!-- 4. Voeding & Balans -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">🥗 Voeding & Balans</h2>
             <p class="text-xs text-gray-500 mb-3">Geen strenge regels. Alleen zachte stempels voor bewustwording.</p>
             
@@ -84,7 +84,7 @@ export function initVitalityModule(appData) {
         </div>
 
         <!-- 5. Snaai-wachtkamer -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">🍿 Snaai-wachtkamer (15 min. Pauze)</h2>
             <p class="text-xs text-gray-500 mb-3">Trek in een ondoordachte snack? Zet de timer.</p>
             
@@ -97,7 +97,7 @@ export function initVitalityModule(appData) {
         </div>
 
         <!-- 6. Vitaliteits-Horizon -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
             <h2 class="text-base font-bold text-indigo-900 mb-1">📊 Vitaliteits-Horizon</h2>
             <p class="text-xs text-gray-500 mb-3">Overzicht van jouw opgebouwde gezondheids-zeges.</p>
             <div id="vitality-horizon-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs"></div>
