@@ -83,7 +83,7 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. De Trots-Kluis (Met uniform Historie & Trends menu en verwijderde knikker-knop) -->
+        <!-- 2. De Trots-Kluis -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
@@ -102,7 +102,7 @@ export function initVandaagModule(appData) {
                 <div id="marble-visual-pot" class="flex flex-wrap gap-1.5 justify-center max-h-28 overflow-y-auto p-2 w-full"></div>
             </div>
 
-            <!-- Uniforme Historie & Trends Container voor De Trots-Kluis -->
+            <!-- Historie & Trends Container voor De Trots-Kluis -->
             <div id="marble-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
                 <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="grid grid-cols-2 gap-2">
@@ -132,7 +132,7 @@ export function initVandaagModule(appData) {
 
                 <div class="flex justify-end gap-2">
                     <button id="marble-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
-                    <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn</button>
+                    <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Aantallen</button>
                 </div>
 
                 <div id="marble-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
@@ -290,7 +290,6 @@ function initVandaagLogic(appData) {
         });
     });
 
-    // Toggle Historie & Trends voor Mood
     const toggleHistoryBtn = document.getElementById('toggle-mood-history');
     const historyBox = document.getElementById('mood-history-box');
     toggleHistoryBtn.addEventListener('click', () => {
@@ -298,7 +297,6 @@ function initVandaagLogic(appData) {
         if (!historyBox.classList.contains('hidden')) renderMoodHistory(appData);
     });
 
-    // Toggle Historie & Trends voor De Trots-Kluis
     const toggleMarbleHistoryBtn = document.getElementById('toggle-marble-history');
     const marbleHistoryBox = document.getElementById('marble-history-box');
     toggleMarbleHistoryBtn.addEventListener('click', () => {
@@ -306,7 +304,6 @@ function initVandaagLogic(appData) {
         if (!marbleHistoryBox.classList.contains('hidden')) renderTrotsKluis(appData);
     });
 
-    // Mood filters & views
     document.getElementById('mood-filter-item').addEventListener('change', () => renderMoodHistory(appData));
     setupDateFilterListeners('mood', () => renderMoodHistory(appData));
 
@@ -324,7 +321,6 @@ function initVandaagLogic(appData) {
         renderMoodHistory(appData);
     });
 
-    // Trots-Kluis filters & views
     document.getElementById('marble-cat-filter').addEventListener('change', () => renderTrotsKluis(appData));
     setupDateFilterListeners('marble', () => renderTrotsKluis(appData));
 
@@ -444,13 +440,23 @@ function renderTrotsKluis(appData) {
             return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${cat}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
         }).join('');
     } else {
-        containerEl.innerHTML = filtered.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
-            <p class="text-[11px] font-bold text-indigo-900 mb-1">Tijdlijn van selectie (${filtered.length} overwinningen):</p>
-            <div class="flex items-end gap-1 h-24 pt-4 border-b border-indigo-200">
-                ${filtered.map((m, i) => {
-                    const heightPct = Math.min(100, Math.max(20, (i + 1) * 15));
-                    return `<div class="flex-1 bg-indigo-500 rounded-t hover:bg-indigo-700 transition relative group" style="height: ${heightPct}%"><span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] bg-indigo-950 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">${m.category}: ${m.text || 'Knikker'}</span></div>`;
-                }).join('')}
+        // Groepeer per datum voor duidelijke aantallen en datums in de tijdlijn
+        const dateGroups = {};
+        filtered.forEach(m => {
+            const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' });
+            dateGroups[dateStr] = (dateGroups[dateStr] || 0) + 1;
+        });
+
+        const entries = Object.entries(dateGroups);
+        containerEl.innerHTML = entries.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
+            <p class="text-[11px] font-bold text-indigo-900 mb-2">Activiteits-tijdlijn (Aantal overwinningen per datum):</p>
+            <div class="space-y-1.5 max-h-36 overflow-y-auto">
+                ${entries.map(([date, count]) => `
+                    <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs">
+                        <span class="font-semibold text-gray-700">📅 ${date}</span>
+                        <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 font-bold rounded-md">+${count} knikker${count > 1 ? 's' : ''}</span>
+                    </div>
+                `).join('')}
             </div>
         `;
     }
@@ -503,13 +509,23 @@ function renderMoodHistory(appData) {
             return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${mood}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
         }).join('');
     } else {
-        containerEl.innerHTML = filteredMoods.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor lijngrafiek.</p>' : `
-            <p class="text-[11px] font-bold text-indigo-900 mb-1">Tijdlijn van selectie (${filteredMoods.length} metingen):</p>
-            <div class="flex items-end gap-1 h-24 pt-4 border-b border-indigo-200">
-                ${filteredMoods.map((m, i) => {
-                    const heightPct = Math.min(100, Math.max(20, (i + 1) * 15));
-                    return `<div class="flex-1 bg-indigo-500 rounded-t hover:bg-indigo-700 transition relative group" style="height: ${heightPct}%"><span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] bg-indigo-950 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">${m.mood}</span></div>`;
-                }).join('')}
+        const dateGroups = {};
+        filteredMoods.forEach(m => {
+            const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' });
+            if (!dateGroups[dateStr]) dateGroups[dateStr] = [];
+            dateGroups[dateStr].push(m.mood);
+        });
+
+        const entries = Object.entries(dateGroups);
+        containerEl.innerHTML = entries.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
+            <p class="text-[11px] font-bold text-indigo-900 mb-2">Tijdlijn van stemmingen per datum:</p>
+            <div class="space-y-1.5 max-h-36 overflow-y-auto">
+                ${entries.map(([date, moods]) => `
+                    <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs">
+                        <span class="font-semibold text-gray-700">📅 ${date}</span>
+                        <span class="text-indigo-900 font-medium">${moods.join(', ')}</span>
+                    </div>
+                `).join('')}
             </div>
         `;
     }
