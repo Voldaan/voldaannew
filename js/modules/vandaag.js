@@ -65,7 +65,8 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
-                    <div id="mood-custom-filter-box" class="hidden">
+                    <!-- Direct zichtbaar en klikbaar wanneer specifiek gekozen -->
+                    <div id="mood-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="mood-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="mood-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="number" id="mood-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -96,7 +97,6 @@ export function initVandaagModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Elke overwinning valt als een echte knikker in jouw glazen pot.</p>
             
-            <!-- Interactieve Zwaartekracht Canvas Container -->
             <div id="physics-pot-container" class="relative w-full h-48 bg-gradient-to-b from-indigo-50/90 to-indigo-100/70 border-2 border-indigo-200/80 rounded-2xl mb-3 overflow-hidden shadow-inner flex items-center justify-center">
                 <canvas id="marble-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></canvas>
                 <div class="absolute bottom-2 text-[10px] text-indigo-900 font-semibold bg-white/80 px-2.5 py-0.5 rounded-full shadow-sm pointer-events-none">💡 Sleep met je muis/vinger aan de knikkers!</div>
@@ -121,7 +121,8 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
-                    <div id="marble-custom-filter-box" class="hidden">
+                    <!-- Direct zichtbaar en klikbaar wanneer specifiek gekozen -->
+                    <div id="marble-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -449,8 +450,10 @@ function setupDateFilterListeners(prefix, callback) {
         callback();
     });
 
-    [dateInput, monthInput, yearInput, weekInput].forEach(inp => inp.addEventListener('change', callback));
-    if (yearInput) yearInput.addEventListener('input', callback);
+    [dateInput, monthInput, yearInput, weekInput].forEach(inp => {
+        inp.addEventListener('change', callback);
+        inp.addEventListener('input', callback);
+    });
 }
 
 function renderTrotsKluis(appData) {
@@ -475,7 +478,6 @@ function renderTrotsKluis(appData) {
     const marbles = appData.marbles || [];
     countBadge.textContent = `${marbles.length} Knikkers`;
 
-    // Herlaad de fysieke zwaartekracht pot
     initPhysicsMarblePot(appData);
 
     const filtered = marbles.filter(m => {
