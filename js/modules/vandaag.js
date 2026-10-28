@@ -28,7 +28,7 @@ export function initVandaagModule(appData) {
     }
 
     container.innerHTML = `
-        <!-- 1. Mijn Dag Begint Nu & Mood Tracker (Met uniform Historie & Trends menu) -->
+        <!-- 1. Mijn Dag Begint Nu & Mood Tracker -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">✨ Mijn Dag Begint Nu</h2>
@@ -46,7 +46,6 @@ export function initVandaagModule(appData) {
                 `).join('')}
             </div>
 
-            <!-- Historie & Trends Container voor Mijn Dag Begint Nu (Uniform met Trots-Kluis) -->
             <div id="mood-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
                 <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="grid grid-cols-2 gap-2">
@@ -84,10 +83,10 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. De Trots-Kluis -->
+        <!-- 2. De Trots-Kluis (Met Fysische Zwaartekracht Pot) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
+                <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis (Fysische Pot)</h2>
                 <div class="flex items-center gap-3">
                     <span id="marble-count-badge" class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[11px] font-bold">0 Knikkers</span>
                     <button id="toggle-marble-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
@@ -95,15 +94,14 @@ export function initVandaagModule(appData) {
                     </button>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Elke kleine overwinning vult jouw virtuele glazen pot automatisch.</p>
+            <p class="text-xs text-gray-500 mb-3">Elke overwinning valt als een echte knikker in jouw glazen pot.</p>
             
-            <div class="p-4 bg-gradient-to-b from-indigo-50/80 to-indigo-100/50 border border-indigo-200/60 rounded-2xl mb-3 flex flex-col items-center text-center shadow-inner">
-                <div class="text-2xl mb-1">🏺✨</div>
-                <p class="text-xs font-bold text-indigo-950 mb-1">Jouw Gevulde Knikkerpot</p>
-                <div id="marble-visual-pot" class="flex flex-wrap gap-1.5 justify-center max-h-28 overflow-y-auto p-2 w-full"></div>
+            <!-- Interactieve Zwaartekracht Canvas Container -->
+            <div id="physics-pot-container" class="relative w-full h-48 bg-gradient-to-b from-indigo-900/10 to-indigo-950/20 border-2 border-indigo-200 rounded-2xl mb-3 overflow-hidden shadow-inner flex items-center justify-center">
+                <canvas id="marble-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                <div class="absolute bottom-2 text-[10px] text-indigo-900 font-semibold bg-white/80 px-2 py-0.5 rounded-full shadow-sm pointer-events-none">💡 Tip: Sleep met je muis aan de knikkers!</div>
             </div>
 
-            <!-- Historie & Trends Container voor De Trots-Kluis -->
             <div id="marble-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
                 <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="grid grid-cols-2 gap-2">
@@ -200,6 +198,92 @@ export function initVandaagModule(appData) {
 
     initVandaagModals(appData);
     initVandaagLogic(appData);
+    initPhysicsMarblePot(appData);
+}
+
+let physicsEngineInstance = null;
+
+function initPhysicsMarblePot(appData) {
+    const canvas = document.getElementById('marble-canvas');
+    if (!canvas || typeof Matter === 'undefined') return;
+
+    const container = canvas.parentElement;
+    const width = container.clientWidth || 300;
+    const height = 192; // h-48
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint, Constraint } = Matter;
+
+    const engine = Engine.create();
+    physicsEngineInstance = engine;
+
+    const render = Render.create({
+        canvas: canvas,
+        engine: engine,
+        options: {
+            width: width,
+            height: height,
+            wireframes: false,
+            background: 'transparent'
+        }
+    });
+
+    Render.run(render);
+    const runner = Runner.create();
+    Runner.run(runner, engine);
+
+    // Fysische muren van de pot (Bodem en zijkanten)
+    const wallOptions = { isStatic: true, render: { visible: false } };
+    const ground = Bodies.rectangle(width / 2, height + 10, width, 40, wallOptions);
+    const leftWall = Bodies.rectangle(-10, height / 2, 40, height * 2, wallOptions);
+    const rightWall = Bodies.rectangle(width + 10, height / 2, 40, height * 2, wallOptions);
+
+    Composite.add(engine.world, [ground, leftWall, rightWall]);
+
+    // Knikkers toevoegen op basis van appData.marbles
+    const marbles = appData.marbles || [];
+    const colorMap = {
+        'Taken': '#6366f1',       // Indigo
+        'Gezondheid': '#10b981',  // Emerald
+        'Doelen': '#f59e0b',      // Amber
+        'Geld & Aflossingen': '#8b5cf6', // Purple
+        'Dagstart': '#ec4899',    // Rose
+        'Algemeen': '#3b82f6'     // Blue
+    };
+
+    marbles.forEach((m, idx) => {
+        const cat = m.category || 'Algemeen';
+        const color = colorMap[cat] || '#6366f1';
+        
+        // Laat ze willekeurig bovenaan in de fles vallen
+        const x = width / 2 + (Math.random() * 60 - 30);
+        const y = -20 - (idx * 15);
+
+        const circle = Bodies.circle(x, y, 11, {
+            restitution: 0.6, // Stuiterfactor
+            friction: 0.05,
+            render: {
+                fillStyle: color,
+                strokeStyle: '#ffffff',
+                lineWidth: 1.5
+            }
+        });
+        Composite.add(engine.world, circle);
+    });
+
+    // Muis interactie om knikkers op te pakken en rond te slingeren
+    const mouse = Mouse.create(canvas);
+    const mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+            stiffness: 0.2,
+            render: { visible: false }
+        }
+    });
+    Composite.add(engine.world, mouseConstraint);
+    render.mouse = mouse;
 }
 
 function initVandaagModals(appData) {
@@ -379,7 +463,6 @@ function setupDateFilterListeners(prefix, callback) {
 function renderTrotsKluis(appData) {
     const listEl = document.getElementById('marble-list');
     const countBadge = document.getElementById('marble-count-badge');
-    const visualPot = document.getElementById('marble-visual-pot');
     const containerEl = document.getElementById('marble-chart-container');
     
     const catFilter = document.getElementById('marble-cat-filter').value;
@@ -399,11 +482,8 @@ function renderTrotsKluis(appData) {
     const marbles = appData.marbles || [];
     countBadge.textContent = `${marbles.length} Knikkers`;
 
-    const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-rose-500', 'bg-teal-500'];
-    visualPot.innerHTML = marbles.length === 0 ? '<p class="text-[11px] text-indigo-400 italic">Nog geen knikkers in de pot.</p>' : marbles.map((m, idx) => {
-        const colorClass = colors[idx % colors.length];
-        return `<div class="w-6 h-6 rounded-full ${colorClass} shadow-sm border border-white/80 flex items-center justify-center text-[10px] text-white font-bold cursor-pointer transition transform hover:scale-110" title="[${m.category || 'Algemeen'}] ${m.text || m.reason || 'Knikker'}">✨</div>`;
-    }).join('');
+    // Herlaad de physics simulatie pot zodat deze actueel blijft
+    initPhysicsMarblePot(appData);
 
     const filtered = marbles.filter(m => {
         const matchCat = catFilter === 'Alle' || (m.category || 'Algemeen') === catFilter;
