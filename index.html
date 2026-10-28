@@ -6,24 +6,16 @@
     <title>Voldaan - Jouw Zachte Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
-<body class="bg-indigo-50/40 text-gray-800 font-sans min-h-screen flex flex-col antialiased">
+<body class="bg-indigo-50/40 text-gray-800 font-sans min-h-screen flex flex-col antialiased pb-20">
 
-    <!-- Hoofdnavigatie / Tabbladen (Strak op één lijn) -->
+    <!-- Header / Logo bovenaan -->
     <header class="bg-white border-b border-indigo-100 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-                <span class="text-xl">🪷</span>
-                <h1 class="text-base font-bold text-indigo-950 tracking-tight">Voldaan</h1>
-            </div>
-            <nav id="app-nav" class="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
-                <button data-tab="vandaag" class="tab-btn px-3 py-1.5 rounded-xl transition bg-indigo-600 text-white shadow-sm text-xs font-semibold whitespace-nowrap">Vandaag</button>
-                <button data-tab="plannen" class="tab-btn px-3 py-1.5 rounded-xl transition bg-white text-gray-600 hover:bg-indigo-50 text-xs font-semibold whitespace-nowrap">Plannen</button>
-                <button data-tab="money" class="tab-btn px-3 py-1.5 rounded-xl transition bg-white text-gray-600 hover:bg-indigo-50 text-xs font-semibold whitespace-nowrap">Geld</button>
-                <button data-tab="vitality" class="tab-btn px-3 py-1.5 rounded-xl transition bg-white text-gray-600 hover:bg-indigo-50 text-xs font-semibold whitespace-nowrap">Vitaliteit</button>
-                <button data-tab="ideeen" class="tab-btn px-3 py-1.5 rounded-xl transition bg-white text-gray-600 hover:bg-indigo-50 text-xs font-semibold whitespace-nowrap">Ideeën</button>
-                <button data-tab="inzichten" class="tab-btn px-3 py-1.5 rounded-xl transition bg-white text-gray-600 hover:bg-indigo-50 text-xs font-semibold whitespace-nowrap">Inzichten</button>
-            </nav>
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-center gap-2">
+            <span class="text-xl">🪷</span>
+            <h1 class="text-base font-bold text-indigo-950 tracking-tight">Voldaan</h1>
         </div>
     </header>
 
@@ -46,10 +38,35 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-indigo-100 py-4 text-center text-[11px] text-gray-400">
-        <p>Voldaan app • Ontworpen voor rust, overzicht en zachtheid 🪷</p>
-    </footer>
+    <!-- Vaste Navigatiebalk ONDERAAN met Iconen -->
+    <nav id="app-nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-indigo-100 z-50 shadow-lg py-2 px-3">
+        <div class="max-w-md mx-auto flex justify-around items-center text-[10px] font-semibold text-gray-500">
+            <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition text-indigo-600">
+                <span class="text-lg">☀️</span>
+                <span>Vandaag</span>
+            </button>
+            <button data-tab="plannen" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+                <span class="text-lg">📅</span>
+                <span>Plannen</span>
+            </button>
+            <button data-tab="money" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+                <span class="text-lg">💰</span>
+                <span>Geld</span>
+            </button>
+            <button data-tab="vitality" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+                <span class="text-lg">🌱</span>
+                <span>Vitaliteit</span>
+            </button>
+            <button data-tab="ideeen" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+                <span class="text-lg">💡</span>
+                <span>Ideeën</span>
+            </button>
+            <button data-tab="inzichten" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+                <span class="text-lg">🔍</span>
+                <span>Inzichten</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- App JavaScript Entry Point -->
     <script type="module" src="js/app.js"></script>
