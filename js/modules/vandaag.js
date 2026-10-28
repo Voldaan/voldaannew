@@ -120,6 +120,7 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
+                    <!-- Specifieke invoervelden die direct openklappen bij selectie -->
                     <div id="marble-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -433,18 +434,18 @@ function setupDateFilterListeners(prefix, callback) {
 
     dateFilterSelect.addEventListener('change', () => {
         customBox.classList.add('hidden');
-        dateInput.classList.add('hidden');
-        monthInput.classList.add('hidden');
-        yearInput.classList.add('hidden');
-        weekInput.classList.add('hidden');
+        if (dateInput) dateInput.classList.add('hidden');
+        if (monthInput) monthInput.classList.add('hidden');
+        if (yearInput) yearInput.classList.add('hidden');
+        if (weekInput) weekInput.classList.add('hidden');
 
         const val = dateFilterSelect.value;
         if (val.startsWith('specific-')) {
             customBox.classList.remove('hidden');
-            if (val === 'specific-day') dateInput.classList.remove('hidden');
-            if (val === 'specific-month') monthInput.classList.remove('hidden');
-            if (val === 'specific-year') yearInput.classList.remove('hidden');
-            if (val === 'specific-week') weekInput.classList.remove('hidden');
+            if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+            if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+            if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+            if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
         }
         callback();
     });
@@ -471,10 +472,10 @@ function renderTrotsKluis(appData) {
     const weekInput = document.getElementById('marble-custom-week');
 
     let customVal = null;
-    if (dateFilter === 'specific-day') customVal = dateInput.value;
-    else if (dateFilter === 'specific-month') customVal = monthInput.value;
-    else if (dateFilter === 'specific-year') customVal = yearInput.value;
-    else if (dateFilter === 'specific-week') customVal = weekInput.value;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
 
     const marbles = appData.marbles || [];
     countBadge.textContent = `${marbles.length} Knikkers`;
@@ -550,10 +551,10 @@ function renderMoodHistory(appData) {
     const weekInput = document.getElementById('mood-custom-week');
 
     let customVal = null;
-    if (dateFilter === 'specific-day') customVal = dateInput.value;
-    else if (dateFilter === 'specific-month') customVal = monthInput.value;
-    else if (dateFilter === 'specific-year') customVal = yearInput.value;
-    else if (dateFilter === 'specific-week') customVal = weekInput.value;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
 
     const allMoods = appData.moods || [];
     const filteredMoods = allMoods.filter(m => {
@@ -585,7 +586,6 @@ function renderMoodHistory(appData) {
             return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${mood}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
         }).join('');
     } else {
-        // Uniforme, strakke tijdlijn net als bij De Trots-Kluis (geen rommelige tekstbreuken meer)
         const dateGroups = {};
         filteredMoods.forEach(m => {
             const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -595,7 +595,7 @@ function renderMoodHistory(appData) {
 
         const entries = Object.entries(dateGroups);
         containerEl.innerHTML = entries.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
-            <p class="text-[11px] font-bold text-indigo-900 mb-2">Activiteits-tijdlijn (Stemmingen per datum):</p>
+            <p class="text-[11px] font-bold text-indigo-900 mb-2">Tijdlijn van stemmingen per datum:</p>
             <div class="space-y-1.5 max-h-36 overflow-y-auto">
                 ${entries.map(([date, moods]) => `
                     <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs">
