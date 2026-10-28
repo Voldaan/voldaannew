@@ -35,6 +35,8 @@
         <div id="money" class="tab-content hidden"></div>
         <div id="vitality" class="tab-content hidden"></div>
         <div id="ideeen" class="tab-content hidden"></div>
+        <div id="kennis" class="tab-content hidden"></div>
+        <div id="luchtig" class="tab-content hidden"></div>
         <div id="inzichten" class="tab-content hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
                 <h2 class="text-base font-bold text-indigo-950 mb-1">🔍 Inzichten & Verbanden</h2>
@@ -46,9 +48,9 @@
         </div>
     </main>
 
-    <!-- Vaste Navigatiebalk ONDERAAN (Horizontaal scrollbaar voor alle tabbladen) -->
+    <!-- Vaste Navigatiebalk ONDERAAN (Horizontaal scrollbaar voor alle 8 tabbladen) -->
     <nav id="app-nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-indigo-100 z-50 shadow-lg py-2 px-3">
-        <div class="max-w-md mx-auto flex items-center gap-3 overflow-x-auto no-scrollbar text-[11px] font-semibold text-gray-500 justify-start sm:justify-around">
+        <div class="max-w-md mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar text-[11px] font-semibold text-gray-500 justify-start">
             <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition text-indigo-600 flex-shrink-0">
                 <span class="text-lg">☀️</span>
                 <span>Vandaag</span>
@@ -68,6 +70,14 @@
             <button data-tab="ideeen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">💡</span>
                 <span>Ideeën</span>
+            </button>
+            <button data-tab="kennis" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+                <span class="text-lg">🧠</span>
+                <span>Kennis</span>
+            </button>
+            <button data-tab="luchtig" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+                <span class="text-lg">🎈</span>
+                <span>Luchtig</span>
             </button>
             <button data-tab="inzichten" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">🔍</span>
