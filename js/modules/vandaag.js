@@ -28,7 +28,7 @@ export function initVandaagModule(appData) {
     }
 
     container.innerHTML = `
-        <!-- 1. Mijn Dag Begint Nu & Mood Tracker -->
+        <!-- 1. Mijn Dag Begint Nu & Mood Tracker (Met uniform Historie & Trends menu) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">✨ Mijn Dag Begint Nu</h2>
@@ -46,8 +46,9 @@ export function initVandaagModule(appData) {
                 `).join('')}
             </div>
 
-            <div id="mood-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3">
-                <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+            <!-- Historie & Trends Container voor Mijn Dag Begint Nu (Uniform met Trots-Kluis) -->
+            <div id="mood-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
+                <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="grid grid-cols-2 gap-2">
                         <select id="mood-filter-item" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
                             <option value="Alle">Alle stemmingen</option>
@@ -73,13 +74,13 @@ export function initVandaagModule(appData) {
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-2 text-xs">
-                    <button id="mood-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Percentages</button>
-                    <button id="mood-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Lijngrafiek</button>
+                <div class="flex justify-end gap-2">
+                    <button id="mood-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
+                    <button id="mood-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
                 </div>
 
                 <div id="mood-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
-                <div id="mood-history-list" class="space-y-1 text-xs text-gray-600 max-h-32 overflow-y-auto"></div>
+                <div id="mood-history-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
             </div>
         </div>
 
@@ -132,7 +133,7 @@ export function initVandaagModule(appData) {
 
                 <div class="flex justify-end gap-2">
                     <button id="marble-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
-                    <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Aantallen</button>
+                    <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
                 </div>
 
                 <div id="marble-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
@@ -440,10 +441,9 @@ function renderTrotsKluis(appData) {
             return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${cat}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
         }).join('');
     } else {
-        // Groepeer per datum voor duidelijke aantallen en datums in de tijdlijn
         const dateGroups = {};
         filtered.forEach(m => {
-            const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' });
+            const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
             dateGroups[dateStr] = (dateGroups[dateStr] || 0) + 1;
         });
 
@@ -511,9 +511,9 @@ function renderMoodHistory(appData) {
     } else {
         const dateGroups = {};
         filteredMoods.forEach(m => {
-            const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' });
+            const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
             if (!dateGroups[dateStr]) dateGroups[dateStr] = [];
-            dateGroups[dateStr].push(m.mood);
+            dateGroups[dateStr].push(`${m.icon || ''} ${m.mood}`);
         });
 
         const entries = Object.entries(dateGroups);
