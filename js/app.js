@@ -1,14 +1,11 @@
 // js/app.js
 import { loadAppData } from './modules/storage.js';
 import { initVandaagModule } from './modules/vandaag.js';
-// Importeer hier eventueel je andere modules als je die hebt, bijvoorbeeld:
-// import { initPlannenModule } from './modules/plannen.js';
-// import { initMoneyModule } from './modules/money.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const appData = loadAppData();
+    let appData = loadAppData();
 
-    // Globale router functie om te schakelen tussen tabbladen
+    // Globale switchTab functie
     window.switchTab = function(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => {
             el.classList.add('hidden');
@@ -17,6 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = document.getElementById(tabId);
         if (target) {
             target.classList.remove('hidden');
+        } else {
+            // Fallback als container mist: toon Vandaag
+            const fallback = document.getElementById('vandaag');
+            if (fallback) fallback.classList.remove('hidden');
         }
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Klik-listeners koppelen aan alle navigatieknoppen in de onderste balk
+    // Klik-listeners koppelen aan alle navigatieknoppen onderaan
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.getAttribute('data-tab');
@@ -42,7 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Initialiseer modules
-    initVandaagModule(appData);
-    // Voeg hier eventuele initialisaties van andere tabbladen toe indien nodig
+    // Start de Vandaag module veilig
+    try {
+        initVandaagModule(appData);
+    } catch (e) {
+        console.error("Fout bij laden Vandaag module:", e);
+    }
 });
