@@ -65,7 +65,6 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
-                    <!-- Direct zichtbaar en klikbaar wanneer specifiek gekozen -->
                     <div id="mood-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="mood-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="mood-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -84,7 +83,7 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. De Trots-Kluis (Met Fysische Zwaartekracht Pot) -->
+        <!-- 2. De Trots-Kluis -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
@@ -121,7 +120,6 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
-                    <!-- Direct zichtbaar en klikbaar wanneer specifiek gekozen -->
                     <div id="marble-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -440,19 +438,22 @@ function setupDateFilterListeners(prefix, callback) {
         yearInput.classList.add('hidden');
         weekInput.classList.add('hidden');
 
-        if (dateFilterSelect.value.startsWith('specific-')) {
+        const val = dateFilterSelect.value;
+        if (val.startsWith('specific-')) {
             customBox.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-day') dateInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-month') monthInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-year') yearInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-week') weekInput.classList.remove('hidden');
+            if (val === 'specific-day') dateInput.classList.remove('hidden');
+            if (val === 'specific-month') monthInput.classList.remove('hidden');
+            if (val === 'specific-year') yearInput.classList.remove('hidden');
+            if (val === 'specific-week') weekInput.classList.remove('hidden');
         }
         callback();
     });
 
     [dateInput, monthInput, yearInput, weekInput].forEach(inp => {
-        inp.addEventListener('change', callback);
-        inp.addEventListener('input', callback);
+        if (inp) {
+            inp.addEventListener('change', callback);
+            inp.addEventListener('input', callback);
+        }
     });
 }
 
@@ -584,6 +585,7 @@ function renderMoodHistory(appData) {
             return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${mood}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
         }).join('');
     } else {
+        // Uniforme, strakke tijdlijn net als bij De Trots-Kluis (geen rommelige tekstbreuken meer)
         const dateGroups = {};
         filteredMoods.forEach(m => {
             const dateStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -593,12 +595,12 @@ function renderMoodHistory(appData) {
 
         const entries = Object.entries(dateGroups);
         containerEl.innerHTML = entries.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
-            <p class="text-[11px] font-bold text-indigo-900 mb-2">Tijdlijn van stemmingen per datum:</p>
+            <p class="text-[11px] font-bold text-indigo-900 mb-2">Activiteits-tijdlijn (Stemmingen per datum):</p>
             <div class="space-y-1.5 max-h-36 overflow-y-auto">
                 ${entries.map(([date, moods]) => `
                     <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs">
-                        <span class="font-semibold text-gray-700">📅 ${date}</span>
-                        <span class="text-indigo-900 font-medium">${moods.join(', ')}</span>
+                        <span class="font-semibold text-gray-700 whitespace-nowrap">📅 ${date}</span>
+                        <span class="text-indigo-900 font-medium text-right truncate ml-2">${moods.join(', ')}</span>
                     </div>
                 `).join('')}
             </div>
