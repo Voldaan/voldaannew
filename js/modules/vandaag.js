@@ -83,13 +83,18 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. De Trots-Kluis -->
+        <!-- 2. De Trots-Kluis (Met uniform Historie & Trends menu en verwijderde knikker-knop) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
-                <span id="marble-count-badge" class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[11px] font-bold">0 Knikkers</span>
+                <div class="flex items-center gap-3">
+                    <span id="marble-count-badge" class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[11px] font-bold">0 Knikkers</span>
+                    <button id="toggle-marble-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
+                        Historie<br><span class="text-[10px] text-gray-500">& Trends</span>
+                    </button>
+                </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Elke kleine overwinning vult jouw virtuele glazen pot met gekleurde knikkers.</p>
+            <p class="text-xs text-gray-500 mb-3">Elke kleine overwinning vult jouw virtuele glazen pot automatisch.</p>
             
             <div class="p-4 bg-gradient-to-b from-indigo-50/80 to-indigo-100/50 border border-indigo-200/60 rounded-2xl mb-3 flex flex-col items-center text-center shadow-inner">
                 <div class="text-2xl mb-1">🏺✨</div>
@@ -97,40 +102,45 @@ export function initVandaagModule(appData) {
                 <div id="marble-visual-pot" class="flex flex-wrap gap-1.5 justify-center max-h-28 overflow-y-auto p-2 w-full"></div>
             </div>
 
-            <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="marble-cat-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
-                        <option value="Alle">Alle categorieën</option>
-                        ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
-                    </select>
-                    <select id="marble-date-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
-                        <option value="all">Alle data</option>
-                        <option value="today">Vandaag</option>
-                        <option value="week">Deze week</option>
-                        <option value="specific-week">Specifieke week...</option>
-                        <option value="month">Deze maand</option>
-                        <option value="specific-month">Specifieke maand...</option>
-                        <option value="year">Dit jaar</option>
-                        <option value="specific-year">Specifiek jaar...</option>
-                        <option value="specific-day">Specifieke dag...</option>
-                    </select>
+            <!-- Uniforme Historie & Trends Container voor De Trots-Kluis -->
+            <div id="marble-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
+                <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="marble-cat-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                            <option value="Alle">Alle categorieën</option>
+                            ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                        <select id="marble-date-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                            <option value="all">Alle data</option>
+                            <option value="today">Vandaag</option>
+                            <option value="week">Deze week</option>
+                            <option value="specific-week">Specifieke week...</option>
+                            <option value="month">Deze maand</option>
+                            <option value="specific-month">Specifieke maand...</option>
+                            <option value="year">Dit jaar</option>
+                            <option value="specific-year">Specifiek jaar...</option>
+                            <option value="specific-day">Specifieke dag...</option>
+                        </select>
+                    </div>
+                    <div id="marble-custom-filter-box" class="hidden">
+                        <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                        <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                        <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                        <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                    </div>
                 </div>
-                <div id="marble-custom-filter-box" class="hidden">
-                    <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                    <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                    <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                    <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+
+                <div class="flex justify-end gap-2">
+                    <button id="marble-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
+                    <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn</button>
                 </div>
+
+                <div id="marble-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
+                <div id="marble-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
             </div>
-
-            <button id="open-marble-modal-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm mb-3">
-                + Knikker erbij ✨
-            </button>
-
-            <div id="marble-list" class="space-y-2"></div>
         </div>
 
-        <!-- 3. Actie-Hub voor Vandaag (Precies zoals in jouw originele app-voorbeeld) -->
+        <!-- 3. Actie-Hub voor Vandaag -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 space-y-4 text-xs">
             <div class="flex justify-between items-center">
                 <h2 class="text-base font-bold text-indigo-950">📋 Actie-Hub voor Vandaag</h2>
@@ -138,13 +148,11 @@ export function initVandaagModule(appData) {
             </div>
             <p class="text-gray-500">Hier verzamelen we de belangrijkste zaken van jouw andere tabbladen. Vink ze hier direct af!</p>
 
-            <!-- Jouw Avond-pact voor vandaag -->
             <div class="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1">
                 <p class="font-bold text-indigo-950">🌙 JOUW AVOND-PACT VOOR VANDAAG:</p>
                 <div id="actie-hub-pact-container" class="text-gray-700 font-medium">Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!</div>
             </div>
 
-            <!-- Focus-taken -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center">
                     <p class="font-bold text-indigo-950">🎯 FOCUS-TAKEN (NIEUWSTE EERST):</p>
@@ -153,7 +161,6 @@ export function initVandaagModule(appData) {
                 <div id="actie-hub-tasks-list" class="space-y-2"></div>
             </div>
 
-            <!-- Doelen check-in -->
             <div class="space-y-2 pt-2 border-t border-gray-100">
                 <div class="flex justify-between items-center">
                     <p class="font-bold text-indigo-950">🧭 DOELEN CHECK-IN:</p>
@@ -265,6 +272,7 @@ function renderBuddyButtons(appData) {
 }
 
 let currentMoodViewMode = 'bars';
+let currentMarbleViewMode = 'bars';
 
 function initVandaagLogic(appData) {
     if (!appData.moods) appData.moods = [];
@@ -282,6 +290,7 @@ function initVandaagLogic(appData) {
         });
     });
 
+    // Toggle Historie & Trends voor Mood
     const toggleHistoryBtn = document.getElementById('toggle-mood-history');
     const historyBox = document.getElementById('mood-history-box');
     toggleHistoryBtn.addEventListener('click', () => {
@@ -289,34 +298,17 @@ function initVandaagLogic(appData) {
         if (!historyBox.classList.contains('hidden')) renderMoodHistory(appData);
     });
 
-    document.getElementById('mood-filter-item').addEventListener('change', () => renderMoodHistory(appData));
-    
-    const dateFilterSelect = document.getElementById('mood-filter-date');
-    const customBox = document.getElementById('mood-custom-filter-box');
-    const dateInput = document.getElementById('mood-custom-date');
-    const monthInput = document.getElementById('mood-custom-month');
-    const yearInput = document.getElementById('mood-custom-year');
-    const weekInput = document.getElementById('mood-custom-week');
-
-    dateFilterSelect.addEventListener('change', () => {
-        customBox.classList.add('hidden');
-        dateInput.classList.add('hidden');
-        monthInput.classList.add('hidden');
-        yearInput.classList.add('hidden');
-        weekInput.classList.add('hidden');
-
-        if (dateFilterSelect.value.startsWith('specific-')) {
-            customBox.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-day') dateInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-month') monthInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-year') yearInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-week') weekInput.classList.remove('hidden');
-        }
-        renderMoodHistory(appData);
+    // Toggle Historie & Trends voor De Trots-Kluis
+    const toggleMarbleHistoryBtn = document.getElementById('toggle-marble-history');
+    const marbleHistoryBox = document.getElementById('marble-history-box');
+    toggleMarbleHistoryBtn.addEventListener('click', () => {
+        marbleHistoryBox.classList.toggle('hidden');
+        if (!marbleHistoryBox.classList.contains('hidden')) renderTrotsKluis(appData);
     });
 
-    [dateInput, monthInput, yearInput, weekInput].forEach(inp => inp.addEventListener('change', () => renderMoodHistory(appData)));
-    yearInput.addEventListener('input', () => renderMoodHistory(appData));
+    // Mood filters & views
+    document.getElementById('mood-filter-item').addEventListener('change', () => renderMoodHistory(appData));
+    setupDateFilterListeners('mood', () => renderMoodHistory(appData));
 
     document.getElementById('mood-view-bars').addEventListener('click', () => {
         currentMoodViewMode = 'bars';
@@ -332,36 +324,80 @@ function initVandaagLogic(appData) {
         renderMoodHistory(appData);
     });
 
+    // Trots-Kluis filters & views
+    document.getElementById('marble-cat-filter').addEventListener('change', () => renderTrotsKluis(appData));
+    setupDateFilterListeners('marble', () => renderTrotsKluis(appData));
+
+    document.getElementById('marble-view-bars').addEventListener('click', () => {
+        currentMarbleViewMode = 'bars';
+        document.getElementById('marble-view-bars').className = 'px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold';
+        document.getElementById('marble-view-chart').className = 'px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold';
+        renderTrotsKluis(appData);
+    });
+
+    document.getElementById('marble-view-chart').addEventListener('click', () => {
+        currentMarbleViewMode = 'chart';
+        document.getElementById('marble-view-chart').className = 'px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold';
+        document.getElementById('marble-view-bars').className = 'px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold';
+        renderTrotsKluis(appData);
+    });
+
     renderTrotsKluis(appData);
     renderActieHub(appData);
     renderIdeeVanDeDag(appData);
     renderBuddyButtons(appData);
 }
 
+function setupDateFilterListeners(prefix, callback) {
+    const dateFilterSelect = document.getElementById(`${prefix}-filter-date`);
+    const customBox = document.getElementById(`${prefix}-custom-filter-box`);
+    const dateInput = document.getElementById(`${prefix}-custom-date`);
+    const monthInput = document.getElementById(`${prefix}-custom-month`);
+    const yearInput = document.getElementById(`${prefix}-custom-year`);
+    const weekInput = document.getElementById(`${prefix}-custom-week`);
+
+    if (!dateFilterSelect) return;
+
+    dateFilterSelect.addEventListener('change', () => {
+        customBox.classList.add('hidden');
+        dateInput.classList.add('hidden');
+        monthInput.classList.add('hidden');
+        yearInput.classList.add('hidden');
+        weekInput.classList.add('hidden');
+
+        if (dateFilterSelect.value.startsWith('specific-')) {
+            customBox.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-day') dateInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-month') monthInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-year') yearInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-week') weekInput.classList.remove('hidden');
+        }
+        callback();
+    });
+
+    [dateInput, monthInput, yearInput, weekInput].forEach(inp => inp.addEventListener('change', callback));
+    if (yearInput) yearInput.addEventListener('input', callback);
+}
+
 function renderTrotsKluis(appData) {
     const listEl = document.getElementById('marble-list');
     const countBadge = document.getElementById('marble-count-badge');
     const visualPot = document.getElementById('marble-visual-pot');
+    const containerEl = document.getElementById('marble-chart-container');
+    
     const catFilter = document.getElementById('marble-cat-filter').value;
     const dateFilter = document.getElementById('marble-date-filter').value;
 
-    const customBox = document.getElementById('marble-custom-filter-box');
     const dateInput = document.getElementById('marble-custom-date');
     const monthInput = document.getElementById('marble-custom-month');
     const yearInput = document.getElementById('marble-custom-year');
     const weekInput = document.getElementById('marble-custom-week');
 
-    dateInput.classList.add('hidden');
-    monthInput.classList.add('hidden');
-    yearInput.classList.add('hidden');
-    weekInput.classList.add('hidden');
-    customBox.classList.add('hidden');
-
     let customVal = null;
-    if (dateFilter === 'specific-day') { customBox.classList.remove('hidden'); dateInput.classList.remove('hidden'); customVal = dateInput.value; }
-    else if (dateFilter === 'specific-month') { customBox.classList.remove('hidden'); monthInput.classList.remove('hidden'); customVal = monthInput.value; }
-    else if (dateFilter === 'specific-year') { customBox.classList.remove('hidden'); yearInput.classList.remove('hidden'); customVal = yearInput.value; }
-    else if (dateFilter === 'specific-week') { customBox.classList.remove('hidden'); weekInput.classList.remove('hidden'); customVal = weekInput.value; }
+    if (dateFilter === 'specific-day') customVal = dateInput.value;
+    else if (dateFilter === 'specific-month') customVal = monthInput.value;
+    else if (dateFilter === 'specific-year') customVal = yearInput.value;
+    else if (dateFilter === 'specific-week') customVal = weekInput.value;
 
     const marbles = appData.marbles || [];
     countBadge.textContent = `${marbles.length} Knikkers`;
@@ -378,10 +414,10 @@ function renderTrotsKluis(appData) {
         return matchCat && matchDate;
     });
 
-    listEl.innerHTML = filtered.length === 0 ? `<p class="text-xs text-gray-400 italic">Geen knikkers gevonden.</p>` : filtered.slice(-6).reverse().map(m => `
-        <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs">
+    listEl.innerHTML = filtered.length === 0 ? `<p class="text-xs text-gray-400 italic">Geen knikkers gevonden in deze selectie.</p>` : filtered.slice(-6).reverse().map(m => `
+        <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
             <div>
-                <span class="font-bold text-indigo-900 px-2 py-0.5 bg-indigo-100/70 rounded-md mr-1.5">[${m.category || 'Algemeen'}]</span> 
+                <span class="font-bold text-indigo-900 px-1.5 py-0.5 bg-indigo-100/70 rounded-md mr-1">[${m.category || 'Algemeen'}]</span> 
                 <span class="text-gray-800">${m.text || m.reason || 'Knikker'}</span>
                 <span class="text-[10px] text-gray-400 block mt-0.5">${new Date(m.date || Date.now()).toLocaleDateString('nl-NL')}</span>
             </div>
@@ -395,12 +431,29 @@ function renderTrotsKluis(appData) {
         renderTrotsKluis(appData);
     };
 
-    document.getElementById('marble-cat-filter').onchange = () => renderTrotsKluis(appData);
-    document.getElementById('marble-date-filter').onchange = () => renderTrotsKluis(appData);
-    dateInput.onchange = () => renderTrotsKluis(appData);
-    monthInput.onchange = () => renderTrotsKluis(appData);
-    yearInput.oninput = () => renderTrotsKluis(appData);
-    weekInput.onchange = () => renderTrotsKluis(appData);
+    if (currentMarbleViewMode === 'bars') {
+        const counts = {};
+        filtered.forEach(m => {
+            const cat = m.category || 'Algemeen';
+            counts[cat] = (counts[cat] || 0) + 1;
+        });
+        const total = filtered.length;
+
+        containerEl.innerHTML = total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen trenddata in deze selectie.</p>' : Object.entries(counts).map(([cat, count]) => {
+            const pct = Math.round((count / total) * 100);
+            return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${cat}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
+        }).join('');
+    } else {
+        containerEl.innerHTML = filtered.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
+            <p class="text-[11px] font-bold text-indigo-900 mb-1">Tijdlijn van selectie (${filtered.length} overwinningen):</p>
+            <div class="flex items-end gap-1 h-24 pt-4 border-b border-indigo-200">
+                ${filtered.map((m, i) => {
+                    const heightPct = Math.min(100, Math.max(20, (i + 1) * 15));
+                    return `<div class="flex-1 bg-indigo-500 rounded-t hover:bg-indigo-700 transition relative group" style="height: ${heightPct}%"><span class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[9px] bg-indigo-950 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">${m.category}: ${m.text || 'Knikker'}</span></div>`;
+                }).join('')}
+            </div>
+        `;
+    }
 }
 
 function renderMoodHistory(appData) {
@@ -409,7 +462,6 @@ function renderMoodHistory(appData) {
     const itemFilter = document.getElementById('mood-filter-item').value;
     const dateFilter = document.getElementById('mood-filter-date').value;
 
-    const customBox = document.getElementById('mood-custom-filter-box');
     const dateInput = document.getElementById('mood-custom-date');
     const monthInput = document.getElementById('mood-custom-month');
     const yearInput = document.getElementById('mood-custom-year');
@@ -468,7 +520,6 @@ function renderActieHub(appData) {
     const tasksListEl = document.getElementById('actie-hub-tasks-list');
     const goalsListEl = document.getElementById('actie-hub-goals-list');
 
-    // Avond-pact inladen
     const activePacts = appData.plans?.eveningPacts || [];
     if (activePacts.length > 0) {
         pactContainer.innerHTML = activePacts[activePacts.length - 1].text;
@@ -499,7 +550,7 @@ function renderActieHub(appData) {
             voegTrotsKnikkerToe(appData, `Taak volbracht: ${task.text}`, task.category || 'Taken');
             saveAppData(appData);
             renderActieHub(appData);
-            showToast("Taak afgev ಈrd! ✨");
+            showToast("Taak afgevinkt! ✨");
         }
     };
 
