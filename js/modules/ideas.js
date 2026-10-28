@@ -1,5 +1,5 @@
 // js/modules/ideas.js
-import { saveAppData } from './storage.js';
+import { saveAppData, showToast } from './storage.js';
 
 const DEFAULT_IDEA_CATEGORIES = ['Algemeen', 'Voldaan', 'Creatief', 'Werk / Studie', 'Privé / Thuis'];
 
@@ -20,12 +20,12 @@ export function initIdeasModule(appData) {
 
     container.innerHTML = `
         <!-- 1. Ideeënkluis & Post-its -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">📌 Ideeënkluis & Post-its</h2>
                 <div class="flex gap-2">
                     <button id="open-idea-cat-manager" class="text-xs text-indigo-600 hover:underline">Categorieën</button>
-                    <button id="open-all-ideas-modal" class="text-xs text-indigo-600 hover:underline font-medium">Alle Post-its</button>
+                    <button id="open-all-ideas-modal" class="text-xs text-indigo-600 hover:underline font-medium">Beheer & Archief</button>
                 </div>
             </div>
             <p class="text-xs text-gray-500 mb-3">Schrijf je gedachten van je af en laat ze rustig sudderen.</p>
@@ -44,18 +44,19 @@ export function initIdeasModule(appData) {
                 <textarea id="idea-text" rows="3" placeholder="Typ een willekeurig idee of wilde gedachte..." class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500" required></textarea>
                 <div class="grid grid-cols-2 gap-2">
                     <select id="idea-cat" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white"></select>
-                    <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Prik op het bord 📌</button>
+                    <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Prik op het bord 📌</button>
                 </div>
             </form>
 
-            <div id="idea-grid" class="grid grid-cols-1 gap-2.5"></div>
+            <div id="idea-grid" class="grid grid-cols-1 gap-2.5 mb-2"></div>
+            <div id="idea-expand-toggle-container" class="text-center"></div>
         </div>
 
         <!-- 2. Projecten-Hub -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🚀 Projecten-Hub</h2>
-                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Nieuw Project</button>
+                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Nieuw Project</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Zet spontane post-its om in gestructureerde projecten.</p>
             
@@ -70,33 +71,34 @@ export function initIdeasModule(appData) {
 function initIdeasModals(appData) {
     const allIdeasModalHTML = `
         <div id="all-ideas-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">📚 Alle Post-its in Kluis & Archief</h3>
-                    <button id="close-all-ideas-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                    <h3 class="text-sm font-bold text-indigo-950">📚 Alle Post-its in Kluis & Archief</h3>
+                    <button id="close-all-ideas-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 <div class="flex flex-col gap-2 bg-gray-50 p-2.5 rounded-xl border">
-                    <input type="text" id="modal-idea-search" placeholder="Live zoeken in ideeën..." class="w-full px-3 py-2 text-xs bg-white border rounded-xl">
+                    <input type="text" id="modal-idea-search" placeholder="Live zoeken in ideeën..." class="w-full px-3 py-2 bg-white border rounded-xl">
                     <div class="flex gap-2">
-                        <select id="modal-idea-cat-filter" class="flex-1 px-2 py-1.5 text-xs bg-white border rounded-xl">
+                        <select id="modal-idea-cat-filter" class="flex-1 px-2 py-1.5 bg-white border rounded-xl">
                             <option value="Alle">Alle categorieën</option>
                         </select>
-                        <button id="toggle-idea-archive-view" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-xl">Archief weergeven</button>
+                        <button id="toggle-idea-archive-view" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 font-semibold rounded-xl">Archief weergeven</button>
                     </div>
                 </div>
-                <ul id="modal-all-ideas-list" class="space-y-2 text-xs"></ul>
+                <ul id="modal-all-ideas-list" class="space-y-2"></ul>
             </div>
         </div>
     `;
 
     const projectModalHTML = `
         <div id="idea-project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">🚀 Nieuw Project vanuit Idee</h3>
-                    <button id="close-idea-project-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                    <h3 class="text-sm font-bold text-indigo-950">🚀 Nieuw Project vanuit Idee</h3>
+                    <button id="close-idea-project-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <form id="idea-project-form" class="space-y-3 text-xs">
+                <form id="idea-project-form" class="space-y-3">
+                    <input type="hidden" id="modal-proj-source-id">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Titel van het project</label>
                         <input type="text" id="modal-proj-title" placeholder="Bijv. Voldaan app vernieuwen" class="w-full px-3 py-2 border rounded-xl" required>
@@ -110,7 +112,7 @@ function initIdeasModals(appData) {
                         <input type="text" id="modal-proj-time" placeholder="Bijv. Voor eind van de maand" class="w-full px-3 py-2 border rounded-xl">
                     </div>
                     <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Subtaksen (komma-gescheiden)</label>
+                        <label class="block font-semibold text-gray-600 mb-1">Subtaken (komma-gescheiden)</label>
                         <input type="text" id="modal-proj-subtasks" placeholder="Stap 1, Stap 2, Stap 3" class="w-full px-3 py-2 border rounded-xl">
                     </div>
                     <div class="flex gap-2 pt-2">
@@ -124,12 +126,12 @@ function initIdeasModals(appData) {
 
     const editIdeaModalHTML = `
         <div id="edit-idea-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">✏️ Post-it Bewerken</h3>
-                    <button id="close-edit-idea-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                    <h3 class="text-sm font-bold text-indigo-950">✏️ Post-it Bewerken</h3>
+                    <button id="close-edit-idea-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <form id="edit-idea-form" class="space-y-3 text-xs">
+                <form id="edit-idea-form" class="space-y-3">
                     <input type="hidden" id="edit-idea-id">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Tekst</label>
@@ -158,7 +160,11 @@ function initIdeasModals(appData) {
     document.getElementById('close-all-ideas-modal').onclick = () => allModal.classList.add('hidden');
 
     const projModal = document.getElementById('idea-project-modal');
-    document.getElementById('open-project-modal-btn').onclick = () => projModal.classList.remove('hidden');
+    document.getElementById('open-project-modal-btn').onclick = () => {
+        document.getElementById('modal-proj-source-id').value = '';
+        document.getElementById('idea-project-form').reset();
+        projModal.classList.remove('hidden');
+    };
     document.getElementById('close-idea-project-modal').onclick = () => projModal.classList.add('hidden');
     document.getElementById('cancel-idea-project-modal').onclick = () => projModal.classList.add('hidden');
 
@@ -168,6 +174,7 @@ function initIdeasModals(appData) {
 
     document.getElementById('idea-project-form').onsubmit = (e) => {
         e.preventDefault();
+        const sourceId = document.getElementById('modal-proj-source-id').value;
         const title = document.getElementById('modal-proj-title').value.trim();
         const description = document.getElementById('modal-proj-desc').value.trim();
         const timeGoal = document.getElementById('modal-proj-time').value.trim();
@@ -177,9 +184,21 @@ function initIdeasModals(appData) {
         if (title) {
             if (!appData.ideasModule.projects) appData.ideasModule.projects = [];
             appData.ideasModule.projects.push({ id: Date.now(), title, description, timeGoal, subtasks, date: new Date().toISOString() });
+            
+            // Als het vanuit een post-it komt, deze eventueel archiveren of markeren
+            if (sourceId) {
+                const item = appData.ideasModule.ideas.find(x => x.id == sourceId);
+                if (item) {
+                    appData.ideasModule.ideas = appData.ideasModule.ideas.filter(x => x.id != sourceId);
+                    if (!appData.ideasModule.archivedIdeas) appData.ideasModule.archivedIdeas = [];
+                    appData.ideasModule.archivedIdeas.push(item);
+                }
+            }
+
             saveAppData(appData);
             projModal.classList.add('hidden');
             e.target.reset();
+            renderIdeasView(appData);
             renderProjectsView(appData);
             showToast("Project succesvol aangemaakt! 🚀");
         }
@@ -190,7 +209,6 @@ function initIdeasModals(appData) {
         const id = parseInt(document.getElementById('edit-idea-id').value);
         const text = document.getElementById('edit-idea-text').value.trim();
         const category = document.getElementById('edit-idea-cat').value;
-
         const item = appData.ideasModule.ideas.find(i => i.id === id);
         if (item && text) {
             item.text = text;
@@ -261,7 +279,6 @@ function renderIdeaCategoryChips(appData) {
     const chipsList = document.getElementById('idea-category-chips-list');
     if (!chipsList) return;
     const cats = appData.ideasModule.categories || DEFAULT_IDEA_CATEGORIES;
-
     chipsList.innerHTML = cats.map(c => `
         <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-indigo-900 font-medium text-[11px]">
             ${c}
@@ -277,41 +294,58 @@ function renderIdeaCategoryChips(appData) {
     };
 }
 
+let showAllIdeas = false;
+
 function renderIdeasView(appData) {
     const grid = document.getElementById('idea-grid');
+    const toggleContainer = document.getElementById('idea-expand-toggle-container');
     const ideas = (appData.ideasModule.ideas || []).filter(i => !i.archived);
+    
+    const displayIdeas = showAllIdeas ? ideas.slice().reverse() : ideas.slice(-5).reverse();
 
-    grid.innerHTML = ideas.length === 0 ? '<p class="text-xs text-gray-400 italic">Nog geen post-its op het bord.</p>' : ideas.slice(-5).reverse().map(i => {
-        const isLong = i.text.length > 90;
-        const shortText = isLong ? i.text.slice(0, 90) + '...' : i.text;
+    grid.innerHTML = displayIdeas.length === 0 ? '<p class="text-xs text-gray-400 italic">Nog geen post-its op het bord.</p>' : displayIdeas.map(i => {
         return `
-            <div id="idea-card-${i.id}" class="p-3.5 bg-yellow-50/90 border border-yellow-200 rounded-xl relative flex flex-col gap-1.5 shadow-sm">
+            <div class="p-3.5 bg-yellow-50/90 border border-yellow-200 rounded-xl relative flex flex-col gap-1.5 shadow-sm">
                 <div class="flex justify-between items-start">
                     <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">[${i.category}]</span>
-                    <span class="text-[10px] text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
+                        <!-- 3-puntjes menu knop -->
+                        <div class="relative">
+                            <button onclick="window.toggleIdeaMenu(${i.id})" class="text-gray-500 hover:text-gray-800 font-bold px-1 text-sm">⋮</button>
+                            <div id="idea-menu-${i.id}" class="hidden absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 text-xs">
+                                <button onclick="window.openEditIdeaModal(${i.id})" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-gray-700">✏️ Bewerken</button>
+                                <button onclick="window.ideaToPlan(${i.id})" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-indigo-700">🎯 Naar Planbord</button>
+                                <button onclick="window.ideaToProject(${i.id})" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-indigo-700">🚀 Maak Project</button>
+                                <button onclick="window.archiveIdea(${i.id})" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-amber-700">📦 Niet meer relevant</button>
+                                <button onclick="window.deleteIdea(${i.id})" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-red-600">🗑️ Verwijderen</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p id="idea-text-content-${i.id}" class="text-xs text-gray-800 leading-relaxed">${shortText}</p>
-                ${isLong ? `<button onclick="window.toggleExpandIdea(${i.id}, \`${encodeURIComponent(i.text)}\`)" id="expand-btn-${i.id}" class="text-[11px] font-semibold text-amber-900 underline text-left">Uitvouwen</button>` : ''}
-                <div class="flex gap-3 pt-1 text-[11px] font-semibold text-indigo-700">
-                    <button onclick="window.ideaToPlan(${i.id})" class="hover:underline">Naar Planbord</button>
-                    <button onclick="window.openEditIdeaModal(${i.id})" class="hover:underline">Bewerken</button>
-                    <button onclick="window.archiveIdea(${i.id})" class="text-gray-400 hover:text-red-500 ml-auto">Archiveren</button>
-                </div>
+                <p class="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">${i.text}</p>
             </div>
         `;
     }).join('');
 
-    window.toggleExpandIdea = (id, encodedText) => {
-        const textEl = document.getElementById(`idea-text-content-${id}`);
-        const btnEl = document.getElementById(`expand-btn-${id}`);
-        const fullText = decodeURIComponent(encodedText);
-        if (btnEl.textContent === 'Uitvouwen') {
-            textEl.textContent = fullText;
-            btnEl.textContent = 'Inklappen';
-        } else {
-            textEl.textContent = fullText.slice(0, 90) + '...';
-            btnEl.textContent = 'Uitvouwen';
-        }
+    if (ideas.length > 5) {
+        toggleContainer.innerHTML = `<button onclick="window.toggleShowAllIdeas()" class="text-xs text-indigo-600 font-semibold underline mt-1">${showAllIdeas ? 'Minder weergeven (max 5)' : `Alles weergeven (${ideas.length} post-its)`}</button>`;
+    } else {
+        toggleContainer.innerHTML = '';
+    }
+
+    window.toggleShowAllIdeas = () => {
+        showAllIdeas = !showAllIdeas;
+        renderIdeasView(appData);
+    };
+
+    window.toggleIdeaMenu = (id) => {
+        // Sluit eventueel andere openstaande menu's
+        document.querySelectorAll('[id^="idea-menu-"]').forEach(el => {
+            if (el.id !== `idea-menu-${id}`) el.classList.add('hidden');
+        });
+        const menu = document.getElementById(`idea-menu-${id}`);
+        if (menu) menu.classList.toggle('hidden');
     };
 
     window.openEditIdeaModal = (id) => {
@@ -335,6 +369,16 @@ function renderIdeasView(appData) {
         }
     };
 
+    window.ideaToProject = (id) => {
+        const item = appData.ideasModule.ideas.find(x => x.id === id);
+        if (item) {
+            document.getElementById('modal-proj-source-id').value = item.id;
+            document.getElementById('modal-proj-title').value = item.text.slice(0, 40);
+            document.getElementById('modal-proj-desc').value = item.text;
+            document.getElementById('idea-project-modal').classList.remove('hidden');
+        }
+    };
+
     window.archiveIdea = (id) => {
         const item = appData.ideasModule.ideas.find(x => x.id === id);
         if (item) {
@@ -346,6 +390,15 @@ function renderIdeasView(appData) {
             showToast("Post-it gearchiveerd.");
         }
     };
+
+    window.deleteIdea = (id) => {
+        if (confirm("Weet je zeker dat je deze post-it definitief wilt verwijderen?")) {
+            appData.ideasModule.ideas = appData.ideasModule.ideas.filter(x => x.id !== id);
+            saveAppData(appData);
+            renderIdeasView(appData);
+            showToast("Post-it verwijderd.");
+        }
+    };
 }
 
 function renderModalAllIdeas(appData) {
@@ -353,7 +406,6 @@ function renderModalAllIdeas(appData) {
     const searchInput = document.getElementById('modal-idea-search');
     const catFilter = document.getElementById('modal-idea-cat-filter');
     const toggleArchiefBtn = document.getElementById('toggle-idea-archive-view');
-
     let showArchived = false;
 
     function draw() {
@@ -361,7 +413,6 @@ function renderModalAllIdeas(appData) {
         const pool = showArchived ? (ideasMod.archivedIdeas || []) : (ideasMod.ideas || []);
         const query = searchInput.value.toLowerCase();
         const selCat = catFilter.value;
-
         const filtered = pool.filter(i => i.text.toLowerCase().includes(query) && (selCat === 'Alle' || i.category === selCat));
 
         listEl.innerHTML = filtered.length === 0 ? '<p class="text-gray-400 italic">Geen ideeën gevonden.</p>' : filtered.map(i => `
@@ -373,7 +424,7 @@ function renderModalAllIdeas(appData) {
                 ${showArchived ? `
                     <button onclick="window.restoreIdeaModal(${i.id})" class="text-indigo-600 font-semibold">Terugzetten</button>
                 ` : `
-                    <button onclick="window.archiveIdeaModal(${i.id})" class="text-red-500">Archiveren</button>
+                    <button onclick="window.archiveIdeaModal(${i.id})" class="text-red-500 font-semibold">Archiveren</button>
                 `}
             </li>
         `).join('');
@@ -421,12 +472,12 @@ function renderProjectsView(appData) {
         <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-indigo-950 text-sm">📁 ${p.title}</span>
-                <button onclick="window.archiveProject(${p.id})" class="text-gray-400 hover:text-red-500">Archiveren</button>
+                <button onclick="window.archiveProject(${p.id})" class="text-gray-400 hover:text-red-500 font-bold">Archiveren</button>
             </div>
             ${p.description ? `<p class="text-gray-600">${p.description}</p>` : ''}
             ${p.timeGoal ? `<p class="text-[11px] text-indigo-700 font-medium">⏱️ Planning: ${p.timeGoal}</p>` : ''}
             ${p.subtasks && p.subtasks.length > 0 ? `
-                <div class="space-y-1 pt-1 border-t">
+                <div class="space-y-1 pt-1 border-t border-gray-200">
                     <p class="font-semibold text-gray-700">Subtaken:</p>
                     ${p.subtasks.map((st, idx) => `
                         <div class="flex items-center gap-2">
@@ -451,6 +502,7 @@ function renderProjectsView(appData) {
     window.archiveProject = (id) => {
         const proj = appData.ideasModule.projects.find(x => x.id === id);
         if (proj) {
+            appData.ideasModule.ideas = appData.ideasModule.projects.filter(x => x.id !== id); // of archivedProjects
             appData.ideasModule.projects = appData.ideasModule.projects.filter(x => x.id !== id);
             if (!appData.ideasModule.archivedProjects) appData.ideasModule.archivedProjects = [];
             appData.ideasModule.archivedProjects.push(proj);
@@ -459,15 +511,4 @@ function renderProjectsView(appData) {
             showToast("Project gearchiveerd.");
         }
     };
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-950 text-white px-4 py-2.5 rounded-xl text-xs font-medium shadow-lg z-50 transition transform duration-300';
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
 }
