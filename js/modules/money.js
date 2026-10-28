@@ -1,5 +1,5 @@
 // js/modules/money.js
-import { saveAppData, checkDateFilter } from './storage.js';
+import { saveAppData, checkDateFilter, showToast } from './storage.js';
 
 const MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwachte uitgaven', 'uitje', 'cadeau', 'aanschaf', 'aflossen', 'loon', 'lening', 'verwachte uitgave'];
 const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaankoop', 'Noodzakelijk/Vaste last', 'Investeer in mezelf'];
@@ -9,67 +9,10 @@ export function initMoneyModule(appData) {
     const container = document.getElementById('geld');
     if (!container) return;
 
-    // Directe fallback en inlezen van zowel geneste appData als oude backup sleutels uit localStorage
     if (!appData.money) appData.money = {};
-
-    let rawBalance = localStorage.getItem('voldaan_bank_balance');
-    let rawTransactions = localStorage.getItem('voldaan_transactions');
-    let rawBills = localStorage.getItem('voldaan_fixed_bills');
-    let rawProjects = localStorage.getItem('voldaan_ruimte_projects');
-    let rawStudy = localStorage.getItem('voldaan_study_debt');
-
-    if (rawBalance && (!appData.money.balance || appData.money.balance === 0)) {
-        appData.money.balance = parseFloat(rawBalance) || 37.70;
-    }
-
-    if ((!appData.money.transactions || appData.money.transactions.length === 0) && rawTransactions) {
-        try {
-            const parsedTx = JSON.parse(rawTransactions);
-            appData.money.transactions = parsedTx.map(tx => ({
-                id: tx.id || Date.now(),
-                description: tx.title || tx.description || 'Transactie',
-                amount: tx.type === 'EXPENSE' ? -Math.abs(tx.amount) : Math.abs(tx.amount),
-                category: tx.category || 'Algemeen',
-                label: tx.label || 'Geen bewustwordingslabel',
-                date: tx.datetime || tx.created || new Date().toISOString()
-            }));
-        } catch (e) { console.error("Fout bij inlezen oude transacties:", e); }
-    }
-
-    if ((!appData.money.expectedExpenses || appData.money.expectedExpenses.length === 0) && rawBills) {
-        try {
-            const parsedBills = JSON.parse(rawBills);
-            appData.money.expectedExpenses = parsedBills.map(ex => ({
-                id: ex.id || Date.now(),
-                description: ex.name || 'Verwachte uitgave',
-                amount: ex.amount || ex.rawAmount || 0,
-                method: ex.type || 'Automatische Incasso',
-                category: 'Geld & Aflossingen',
-                date: ex.date || new Date().toISOString().slice(0,10),
-                completed: ex.paid || false
-            }));
-        } catch (e) { console.error("Fout bij inlezen oude vaste lasten:", e); }
-    }
-
-    if ((!appData.money.financialProjects || appData.money.financialProjects.length === 0) && rawProjects) {
-        try {
-            const parsedProj = JSON.parse(rawProjects);
-            appData.money.financialProjects = parsedProj.map(p => ({
-                id: p.id || Date.now(),
-                title: p.title,
-                target: p.totalAmount || 0,
-                freed: p.repaidAmount || 0,
-                history: p.history || []
-            }));
-        } catch (e) { console.error("Fout bij inlezen oude ruimte projecten:", e); }
-    }
-
-    if (!appData.money.studyDebt && rawStudy) {
-        try {
-            appData.money.studyDebt = JSON.parse(rawStudy);
-        } catch (e) { console.error("Fout bij inlezen studieschuld:", e); }
-    }
-
+    if (!appData.money.transactions) appData.money.transactions = [];
+    if (!appData.money.expectedExpenses) appData.money.expectedExpenses = [];
+    if (!appData.money.financialProjects) appData.money.financialProjects = [];
     if (!appData.money.studyDebt) {
         appData.money.studyDebt = { total: 41939, paid: 477.35, monthly: 477.35 };
     }
@@ -77,7 +20,7 @@ export function initMoneyModule(appData) {
     container.innerHTML = `
         <!-- Bovenste Grid: Saldo & Paydayradar -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Actueel Banksaldo</p>
@@ -87,7 +30,6 @@ export function initMoneyModule(appData) {
                 </div>
                 <p class="text-[11px] text-gray-400 mt-3">Transacties passen dit automatisch aan.</p>
             </div>
-
             <div class="bg-indigo-900 text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                 <div>
                     <p class="text-xs text-indigo-200 uppercase font-semibold mb-1">Paydayradar</p>
@@ -98,45 +40,66 @@ export function initMoneyModule(appData) {
         </div>
 
         <!-- 1. Transacties (Inkomsten & Uitgaven) -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">💶 Transacties & Overzicht</h2>
-                <button id="open-tx-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Transactie</button>
+                <button id="open-tx-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Transactie</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Houd rust en overzicht in al je uitgaven en inkomsten.</p>
+            <p class="text-xs text-gray-500 mb-3">Houd rust en overzicht in al je uitgaven en inkomsten. Klik op een transactie om te bewerken.</p>
+            
+            <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+                <input type="text" id="tx-search" placeholder="Zoek transactie..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="tx-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                        <option value="all">Alle data</option>
+                        <option value="today">Vandaag</option>
+                        <option value="week">Deze week</option>
+                        <option value="specific-week">Specifieke week...</option>
+                        <option value="month">Deze maand</option>
+                        <option value="specific-month">Specifieke maand...</option>
+                        <option value="year">Dit jaar</option>
+                        <option value="specific-year">Specifiek jaar...</option>
+                        <option value="specific-day">Specifieke dag...</option>
+                    </select>
+                    <select id="tx-filter-cat" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                        <option value="Alle">Alle categorieën</option>
+                        ${MONEY_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+                </div>
+                <div id="tx-custom-filter-box" class="hidden">
+                    <input type="date" id="tx-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                    <input type="month" id="tx-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                    <input type="number" id="tx-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                    <input type="week" id="tx-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                </div>
+            </div>
 
-            <div class="flex flex-col sm:flex-row gap-2 mb-3 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                <input type="text" id="tx-search" placeholder="Zoek transactie..." class="w-full px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-xl">
-                <select id="tx-filter-date" class="w-full sm:w-auto px-2 py-1.5 text-xs bg-white border border-gray-200 rounded-xl">
-                    <option value="all">Alles</option>
-                    <option value="today">Vandaag</option>
-                    <option value="week">Deze week</option>
-                    <option value="month">Deze maand</option>
-                    <option value="year">Dit jaar</option>
-                </select>
-            </div>
-            <ul id="transaction-list" class="space-y-1.5"></ul>
+            <ul id="transaction-list" class="space-y-1.5 mb-2"></ul>
+            <div id="tx-expand-toggle-container" class="text-center"></div>
         </div>
 
         <!-- 2. Verwachte Uitgaven -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
-                <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Verwachte Uitgave</button>
+                <div>
+                    <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
+                    <p id="expected-total-label" class="text-xs font-semibold text-indigo-700 mt-0.5">Totaal verwacht: € 0.00</p>
+                </div>
+                <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Verwachte Uitgave</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven. Vink af om ze door te zetten naar transacties & saldo.</p>
+            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven. Klik om te bewerken of vink af.</p>
             <ul id="expected-expense-list" class="space-y-2"></ul>
         </div>
 
         <!-- 3. Het Ruimte-Kompas (Financiële Projecten) -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🧭 Het Ruimte-Kompas</h2>
-                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">+ Financieel Project</button>
+                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Financieel Project</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Herstel en breng financiële afspraken & leningen rustig in balans.</p>
             
-            <div class="bg-indigo-50/60 p-3.5 rounded-xl mb-3 text-xs text-indigo-950 flex justify-between items-center">
+            <div class="bg-indigo-50/60 p-3.5 rounded-xl mb-3 text-xs text-indigo-950 flex justify-between items-center border border-indigo-100">
                 <div>
                     <p class="font-bold text-sm" id="space-total-freed">€ 0.00 <span class="text-[11px] font-normal text-gray-600">Vrijgemaakt</span></p>
                     <p class="text-[11px] text-gray-500 mt-0.5">Vrijheids-Horizon: groeit naarmate je aflost.</p>
@@ -147,8 +110,7 @@ export function initMoneyModule(appData) {
 
         <!-- 4. Studieschuld-Kompas & Impuls-Wachtkamer Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <!-- Studieschuld -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
                 <div class="flex justify-between items-center mb-2">
                     <h2 class="text-base font-bold text-indigo-900">🎓 Studieschuld Kompas</h2>
                     <button id="edit-study-debt-btn" class="text-xs text-indigo-600 hover:underline">Instellen</button>
@@ -156,9 +118,7 @@ export function initMoneyModule(appData) {
                 <p class="text-xs text-gray-500 mb-3">Houd in jouw eigen tempo overzicht.</p>
                 <div id="study-debt-summary" class="space-y-2 text-xs text-gray-700"></div>
             </div>
-
-            <!-- Impuls-Wachtkamer -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
                 <h2 class="text-base font-bold text-indigo-900 mb-1">🛡️ Impuls-Wachtkamer</h2>
                 <p class="text-xs text-gray-500 mb-3">Zet aankoopwensen 24 uur in de wacht.</p>
                 <form id="impulse-form" class="flex flex-col gap-2 mb-3">
@@ -180,12 +140,13 @@ export function initMoneyModule(appData) {
 function initMoneyModals(appData) {
     const txModalHTML = `
         <div id="tx-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">💶 Nieuwe Transactie Invoeren</h3>
-                    <button id="close-tx-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                    <h3 id="tx-modal-title" class="text-sm font-bold text-indigo-950">💶 Transactie Invoeren / Bewerken</h3>
+                    <button id="close-tx-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <form id="tx-modal-form" class="space-y-3 text-xs">
+                <form id="tx-modal-form" class="space-y-3">
+                    <input type="hidden" id="modal-tx-id">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Omschrijving</label>
                         <input type="text" id="modal-tx-desc" placeholder="Bijv. Albert Heijn of Salaris" class="w-full px-3 py-2 border rounded-xl" required>
@@ -222,7 +183,7 @@ function initMoneyModals(appData) {
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-tx-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
-                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Opslaan & Bereken Saldo ✨</button>
+                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Opslaan ✨</button>
                     </div>
                 </form>
             </div>
@@ -231,12 +192,13 @@ function initMoneyModals(appData) {
 
     const expectedModalHTML = `
         <div id="expected-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">📅 Nieuwe Verwachte Uitgave</h3>
-                    <button id="close-expected-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                    <h3 id="expected-modal-title" class="text-sm font-bold text-indigo-950">📅 Verwachte Uitgave Beheren</h3>
+                    <button id="close-expected-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <form id="expected-modal-form" class="space-y-3 text-xs">
+                <form id="expected-modal-form" class="space-y-3">
+                    <input type="hidden" id="modal-exp-id">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Omschrijving</label>
                         <input type="text" id="modal-exp-desc" placeholder="Bijv. Verzekering of abonnement" class="w-full px-3 py-2 border rounded-xl" required>
@@ -269,7 +231,7 @@ function initMoneyModals(appData) {
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-expected-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
-                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen ✨</button>
+                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Opslaan ✨</button>
                     </div>
                 </form>
             </div>
@@ -278,12 +240,12 @@ function initMoneyModals(appData) {
 
     const projectModalHTML = `
         <div id="project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-base font-bold text-indigo-950">🧭 Financieel Project Beheer</h3>
-                    <button id="close-project-modal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                    <h3 class="text-sm font-bold text-indigo-950">🧭 Financieel Project Beheer</h3>
+                    <button id="close-project-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <form id="project-modal-form" class="space-y-3 text-xs">
+                <form id="project-modal-form" class="space-y-3">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Naam Project / Lening</label>
                         <input type="text" id="modal-proj-title" placeholder="Bijv. Achterstand betalen" class="w-full px-3 py-2 border rounded-xl" required>
@@ -315,7 +277,18 @@ function setupModalHandlers(type, appData) {
     const cancelBtn = document.getElementById(`cancel-${type}-modal`);
     const form = document.getElementById(`${type}-modal-form`);
 
-    if (openBtn) openBtn.onclick = () => modal.classList.remove('hidden');
+    if (openBtn) openBtn.onclick = () => {
+        if (type === 'tx') {
+            document.getElementById('modal-tx-id').value = '';
+            document.getElementById('tx-modal-form').reset();
+            document.getElementById('tx-modal-title').textContent = '💶 Nieuwe Transactie Invoeren';
+        } else if (type === 'expected') {
+            document.getElementById('modal-exp-id').value = '';
+            document.getElementById('expected-modal-form').reset();
+            document.getElementById('expected-modal-title').textContent = '📅 Nieuwe Verwachte Uitgave';
+        }
+        modal.classList.remove('hidden');
+    };
     if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
     if (cancelBtn) cancelBtn.onclick = () => modal.classList.add('hidden');
 
@@ -323,6 +296,7 @@ function setupModalHandlers(type, appData) {
         form.onsubmit = (e) => {
             e.preventDefault();
             if (type === 'tx') {
+                const id = document.getElementById('modal-tx-id').value;
                 const description = document.getElementById('modal-tx-desc').value.trim();
                 const amount = parseFloat(document.getElementById('modal-tx-amount').value);
                 const category = document.getElementById('modal-tx-cat').value;
@@ -332,17 +306,33 @@ function setupModalHandlers(type, appData) {
 
                 if (description && !isNaN(amount)) {
                     if (!appData.money.transactions) appData.money.transactions = [];
-                    appData.money.transactions.push({
-                        id: Date.now(), description, amount, category, label, period,
-                        date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
-                    });
-                    appData.money.balance = (appData.money.balance || 0) + amount;
+                    if (id) {
+                        const tx = appData.money.transactions.find(x => x.id == id);
+                        if (tx) {
+                            appData.money.balance -= tx.amount; 
+                            tx.description = description;
+                            tx.amount = amount;
+                            tx.category = category;
+                            tx.label = label;
+                            tx.period = period;
+                            if (dateVal) tx.date = new Date(dateVal).toISOString();
+                            appData.money.balance += amount; 
+                        }
+                    } else {
+                        appData.money.transactions.push({
+                            id: Date.now(), description, amount, category, label, period,
+                            date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString()
+                        });
+                        appData.money.balance = (appData.money.balance || 0) + amount;
+                    }
                     saveAppData(appData);
                     modal.classList.add('hidden');
                     form.reset();
                     renderMoneyViews(appData);
+                    showToast("Transactie opgeslagen! 💶");
                 }
             } else if (type === 'expected') {
+                const id = document.getElementById('modal-exp-id').value;
                 const description = document.getElementById('modal-exp-desc').value.trim();
                 const amount = parseFloat(document.getElementById('modal-exp-amount').value);
                 const method = document.getElementById('modal-exp-method').value;
@@ -351,16 +341,27 @@ function setupModalHandlers(type, appData) {
 
                 if (description && !isNaN(amount) && date) {
                     if (!appData.money.expectedExpenses) appData.money.expectedExpenses = [];
-                    appData.money.expectedExpenses.push({ id: Date.now(), description, amount, method, category, date, completed: false });
+                    if (id) {
+                        const exp = appData.money.expectedExpenses.find(x => x.id == id);
+                        if (exp) {
+                            exp.description = description;
+                            exp.amount = amount;
+                            exp.method = method;
+                            exp.category = category;
+                            exp.date = date;
+                        }
+                    } else {
+                        appData.money.expectedExpenses.push({ id: Date.now(), description, amount, method, category, date, completed: false });
+                    }
                     saveAppData(appData);
                     modal.classList.add('hidden');
                     form.reset();
                     renderMoneyViews(appData);
+                    showToast("Verwachte uitgave bijgewerkt! 📅");
                 }
             } else if (type === 'project') {
                 const title = document.getElementById('modal-proj-title').value.trim();
                 const target = parseFloat(document.getElementById('modal-proj-target').value);
-
                 if (title && !isNaN(target)) {
                     if (!appData.money.financialProjects) appData.money.financialProjects = [];
                     appData.money.financialProjects.push({ id: Date.now(), title, target, freed: 0, history: [] });
@@ -368,6 +369,7 @@ function setupModalHandlers(type, appData) {
                     modal.classList.add('hidden');
                     form.reset();
                     renderMoneyViews(appData);
+                    showToast("Financieel project aangemaakt! 🧭");
                 }
             }
         };
@@ -385,7 +387,34 @@ function initMoneyLogic(appData) {
     };
 
     document.getElementById('tx-search').oninput = () => renderMoneyViews(appData);
-    document.getElementById('tx-filter-date').onchange = () => renderMoneyViews(appData);
+    document.getElementById('tx-filter-cat').onchange = () => renderMoneyViews(appData);
+    
+    const dateFilterSelect = document.getElementById('tx-filter-date');
+    const customBox = document.getElementById('tx-custom-filter-box');
+    const dateInput = document.getElementById('tx-custom-date');
+    const monthInput = document.getElementById('tx-custom-month');
+    const yearInput = document.getElementById('tx-custom-year');
+    const weekInput = document.getElementById('tx-custom-week');
+
+    dateFilterSelect.onchange = () => {
+        customBox.classList.add('hidden');
+        dateInput.classList.add('hidden');
+        monthInput.classList.add('hidden');
+        yearInput.classList.add('hidden');
+        weekInput.classList.add('hidden');
+
+        if (dateFilterSelect.value.startsWith('specific-')) {
+            customBox.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-day') dateInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-month') monthInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-year') yearInput.classList.remove('hidden');
+            if (dateFilterSelect.value === 'specific-week') weekInput.classList.remove('hidden');
+        }
+        renderMoneyViews(appData);
+    };
+
+    [dateInput, monthInput, yearInput, weekInput].forEach(inp => inp.onchange = () => renderMoneyViews(appData));
+    yearInput.oninput = () => renderMoneyViews(appData);
 
     document.getElementById('impulse-form').onsubmit = (e) => {
         e.preventDefault();
@@ -397,6 +426,7 @@ function initMoneyLogic(appData) {
             saveAppData(appData);
             e.target.reset();
             renderMoneyViews(appData);
+            showToast("Geparkeerd in de Impuls-Wachtkamer! 🛡️");
         }
     };
 
@@ -408,6 +438,7 @@ function initMoneyLogic(appData) {
             appData.money.studyDebt = { total: parseFloat(total) || 0, paid: parseFloat(paid) || 0, monthly: parseFloat(monthly) || 50 };
             saveAppData(appData);
             renderMoneyViews(appData);
+            showToast("Studieschuld bijgewerkt! 🎓");
         }
     };
 
@@ -415,34 +446,75 @@ function initMoneyLogic(appData) {
     initPaydayRadar();
 }
 
+let showAllTxs = false;
+
 function renderMoneyViews(appData) {
     const balanceEl = document.getElementById('current-balance');
-    const balance = appData.money?.balance || 37.70;
+    const balance = appData.money?.balance || 0;
     balanceEl.textContent = `€ ${balance.toFixed(2)}`;
     balanceEl.className = balance < 0 ? "text-2xl font-bold text-red-600" : "text-2xl font-bold text-indigo-900";
 
     const txList = document.getElementById('transaction-list');
+    const toggleContainer = document.getElementById('tx-expand-toggle-container');
     const searchTerm = document.getElementById('tx-search').value.toLowerCase();
     const dateFilter = document.getElementById('tx-filter-date').value;
-    
+    const catFilter = document.getElementById('tx-filter-cat').value;
+
+    let customVal = null;
+    if (dateFilter === 'specific-day') customVal = document.getElementById('tx-custom-date').value;
+    if (dateFilter === 'specific-month') customVal = document.getElementById('tx-custom-month').value;
+    if (dateFilter === 'specific-year') customVal = document.getElementById('tx-custom-year').value;
+    if (dateFilter === 'specific-week') customVal = document.getElementById('tx-custom-week').value;
+
     const txs = (appData.money?.transactions || []).filter(t => {
         const matchSearch = t.description.toLowerCase().includes(searchTerm) || t.category.toLowerCase().includes(searchTerm);
-        const matchDate = checkDateFilter(t.date, dateFilter);
-        return matchSearch && matchDate;
+        const matchCat = catFilter === 'Alle' || t.category === catFilter;
+        const matchDate = checkDateFilter(t.date, dateFilter, customVal);
+        return matchSearch && matchCat && matchDate;
     });
 
-    txList.innerHTML = txs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen transacties gevonden.</p>' : txs.slice(-10).reverse().map(t => `
-        <li class="flex justify-between items-center p-2.5 rounded-xl text-xs border ${t.amount >= 0 ? 'bg-green-50/50 border-green-100 text-green-900' : 'bg-red-50/50 border-red-100 text-red-900'}">
+    const displayTxs = showAllTxs ? txs.slice().reverse() : txs.slice(-5).reverse();
+
+    txList.innerHTML = displayTxs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen transacties gevonden.</p>' : displayTxs.map(t => `
+        <li onclick="window.openEditTxModal(${t.id})" class="flex justify-between items-center p-3 rounded-xl text-xs border cursor-pointer hover:bg-gray-50/80 transition ${t.amount >= 0 ? 'bg-green-50/40 border-green-100 text-green-950' : 'bg-red-50/40 border-red-100 text-red-950'}">
             <div>
-                <span class="font-bold">[${t.category}]</span> ${t.description} 
-                <span class="text-[10px] text-gray-400 block">${t.label || ''} • ${new Date(t.date).toLocaleDateString('nl-NL')}</span>
+                <span class="font-bold">[${t.category}]</span> <span class="text-sm font-medium">${t.description}</span>
+                <span class="text-[10px] text-gray-500 block mt-0.5">${t.label || ''} • ${new Date(t.date).toLocaleDateString('nl-NL')}</span>
             </div>
             <div class="flex items-center gap-2">
-                <span class="font-bold">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
-                <button onclick="window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+                <span class="font-bold text-sm">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
+                <button onclick="event.stopPropagation(); window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </li>
     `).join('');
+
+    if (txs.length > 5) {
+        toggleContainer.innerHTML = `<button onclick="window.toggleShowAllTxs()" class="text-xs text-indigo-600 font-semibold underline mt-1">${showAllTxs ? 'Minder weergeven (max 5)' : `Alles weergeven (${txs.length} transacties)`}</button>`;
+    } else {
+        toggleContainer.innerHTML = '';
+    }
+
+    window.toggleShowAllTxs = () => {
+        showAllTxs = !showAllTxs;
+        renderMoneyViews(appData);
+    };
+
+    window.openEditTxModal = (id) => {
+        const t = appData.money.transactions.find(x => x.id === id);
+        if (t) {
+            document.getElementById('modal-tx-id').value = t.id;
+            document.getElementById('modal-tx-desc').value = t.description;
+            document.getElementById('modal-tx-amount').value = t.amount;
+            document.getElementById('modal-tx-cat').value = t.category;
+            document.getElementById('modal-tx-label').value = t.label || MONEY_LABELS[0];
+            document.getElementById('modal-tx-period').value = t.period || PERIODIC_OPTIONS[0];
+            if (t.date) {
+                document.getElementById('modal-tx-date').value = new Date(t.date).toISOString().slice(0, 16);
+            }
+            document.getElementById('tx-modal-title').textContent = '💶 Transactie Bewerken';
+            document.getElementById('tx-modal').classList.remove('hidden');
+        }
+    };
 
     window.deleteTransaction = (id) => {
         const tx = appData.money.transactions.find(x => x.id === id);
@@ -451,24 +523,46 @@ function renderMoneyViews(appData) {
             appData.money.transactions = appData.money.transactions.filter(x => x.id !== id);
             saveAppData(appData);
             renderMoneyViews(appData);
+            showToast("Transactie verwijderd.");
         }
     };
 
     const expList = document.getElementById('expected-expense-list');
     const expenses = appData.money?.expectedExpenses || [];
+    let totalExpectedAmount = 0;
+
+    expenses.forEach(e => {
+        if (!e.completed) totalExpectedAmount += e.amount;
+    });
+
+    document.getElementById('expected-total-label').textContent = `Totaal nog te verwachten: € ${totalExpectedAmount.toFixed(2)}`;
 
     expList.innerHTML = expenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen verwachte uitgaven ingesteld.</p>' : expenses.map(e => `
-        <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs ${e.completed ? 'opacity-50 line-through' : ''}">
-            <div>
-                <span class="font-bold text-indigo-900">[${e.category}]</span> ${e.description} - € ${e.amount.toFixed(2)}
+        <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs ${e.completed ? 'opacity-50 line-through' : ''}">
+            <div onclick="window.openEditExpectedModal(${e.id})" class="cursor-pointer flex-1">
+                <span class="font-bold text-indigo-900">[${e.category}]</span> <span class="font-medium text-gray-800 text-sm">${e.description}</span> - <span class="font-bold">€ ${e.amount.toFixed(2)}</span>
                 <span class="text-[10px] text-gray-500 block">Betaalwijze: ${e.method} • Datum: ${e.date}</span>
             </div>
             <div class="flex gap-2 items-center">
-                <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-lg font-semibold">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
+                <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
                 <button onclick="window.deleteExpected(${e.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
         </div>
     `).join('');
+
+    window.openEditExpectedModal = (id) => {
+        const e = appData.money.expectedExpenses.find(x => x.id === id);
+        if (e) {
+            document.getElementById('modal-exp-id').value = e.id;
+            document.getElementById('modal-exp-desc').value = e.description;
+            document.getElementById('modal-exp-amount').value = e.amount;
+            document.getElementById('modal-exp-method').value = e.method;
+            document.getElementById('modal-exp-cat').value = e.category;
+            document.getElementById('modal-exp-date').value = e.date;
+            document.getElementById('expected-modal-title').textContent = '📅 Verwachte Uitgave Bewerken';
+            document.getElementById('expected-modal').classList.remove('hidden');
+        }
+    };
 
     window.toggleExpectedExpense = (id) => {
         const exp = appData.money.expectedExpenses.find(x => x.id === id);
@@ -483,6 +577,7 @@ function renderMoneyViews(appData) {
             renderMoneyViews(appData);
         }
     };
+
     window.deleteExpected = (id) => {
         appData.money.expectedExpenses = appData.money.expectedExpenses.filter(x => x.id !== id);
         saveAppData(appData);
@@ -499,19 +594,19 @@ function renderMoneyViews(appData) {
         return `
             <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
                 <div class="flex justify-between items-center">
-                    <span class="font-bold text-indigo-950">🎯 ${p.title}</span>
+                    <span class="font-bold text-indigo-950 text-sm">🎯 ${p.title} (Doel: € ${p.target.toFixed(2)})</span>
                     <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-400 hover:text-red-500 font-bold px-1">Verwijderen</button>
                 </div>
                 <div class="flex justify-between text-gray-600">
-                    <span>Vrijgemaakt: € ${p.freed.toFixed(2)} / € ${p.target.toFixed(2)}</span>
+                    <span>Vrijgemaakt: € ${p.freed.toFixed(2)}</span>
                     <span class="font-bold text-indigo-700">${pct}%</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div>
                 </div>
                 <div class="flex gap-2 pt-1">
-                    <input type="number" step="0.01" id="repay-input-${p.id}" placeholder="Bedrag aflossen..." class="px-2 py-1 border rounded-lg text-xs w-32">
-                    <button onclick="window.repayProject(${p.id})" class="px-3 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Aflossen 💶</button>
+                    <input type="number" step="0.01" id="repay-input-${p.id}" placeholder="Bedrag aflossen..." class="px-2 py-1.5 border rounded-lg text-xs w-32 bg-white">
+                    <button onclick="window.repayProject(${p.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-semibold">Aflossen 💶</button>
                 </div>
             </div>
         `;
@@ -527,8 +622,10 @@ function renderMoneyViews(appData) {
             proj.freed += val;
             saveAppData(appData);
             renderMoneyViews(appData);
+            showToast("Aflossing geregistreerd in Ruimte-Kompas! 💶");
         }
     };
+
     window.deleteFinancialProject = (id) => {
         appData.money.financialProjects = appData.money.financialProjects.filter(x => x.id !== id);
         saveAppData(appData);
