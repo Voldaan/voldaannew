@@ -1,60 +1,48 @@
 // js/app.js
-import { loadAppData, saveAppData } from './modules/storage.js';
+import { loadAppData } from './modules/storage.js';
 import { initVandaagModule } from './modules/vandaag.js';
-import { initPlannenModule } from './modules/plannen.js';
-import { initVitalityModule } from './modules/vitality.js';
-import { initMoneyModule } from './modules/money.js';
-import { initIdeasModule } from './modules/ideas.js';
-import { initKnowledgeModule } from './modules/knowledge.js';
-import { initInsightsModule } from './modules/insights.js';
-import { initLuchtigModule } from './modules/luchtig.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const appData = loadAppData();
 
-    // Tabblad navigatie logica
-    const navButtons = document.querySelectorAll('.nav-tab-btn');
-    const viewSections = document.querySelectorAll('.view-section');
+    // Globale router functie om te schakelen tussen tabbladen
+    window.switchTab = function(tabId) {
+        // Verberg alle tabbladen
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.add('hidden');
+        });
 
-    function switchTab(targetId) {
-        viewSections.forEach(section => {
-            if (section.id === targetId) {
-                section.classList.remove('hidden');
-            } else {
-                section.classList.add('hidden');
+        // Toon het geselecteerde tabblad
+        const target = document.getElementById(tabId);
+        if (target) {
+            target.classList.remove('hidden');
+        }
+
+        // Update de actieve styling van de navigatieknoppen onderaan
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-indigo-600', 'font-bold');
+            btn.classList.add('text-gray-500');
+            
+            if (btn.getAttribute('data-tab') === tabId) {
+                btn.classList.add('text-indigo-600', 'font-bold');
+                btn.classList.remove('text-gray-500');
             }
         });
 
-        navButtons.forEach(btn => {
-            if (btn.getAttribute('data-target') === targetId) {
-                btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-                btn.classList.remove('text-gray-600', 'hover:bg-gray-100');
-            } else {
-                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
-            }
-        });
-
-        // Initialiseer de specifieke module bij het openen van het tabblad
-        if (targetId === 'vandaag') initVandaagModule(appData);
-        if (targetId === 'plannen') initPlannenModule(appData);
-        if (targetId === 'vitality') initVitalityModule(appData);
-        if (targetId === 'geld') initMoneyModule(appData);
-        if (targetId === 'ideeen') initIdeasModule(appData);
-        if (targetId === 'kennis') initKnowledgeModule(appData);
-        if (targetId === 'inzichten') initInsightsModule(appData);
-        if (targetId === 'luchtig') initLuchtigModule(appData);
-
+        // Scroll soepel terug naar boven bij het wisselen van tab
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    };
 
-    navButtons.forEach(btn => {
+    // Klik-listeners koppelen aan alle navigatieknoppen in de onderste balk
+    document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            switchTab(target);
+            const tabId = btn.getAttribute('data-tab');
+            if (tabId) {
+                window.switchTab(tabId);
+            }
         });
     });
 
-    // Start standaard op Vandaag
-    switchTab('vandaag');
+    // Start de Vandaag-module bij het openen van de app
+    initVandaagModule(appData);
 });
