@@ -9,13 +9,14 @@
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
+        /* Verberg scrollbar maar behoud scroll-functionaliteit voor de menubalk */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-indigo-50/40 text-gray-800 font-sans min-h-screen flex flex-col antialiased pb-24">
 
-    <!-- Header / Logo -->
+    <!-- Header / Logo bovenaan met de originele zachte subtekst -->
     <header class="bg-white border-b border-indigo-100 sticky top-0 z-40 shadow-sm">
         <div class="max-w-md mx-auto px-4 py-3 text-center">
             <div class="flex items-center justify-center gap-1.5 mb-0.5">
@@ -28,499 +29,64 @@
 
     <!-- Main Content Container -->
     <main class="max-w-md mx-auto px-4 py-5 flex-1 w-full">
-        <!-- 8 Tabbladen Secties -->
+        <!-- Alle 8 Tabbladen Secties (Containers) -->
         <div id="vandaag" class="tab-content"></div>
-        <div id="plannen" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">📅 Plannen & Doelen</h2>
-                <p class="text-xs text-gray-500">Beheer hier je taken, projecten en avond-pacten.</p>
-            </div>
-        </div>
-        <div id="money" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">💰 Geld & Overzicht</h2>
-                <p class="text-xs text-gray-500">Jouw financiële zachtheid en overzicht.</p>
-            </div>
-        </div>
-        <div id="vitality" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">🌱 Vitaliteit</h2>
-                <p class="text-xs text-gray-500">Zorg goed voor je energie en lichaam.</p>
-            </div>
-        </div>
-        <div id="ideeen" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">💡 Ideeënkluis</h2>
-                <p class="text-xs text-gray-500">Al je creatieve vonken en plannen op één plek.</p>
-            </div>
-        </div>
-        <div id="kennis" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">🧠 Kennis & Hacks</h2>
-                <p class="text-xs text-gray-500">Handige inzichten en levenshacks.</p>
-            </div>
-        </div>
-        <div id="luchtig" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">🎈 Luchtig</h2>
-                <p class="text-xs text-gray-500">Even ontspannen en lachen.</p>
-            </div>
-        </div>
+        <div id="plannen" class="tab-content hidden"></div>
+        <div id="money" class="tab-content hidden"></div>
+        <div id="vitality" class="tab-content hidden"></div>
+        <div id="ideeen" class="tab-content hidden"></div>
+        <div id="kennis" class="tab-content hidden"></div>
+        <div id="luchtig" class="tab-content hidden"></div>
         <div id="inzichten" class="tab-content hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
                 <h2 class="text-base font-bold text-indigo-950 mb-1">🔍 Inzichten & Verbanden</h2>
-                <p class="text-xs text-gray-500 mb-4">Trends en koppelingen van al je tabbladen.</p>
+                <p class="text-xs text-gray-500 mb-4">Hier komen straks alle trends en koppelingen samen.</p>
+                <div id="inzichten-content" class="space-y-3 text-xs text-gray-600">
+                    <p class="italic">Alle Historie & Trends van de tabbladen worden hier binnenkort gekoppeld voor diepe inzichten!</p>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Vaste Navigatiebalk ONDERAAN -->
+    <!-- Vaste Navigatiebalk ONDERAAN (Horizontaal scrollbaar voor alle 8 tabbladen) -->
     <nav id="app-nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-indigo-100 z-50 shadow-lg py-2 px-3">
         <div class="max-w-md mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar text-[11px] font-semibold text-gray-500 justify-start">
-            <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition text-indigo-600 font-bold flex-shrink-0">
-                <span class="text-lg">☀️</span><span>Vandaag</span>
+            <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition text-indigo-600 flex-shrink-0">
+                <span class="text-lg">☀️</span>
+                <span>Vandaag</span>
             </button>
             <button data-tab="plannen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">📅</span><span>Plannen</span>
+                <span class="text-lg">📅</span>
+                <span>Plannen</span>
             </button>
             <button data-tab="money" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">💰</span><span>Geld</span>
+                <span class="text-lg">💰</span>
+                <span>Geld</span>
             </button>
             <button data-tab="vitality" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">🌱</span><span>Vitaliteit</span>
+                <span class="text-lg">🌱</span>
+                <span>Vitaliteit</span>
             </button>
             <button data-tab="ideeen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">💡</span><span>Ideeën</span>
+                <span class="text-lg">💡</span>
+                <span>Ideeën</span>
             </button>
             <button data-tab="kennis" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">🧠</span><span>Kennis</span>
+                <span class="text-lg">🧠</span>
+                <span>Kennis</span>
             </button>
             <button data-tab="luchtig" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">🎈</span><span>Luchtig</span>
+                <span class="text-lg">🎈</span>
+                <span>Luchtig</span>
             </button>
             <button data-tab="inzichten" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">🔍</span><span>Inzichten</span>
+                <span class="text-lg">🔍</span>
+                <span>Inzichten</span>
             </button>
         </div>
     </nav>
 
-    <!-- Geïntegreerde App Logica (Zonder externe file-import problemen) -->
-    <script>
-        const CATEGORIES = ['Algemeen', 'Taken', 'Doelen', 'Gezondheid', 'Geld & Aflossingen', 'Contacten', 'Dagstart'];
-        const MOOD_TYPES = [
-            { label: 'Wazig / Moe', icon: '🌫️' },
-            { label: 'Rustig / Okay', icon: '🪨' },
-            { label: 'Energiek', icon: '⚡' },
-            { label: 'Chaotisch', icon: '🌀' },
-            { label: 'Hyperfocus', icon: '🎯' },
-            { label: 'Kan beter', icon: '🌧️' }
-        ];
-
-        function loadAppData() {
-            try {
-                const data = localStorage.getItem('voldaan_app_data');
-                return data ? JSON.parse(data) : { moods: [], marbles: [], tasks: [], ideas: [] };
-            } catch(e) {
-                return { moods: [], marbles: [], tasks: [], ideas: [] };
-            }
-        }
-
-        function saveAppData(data) {
-            localStorage.setItem('voldaan_app_data', JSON.stringify(data));
-        }
-
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-indigo-900 text-white px-4 py-2 rounded-xl text-xs z-50 shadow-lg';
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
-
-        function voegTrotsKnikkerToe(appData, text, category) {
-            if(!appData.marbles) appData.marbles = [];
-            appData.marbles.push({ id: Date.now(), text, category: category || 'Algemeen', date: new Date().toISOString() });
-            saveAppData(appData);
-        }
-
-        function checkDateFilter(dateStr, filterType, customVal) {
-            if (!dateStr) return false;
-            const d = new Date(dateStr);
-            const now = new Date();
-            if (filterType === 'all') return true;
-            if (filterType === 'today') {
-                return d.toDateString() === now.toDateString();
-            }
-            if (filterType === 'week') {
-                const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-                return d >= startOfWeek;
-            }
-            if (filterType === 'month') {
-                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }
-            if (filterType === 'year') {
-                return d.getFullYear() === now.getFullYear();
-            }
-            if (filterType === 'specific-day' && customVal) {
-                return d.toISOString().split('T')[0] === customVal;
-            }
-            if (filterType === 'specific-month' && customVal) {
-                const [y, m] = customVal.split('-');
-                return d.getFullYear() === parseInt(y) && (d.getMonth() + 1) === parseInt(m);
-            }
-            if (filterType === 'specific-year' && customVal) {
-                return d.getFullYear() === parseInt(customVal);
-            }
-            return true;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            let appData = loadAppData();
-
-            // Tab router
-            window.switchTab = function(tabId) {
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-                const target = document.getElementById(tabId);
-                if (target) target.classList.remove('hidden');
-
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('text-indigo-600', 'font-bold');
-                    btn.classList.add('text-gray-500');
-                    if (btn.getAttribute('data-tab') === tabId) {
-                        btn.classList.add('text-indigo-600', 'font-bold');
-                        btn.classList.remove('text-gray-500');
-                    }
-                });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const tabId = btn.getAttribute('data-tab');
-                    if (tabId) window.switchTab(tabId);
-                });
-            });
-
-            initVandaagModule(appData);
-        });
-
-        function initVandaagModule(appData) {
-            const container = document.getElementById('vandaag');
-            if (!container) return;
-
-            container.innerHTML = `
-                <!-- 1. Mood Tracker -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-base font-bold text-indigo-900">✨ Mijn Dag Begint Nu</h2>
-                        <button id="toggle-mood-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">Historie<br><span class="text-[10px] text-gray-500">& Trends</span></button>
-                    </div>
-                    <p class="text-xs text-gray-500 mb-3">Hoe voelt je brein op dit moment?</p>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-                        ${MOOD_TYPES.map(m => `<button data-mood="${m.label}" data-icon="${m.icon}" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm text-center"><span class="text-sm">${m.icon}</span> <span class="truncate">${m.label}</span></button>`).join('')}
-                    </div>
-                    <div id="mood-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
-                        <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                            <div class="grid grid-cols-2 gap-2">
-                                <select id="mood-filter-item" class="px-3 py-2 bg-white border border-gray-200 rounded-xl"><option value="Alle">Alle stemmingen</option>${MOOD_TYPES.map(m => `<option value="${m.label}">${m.label}</option>`).join('')}</select>
-                                <select id="mood-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
-                                    <option value="all">Alle data</option><option value="today">Vandaag</option><option value="week">Deze week</option><option value="specific-week">Specifieke week...</option><option value="month">Deze maand</option><option value="specific-month">Specifieke maand...</option><option value="year">Dit jaar</option><option value="specific-year">Specifiek jaar...</option><option value="specific-day">Specifieke dag...</option>
-                                </select>
-                            </div>
-                            <div id="mood-custom-filter-box" class="hidden pt-1">
-                                <input type="date" id="mood-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                                <input type="month" id="mood-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                                <input type="number" id="mood-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                                <input type="week" id="mood-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                            </div>
-                        </div>
-                        <div class="flex justify-end gap-2">
-                            <button id="mood-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
-                            <button id="mood-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
-                        </div>
-                        <div id="mood-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
-                        <div id="mood-history-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-                    </div>
-                </div>
-
-                <!-- 2. De Trots-Kluis -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
-                        <div class="flex items-center gap-3">
-                            <span id="marble-count-badge" class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[11px] font-bold">0 Knikkers</span>
-                            <button id="toggle-marble-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">Historie<br><span class="text-[10px] text-gray-500">& Trends</span></button>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mb-3">Elke overwinning valt als een echte knikker in jouw glazen pot.</p>
-                    <div id="physics-pot-container" class="relative w-full h-48 bg-gradient-to-b from-indigo-50/90 to-indigo-100/70 border-2 border-indigo-200/80 rounded-2xl mb-3 overflow-hidden shadow-inner flex items-center justify-center">
-                        <canvas id="marble-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></canvas>
-                        <div class="absolute bottom-2 text-[10px] text-indigo-900 font-semibold bg-white/80 px-2.5 py-0.5 rounded-full shadow-sm pointer-events-none">💡 Sleep met je muis/vinger aan de knikkers!</div>
-                    </div>
-                    <div id="marble-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
-                        <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                            <div class="grid grid-cols-2 gap-2">
-                                <select id="marble-cat-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl"><option value="Alle">Alle categorieën</option>${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-                                <select id="marble-date-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
-                                    <option value="all">Alle data</option><option value="today">Vandaag</option><option value="week">Deze week</option><option value="specific-week">Specifieke week...</option><option value="month">Deze maand</option><option value="specific-month">Specifieke maand...</option><option value="year">Dit jaar</option><option value="specific-year">Specifiek jaar...</option><option value="specific-day">Specifieke dag...</option>
-                                </select>
-                            </div>
-                            <div id="marble-custom-filter-box" class="hidden pt-1">
-                                <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                                <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                                <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                                <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                            </div>
-                        </div>
-                        <div class="flex justify-end gap-2">
-                            <button id="marble-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
-                            <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
-                        </div>
-                        <div id="marble-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
-                        <div id="marble-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-                    </div>
-                </div>
-            `;
-
-            setupLogic(appData);
-        }
-
-        let currentMoodViewMode = 'bars';
-        let currentMarbleViewMode = 'bars';
-
-        function setupLogic(appData) {
-            if (!appData.moods) appData.moods = [];
-            if (!appData.marbles) appData.marbles = [];
-
-            document.querySelectorAll('.mood-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const mood = btn.getAttribute('data-mood');
-                    const icon = btn.getAttribute('data-icon');
-                    appData.moods.push({ id: Date.now(), mood, icon, date: new Date().toISOString() });
-                    voegTrotsKnikkerToe(appData, `Dagstart check-in: ${mood}`, 'Dagstart');
-                    saveAppData(appData);
-                    renderMoodHistory(appData);
-                    renderTrotsKluis(appData);
-                });
-            });
-
-            document.getElementById('toggle-mood-history').onclick = () => {
-                const box = document.getElementById('mood-history-box');
-                box.classList.toggle('hidden');
-                if (!box.classList.contains('hidden')) renderMoodHistory(appData);
-            };
-
-            document.getElementById('toggle-marble-history').onclick = () => {
-                const box = document.getElementById('marble-history-box');
-                box.classList.toggle('hidden');
-                if (!box.classList.contains('hidden')) renderTrotsKluis(appData);
-            };
-
-            document.getElementById('mood-filter-item').onchange = () => renderMoodHistory(appData);
-            setupDateFilterListeners('mood', () => renderMoodHistory(appData));
-
-            document.getElementById('mood-view-bars').onclick = () => { currentMoodViewMode = 'bars'; renderMoodHistory(appData); };
-            document.getElementById('mood-view-chart').onclick = () => { currentMoodViewMode = 'chart'; renderMoodHistory(appData); };
-
-            document.getElementById('marble-cat-filter').onchange = () => renderTrotsKluis(appData);
-            setupDateFilterListeners('marble', () => renderTrotsKluis(appData));
-
-            document.getElementById('marble-view-bars').onclick = () => { currentMarbleViewMode = 'bars'; renderTrotsKluis(appData); };
-            document.getElementById('marble-view-chart').onclick = () => { currentMarbleViewMode = 'chart'; renderTrotsKluis(appData); };
-
-            renderTrotsKluis(appData);
-            initPhysicsMarblePot(appData);
-        }
-
-        function setupDateFilterListeners(prefix, callback) {
-            const select = document.getElementById(`${prefix}-filter-date`);
-            const box = document.getElementById(`${prefix}-custom-filter-box`);
-            const dInput = document.getElementById(`${prefix}-custom-date`);
-            const mInput = document.getElementById(`${prefix}-custom-month`);
-            const yInput = document.getElementById(`${prefix}-custom-year`);
-            const wInput = document.getElementById(`${prefix}-custom-week`);
-
-            if (!select) return;
-
-            select.onchange = () => {
-                box.classList.add('hidden');
-                if(dInput) dInput.classList.add('hidden');
-                if(mInput) mInput.classList.add('hidden');
-                if(yInput) yInput.classList.add('hidden');
-                if(wInput) wInput.classList.add('hidden');
-
-                const val = select.value;
-                if(val.startsWith('specific-')) {
-                    box.classList.remove('hidden');
-                    if(val === 'specific-day' && dInput) dInput.classList.remove('hidden');
-                    if(val === 'specific-month' && mInput) mInput.classList.remove('hidden');
-                    if(val === 'specific-year' && yInput) yInput.classList.remove('hidden');
-                    if(val === 'specific-week' && wInput) wInput.classList.remove('hidden');
-                }
-                callback();
-            };
-
-            [dInput, mInput, yInput, wInput].forEach(inp => {
-                if(inp) {
-                    inp.onchange = callback;
-                    inp.oninput = callback;
-                }
-            });
-        }
-
-        function initPhysicsMarblePot(appData) {
-            const canvas = document.getElementById('marble-canvas');
-            if (!canvas || typeof Matter === 'undefined') return;
-            const container = canvas.parentElement;
-            const width = container.clientWidth || 320;
-            const height = 192;
-            canvas.width = width;
-            canvas.height = height;
-
-            const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint } = Matter;
-            const engine = Engine.create();
-            const render = Render.create({ canvas: canvas, engine: engine, options: { width: width, height: height, wireframes: false, background: 'transparent' } });
-            Render.run(render);
-            Runner.run(Runner.create(), engine);
-
-            const wallOptions = { isStatic: true, render: { visible: false } };
-            Composite.add(engine.world, [
-                Bodies.rectangle(width / 2, height + 10, width, 40, wallOptions),
-                Bodies.rectangle(-10, height / 2, 40, height * 2, wallOptions),
-                Bodies.rectangle(width + 10, height / 2, 40, height * 2, wallOptions)
-            ]);
-
-            const marbles = appData.marbles || [];
-            const colorMap = { 'Taken': '#6366f1', 'Gezondheid': '#10b981', 'Doelen': '#f59e0b', 'Geld & Aflossingen': '#8b5cf6', 'Dagstart': '#ec4899', 'Contacten': '#14b8a6', 'Algemeen': '#3b82f6' };
-
-            marbles.forEach((m, idx) => {
-                const color = colorMap[m.category || 'Algemeen'] || '#6366f1';
-                Composite.add(engine.world, Bodies.circle(width / 2 + (Math.random() * 80 - 40), -20 - (idx * 10), 12, { restitution: 0.5, friction: 0.05, render: { fillStyle: color, strokeStyle: '#ffffff', lineWidth: 2 } }));
-            });
-
-            const mouse = Mouse.create(canvas);
-            Composite.add(engine.world, MouseConstraint.create(engine, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } }));
-            render.mouse = mouse;
-        }
-
-        function renderTrotsKluis(appData) {
-            const listEl = document.getElementById('marble-list');
-            const countBadge = document.getElementById('marble-count-badge');
-            const containerEl = document.getElementById('marble-chart-container');
-            const catFilter = document.getElementById('marble-cat-filter').value;
-            const dateFilter = document.getElementById('marble-date-filter').value;
-
-            const dInp = document.getElementById('marble-custom-date');
-            const mInp = document.getElementById('marble-custom-month');
-            const yInp = document.getElementById('marble-custom-year');
-            const wInp = document.getElementById('marble-custom-week');
-
-            let customVal = null;
-            if (dateFilter === 'specific-day' && dInp) customVal = dInp.value;
-            else if (dateFilter === 'specific-month' && mInp) customVal = mInp.value;
-            else if (dateFilter === 'specific-year' && yInp) customVal = yInp.value;
-            else if (dateFilter === 'specific-week' && wInp) customVal = wInp.value;
-
-            const marbles = appData.marbles || [];
-            countBadge.textContent = `${marbles.length} Knikkers`;
-
-            const filtered = marbles.filter(m => {
-                return (catFilter === 'Alle' || (m.category || 'Algemeen') === catFilter) && checkDateFilter(m.date, dateFilter, customVal);
-            });
-
-            listEl.innerHTML = filtered.length === 0 ? `<p class="text-xs text-gray-400 italic">Geen knikkers gevonden.</p>` : filtered.slice(-6).reverse().map(m => `
-                <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
-                    <div><span class="font-bold text-indigo-900 px-1.5 py-0.5 bg-indigo-100/70 rounded-md mr-1">[${m.category || 'Algemeen'}]</span> <span class="text-gray-800">${m.text || m.reason || 'Knikker'}</span><span class="text-[10px] text-gray-400 block mt-0.5">${new Date(m.date || Date.now()).toLocaleDateString('nl-NL')}</span></div>
-                    <button onclick="window.deleteMarble(${m.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
-                </div>
-            `).join('');
-
-            window.deleteMarble = (id) => {
-                appData.marbles = appData.marbles.filter(x => x.id !== id);
-                saveAppData(appData);
-                renderTrotsKluis(appData);
-            };
-
-            if (currentMarbleViewMode === 'bars') {
-                const counts = {};
-                filtered.forEach(m => { const c = m.category || 'Algemeen'; counts[c] = (counts[c] || 0) + 1; });
-                const total = filtered.length;
-                containerEl.innerHTML = total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen trenddata.</p>' : Object.entries(counts).map(([cat, count]) => {
-                    const pct = Math.round((count / total) * 100);
-                    return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${cat}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
-                }).join('');
-            } else {
-                const dateGroups = {};
-                filtered.forEach(m => {
-                    const dStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    dateGroups[dStr] = (dateGroups[dStr] || 0) + 1;
-                });
-                const entries = Object.entries(dateGroups);
-                containerEl.innerHTML = entries.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
-                    <p class="text-[11px] font-bold text-indigo-900 mb-2">Activiteits-tijdlijn:</p>
-                    <div class="space-y-1.5 max-h-36 overflow-y-auto">
-                        ${entries.map(([date, count]) => `<div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs"><span class="font-semibold text-gray-700">📅 ${date}</span><span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 font-bold rounded-md">+${count} knikker${count > 1 ? 's' : ''}</span></div>`).join('')}
-                    </div>
-                `;
-            }
-        }
-
-        function renderMoodHistory(appData) {
-            const listEl = document.getElementById('mood-history-list');
-            const containerEl = document.getElementById('mood-chart-container');
-            const itemFilter = document.getElementById('mood-filter-item').value;
-            const dateFilter = document.getElementById('mood-filter-date').value;
-
-            const dInp = document.getElementById('mood-custom-date');
-            const mInp = document.getElementById('mood-custom-month');
-            const yInp = document.getElementById('mood-custom-year');
-            const wInp = document.getElementById('mood-custom-week');
-
-            let customVal = null;
-            if (dateFilter === 'specific-day' && dInp) customVal = dInp.value;
-            else if (dateFilter === 'specific-month' && mInp) customVal = mInp.value;
-            else if (dateFilter === 'specific-year' && yInp) customVal = yInp.value;
-            else if (dateFilter === 'specific-week' && wInp) customVal = wInp.value;
-
-            const filteredMoods = (appData.moods || []).filter(m => (itemFilter === 'Alle' || m.mood === itemFilter) && checkDateFilter(m.date, dateFilter, customVal));
-
-            listEl.innerHTML = filteredMoods.length === 0 ? `<p class="italic text-gray-400">Geen check-ins.</p>` : filteredMoods.slice(-6).reverse().map(m => `
-                <div class="flex justify-between items-center py-1 border-b">
-                    <span class="font-medium text-gray-800">${m.icon || '✨'} ${m.mood} <span class="text-[10px] text-gray-400">(${new Date(m.date).toLocaleDateString('nl-NL')})</span></span>
-                    <button onclick="window.deleteMood(${m.id})" class="text-gray-300 hover:text-red-500">✕</button>
-                </div>
-            `).join('');
-
-            window.deleteMood = (id) => {
-                appData.moods = appData.moods.filter(x => x.id !== id);
-                saveAppData(appData);
-                renderMoodHistory(appData);
-            };
-
-            if (currentMoodViewMode === 'bars') {
-                const counts = {};
-                filteredMoods.forEach(m => counts[m.mood] = (counts[m.mood] || 0) + 1);
-                const total = filteredMoods.length;
-                containerEl.innerHTML = total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen trenddata.</p>' : Object.entries(counts).map(([mood, count]) => {
-                    const pct = Math.round((count / total) * 100);
-                    return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${mood}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
-                }).join('');
-            } else {
-                const dateGroups = {};
-                filteredMoods.forEach(m => {
-                    const dStr = new Date(m.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    if (!dateGroups[dStr]) dateGroups[dStr] = [];
-                    dateGroups[dStr].push(`${m.icon || ''} ${m.mood}`);
-                });
-                const entries = Object.entries(dateGroups);
-                containerEl.innerHTML = entries.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen data voor tijdlijn.</p>' : `
-                    <p class="text-[11px] font-bold text-indigo-900 mb-2">Tijdlijn van stemmingen:</p>
-                    <div class="space-y-1.5 max-h-36 overflow-y-auto">
-                        ${entries.map(([date, moods]) => `<div class="flex justify-between items-center bg-white p-2 rounded-lg border text-xs"><span class="font-semibold text-gray-700">📅 ${date}</span><span class="text-indigo-900 font-medium text-right truncate ml-2">${moods.join(', ')}</span></div>`).join('')}
-                    </div>
-                `;
-            }
-        }
-    </script>
+    <!-- App JavaScript Entry Point -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
