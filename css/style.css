@@ -9,16 +9,16 @@ html, body {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
-    /* Subtiele warme lichte pasteltint achtergrond voor minder 'hard wit' */
+    /* Subtiele warme lichte pasteltint achtergrond om het harde wit te breken */
     background-color: #f8fafc;
     color: #1e293b;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Zorg dat de hoofdcontainer (main) en vaste elementen gecentreerd en binnen het scherm blijven */
+/* Zorg dat de hoofdcontainer (main) en vaste elementen gecentreerd en binnen het mobiele scherm blijven */
 main {
     width: 100%;
-    max-width: 28rem; /* Overeenkomstig met mobiele container max-w-md */
+    max-width: 28rem; /* Overeenkomstig met max-w-md */
     margin-left: auto;
     margin-right: auto;
 }
@@ -29,11 +29,11 @@ header, nav {
     margin-right: auto;
 }
 
-/* Subtiele visuele begrenzing en rustige schaduwen voor alle secties en kaarten */
+/* Duidelijkere en net wat dikkere randen rondom alle hoofdonderwerpen en kaarten */
 section.view-section > div {
-    border: 1px solid #e2e8f0;
+    border: 2px solid #e0e7ff; /* Dikkere, zachte indigo-pasteltint rand voor mooi onderscheid */
     background-color: #ffffff;
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 2px 4px 0 rgba(15, 23, 42, 0.04);
 }
 
 /* Consistente leesbaarheid en invoergroottes voor mobiel (voorkomt inzoomen op iOS/Android) */
@@ -41,7 +41,7 @@ input, select, textarea, button {
     font-size: 16px !important;
 }
 
-/* Scrollbar verbergen voor strakke navigatie */
+/* Scrollbar verbergen voor een strakke look in de navigatie */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
