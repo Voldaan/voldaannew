@@ -80,7 +80,50 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. De Trots-Kluis -->
+        <!-- 2. Actie-Hub voor Vandaag -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 space-y-4 text-xs">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-indigo-950">📋 Actie-Hub voor Vandaag</h2>
+                <span class="px-3 py-1 bg-indigo-600 text-white rounded-xl font-semibold shadow-sm">Direct Afvinken</span>
+            </div>
+            <p class="text-gray-500">Hier verzamelen we de belangrijkste zaken van jouw andere tabbladen. Vink ze hier direct af!</p>
+            <div class="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1">
+                <p class="font-bold text-indigo-950">🌙 JOUW AVOND-PACT VOOR VANDAAG:</p>
+                <div id="actie-hub-pact-container" class="text-gray-700 font-medium">Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!</div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <p class="font-bold text-indigo-950">🎯 FOCUS-TAKEN (NIEUWSTE EERST):</p>
+                    <a href="#plannen" onclick="window.switchTab && window.switchTab('plannen')" class="px-2.5 py-1 bg-white border rounded-lg text-indigo-700 font-semibold hover:bg-gray-50">Beheer op Plannen-tab →</a>
+                </div>
+                <div id="actie-hub-tasks-list" class="space-y-2"></div>
+            </div>
+            <div class="space-y-2 pt-2 border-t border-gray-100">
+                <div class="flex justify-between items-center">
+                    <p class="font-bold text-indigo-950">🧭 DOELEN CHECK-IN:</p>
+                    <a href="#plannen" onclick="window.switchTab && window.switchTab('plannen')" class="px-2.5 py-1 bg-white border rounded-lg text-indigo-700 font-semibold hover:bg-gray-50">Beheer op Plannen-tab →</a>
+                </div>
+                <div id="actie-hub-goals-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- 3. Idee van de Dag -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-base font-bold text-indigo-950">💡 Idee van de Dag</h2>
+                <button id="grabbel-idea-btn" class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold hover:bg-amber-200 transition">🎲 Grabbelen</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Een willekeurige vonk uit je kluis.</p>
+            <div id="idea-of-day-card" class="p-3 bg-yellow-50/70 border border-yellow-200 rounded-xl space-y-2">
+                <p id="idea-day-text" class="text-xs text-gray-800 leading-relaxed font-medium"></p>
+                <div class="flex gap-2 pt-1">
+                    <button id="idea-to-plan-btn" class="flex-1 py-1.5 bg-white border border-yellow-300 text-yellow-900 rounded-lg text-xs font-medium hover:bg-yellow-100 transition text-center">Naar Planbord</button>
+                    <button id="idea-to-project-btn" class="flex-1 py-1.5 bg-yellow-600 text-white rounded-lg text-xs font-medium hover:bg-yellow-700 transition text-center">Naar Project</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. De Trots-Kluis (Nu verplaatst naar onder Idee van de Dag) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
@@ -116,7 +159,6 @@ export function initVandaagModule(appData) {
                             <option value="specific-day">Specifieke dag...</option>
                         </select>
                     </div>
-                    <!-- Dit vakje klapt nu netjes open bij selectie -->
                     <div id="marble-custom-filter-box" class="hidden pt-1">
                         <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                         <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
@@ -130,49 +172,6 @@ export function initVandaagModule(appData) {
                 </div>
                 <div id="marble-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
                 <div id="marble-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
-            </div>
-        </div>
-
-        <!-- 3. Actie-Hub voor Vandaag -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 space-y-4 text-xs">
-            <div class="flex justify-between items-center">
-                <h2 class="text-base font-bold text-indigo-950">📋 Actie-Hub voor Vandaag</h2>
-                <span class="px-3 py-1 bg-indigo-600 text-white rounded-xl font-semibold shadow-sm">Direct Afvinken</span>
-            </div>
-            <p class="text-gray-500">Hier verzamelen we de belangrijkste zaken van jouw andere tabbladen. Vink ze hier direct af!</p>
-            <div class="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1">
-                <p class="font-bold text-indigo-950">🌙 JOUW AVOND-PACT VOOR VANDAAG:</p>
-                <div id="actie-hub-pact-container" class="text-gray-700 font-medium">Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!</div>
-            </div>
-            <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <p class="font-bold text-indigo-950">🎯 FOCUS-TAKEN (NIEUWSTE EERST):</p>
-                    <a href="#plannen" onclick="window.switchTab && window.switchTab('plannen')" class="px-2.5 py-1 bg-white border rounded-lg text-indigo-700 font-semibold hover:bg-gray-50">Beheer op Plannen-tab →</a>
-                </div>
-                <div id="actie-hub-tasks-list" class="space-y-2"></div>
-            </div>
-            <div class="space-y-2 pt-2 border-t border-gray-100">
-                <div class="flex justify-between items-center">
-                    <p class="font-bold text-indigo-950">🧭 DOELEN CHECK-IN:</p>
-                    <a href="#plannen" onclick="window.switchTab && window.switchTab('plannen')" class="px-2.5 py-1 bg-white border rounded-lg text-indigo-700 font-semibold hover:bg-gray-50">Beheer op Plannen-tab →</a>
-                </div>
-                <div id="actie-hub-goals-list" class="space-y-2"></div>
-            </div>
-        </div>
-
-        <!-- 4. Idee van de Dag -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <div class="flex justify-between items-center mb-1">
-                <h2 class="text-base font-bold text-indigo-950">💡 Idee van de Dag</h2>
-                <button id="grabbel-idea-btn" class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold hover:bg-amber-200 transition">🎲 Grabbelen</button>
-            </div>
-            <p class="text-xs text-gray-500 mb-3">Een willekeurige vonk uit je kluis.</p>
-            <div id="idea-of-day-card" class="p-3 bg-yellow-50/70 border border-yellow-200 rounded-xl space-y-2">
-                <p id="idea-day-text" class="text-xs text-gray-800 leading-relaxed font-medium"></p>
-                <div class="flex gap-2 pt-1">
-                    <button id="idea-to-plan-btn" class="flex-1 py-1.5 bg-white border border-yellow-300 text-yellow-900 rounded-lg text-xs font-medium hover:bg-yellow-100 transition text-center">Naar Planbord</button>
-                    <button id="idea-to-project-btn" class="flex-1 py-1.5 bg-yellow-600 text-white rounded-lg text-xs font-medium hover:bg-yellow-700 transition text-center">Naar Project</button>
-                </div>
             </div>
         </div>
 
