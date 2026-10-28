@@ -39,16 +39,6 @@ export function initPlannenModule(appData) {
             </div>
             <p class="text-[11px] text-gray-500 mb-2.5">Taken structureren op jouw tempo.</p>
 
-            <!-- Inline Categorie Beheer (Nooit meer overflow) -->
-            <div id="category-manager-box" class="hidden mb-3 p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2 text-xs">
-                <p class="font-bold text-indigo-950">Categorieën Beheren</p>
-                <div class="flex gap-2 w-full">
-                    <input type="text" id="new-cat-input" placeholder="Nieuwe categorie..." class="flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs">
-                    <button id="add-cat-submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition whitespace-nowrap">Toevoegen</button>
-                </div>
-                <div id="category-chips-list" class="flex flex-wrap gap-1.5 pt-1"></div>
-            </div>
-
             <!-- Invoer Formulier (Verfijnd & kleiner) -->
             <form id="task-form" class="flex flex-col gap-2 mb-3">
                 <input type="text" id="task-input" placeholder="Nieuwe taak..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs" required>
@@ -96,7 +86,6 @@ export function initPlannenModule(appData) {
         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
             <div class="flex justify-between items-center mb-1.5">
                 <h2 class="text-sm font-bold text-indigo-900">🧭 Het Zachte Kompas</h2>
-                <button id="open-goal-beheer" class="text-[11px] text-indigo-600 hover:underline font-medium">Beheer</button>
             </div>
             <p class="text-[11px] text-gray-500 mb-2.5">Langetermijn voornemens met een ingebouwd veiligheidsnet.</p>
 
@@ -168,6 +157,7 @@ function renderPlanBeheerModal(appData) {
         saveAppData(appData);
         renderPlanBeheerModal(appData);
         initPlannenModule(appData);
+        showToast(`Categorie verwijderd.`);
     };
 
     document.getElementById('modal-add-cat-btn').onclick = () => {
