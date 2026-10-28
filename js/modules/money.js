@@ -66,14 +66,13 @@ export function initMoneyModule(appData) {
                         ${MONEY_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
                     </select>
                 </div>
-                <div id="tx-custom-filter-box" class="hidden">
+                <div id="tx-custom-filter-box" class="hidden pt-1">
                     <input type="date" id="tx-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                     <input type="month" id="tx-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                     <input type="number" id="tx-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                     <input type="week" id="tx-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                 </div>
             </div>
-
             <ul id="transaction-list" class="space-y-1.5 mb-2"></ul>
             <div id="tx-expand-toggle-container" class="text-center"></div>
         </div>
@@ -91,7 +90,7 @@ export function initMoneyModule(appData) {
             <ul id="expected-expense-list" class="space-y-2"></ul>
         </div>
 
-        <!-- 3. Het Ruimte-Kompas (Financiële Projecten & Vrijheids-Horizon) -->
+        <!-- 3. Het Ruimte-Kompas -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🧭 Het Ruimte-Kompas (Vrijheids-Horizon)</h2>
@@ -109,7 +108,6 @@ export function initMoneyModule(appData) {
                 </div>
                 <p class="text-[11px] text-gray-600">Vrijheids-Horizon: groeit naarmate je leningen aflost en doelen bereikt.</p>
             </div>
-            
             <div id="financial-projects-list" class="space-y-3"></div>
         </div>
 
@@ -138,11 +136,14 @@ export function initMoneyModule(appData) {
         </div>
     `;
 
+    // Voeg modals toe aan DOM voordat we handlers koppelen
     initMoneyModals(appData);
     initMoneyLogic(appData);
 }
 
 function initMoneyModals(appData) {
+    if (document.getElementById('tx-modal')) return; // Voorkom dubbele injectie
+
     const txModalHTML = `
         <div id="tx-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -194,7 +195,6 @@ function initMoneyModals(appData) {
             </div>
         </div>
     `;
-
     const expectedModalHTML = `
         <div id="expected-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -242,7 +242,6 @@ function initMoneyModals(appData) {
             </div>
         </div>
     `;
-
     const projectModalHTML = `
         <div id="project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
@@ -274,9 +273,7 @@ function initMoneyModals(appData) {
             </div>
         </div>
     `;
-
     document.body.insertAdjacentHTML('beforeend', txModalHTML + expectedModalHTML + projectModalHTML);
-
     setupModalHandlers('tx', appData);
     setupModalHandlers('expected', appData);
     setupModalHandlers('project', appData);
@@ -288,6 +285,7 @@ function setupModalHandlers(type, appData) {
     const closeBtn = document.getElementById(`close-${type}-modal`);
     const cancelBtn = document.getElementById(`cancel-${type}-modal`);
     const form = document.getElementById(`${type}-modal-form`);
+    if (!modal) return;
 
     if (openBtn) openBtn.onclick = () => {
         if (type === 'tx') {
@@ -307,7 +305,6 @@ function setupModalHandlers(type, appData) {
     };
     if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
     if (cancelBtn) cancelBtn.onclick = () => modal.classList.add('hidden');
-
     if (form) {
         form.onsubmit = (e) => {
             e.preventDefault();
@@ -319,7 +316,6 @@ function setupModalHandlers(type, appData) {
                 const label = document.getElementById('modal-tx-label').value;
                 const period = document.getElementById('modal-tx-period').value;
                 const dateVal = document.getElementById('modal-tx-date').value;
-
                 if (description && !isNaN(amount)) {
                     if (!appData.money.transactions) appData.money.transactions = [];
                     if (id) {
@@ -354,7 +350,6 @@ function setupModalHandlers(type, appData) {
                 const method = document.getElementById('modal-exp-method').value;
                 const category = document.getElementById('modal-exp-cat').value;
                 const date = document.getElementById('modal-exp-date').value;
-
                 if (description && !isNaN(amount) && date) {
                     if (!appData.money.expectedExpenses) appData.money.expectedExpenses = [];
                     if (id) {
@@ -380,7 +375,6 @@ function setupModalHandlers(type, appData) {
                 const title = document.getElementById('modal-proj-title').value.trim();
                 const target = parseFloat(document.getElementById('modal-proj-target').value);
                 const freed = parseFloat(document.getElementById('modal-proj-freed').value) || 0;
-
                 if (title && !isNaN(target)) {
                     if (!appData.money.financialProjects) appData.money.financialProjects = [];
                     if (id) {
@@ -413,7 +407,6 @@ function initMoneyLogic(appData) {
             renderMoneyViews(appData);
         }
     };
-
     document.getElementById('tx-search').oninput = () => renderMoneyViews(appData);
     document.getElementById('tx-filter-cat').onchange = () => renderMoneyViews(appData);
     
@@ -426,23 +419,28 @@ function initMoneyLogic(appData) {
 
     dateFilterSelect.onchange = () => {
         customBox.classList.add('hidden');
-        dateInput.classList.add('hidden');
-        monthInput.classList.add('hidden');
-        yearInput.classList.add('hidden');
-        weekInput.classList.add('hidden');
+        if(dateInput) dateInput.classList.add('hidden');
+        if(monthInput) monthInput.classList.add('hidden');
+        if(yearInput) yearInput.classList.add('hidden');
+        if(weekInput) weekInput.classList.add('hidden');
 
-        if (dateFilterSelect.value.startsWith('specific-')) {
+        const val = dateFilterSelect.value;
+        if (val.startsWith('specific-')) {
             customBox.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-day') dateInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-month') monthInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-year') yearInput.classList.remove('hidden');
-            if (dateFilterSelect.value === 'specific-week') weekInput.classList.remove('hidden');
+            if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+            if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+            if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+            if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
         }
         renderMoneyViews(appData);
     };
 
-    [dateInput, monthInput, yearInput, weekInput].forEach(inp => inp.onchange = () => renderMoneyViews(appData));
-    yearInput.oninput = () => renderMoneyViews(appData);
+    [dateInput, monthInput, yearInput, weekInput].forEach(inp => {
+        if(inp) {
+            inp.onchange = () => renderMoneyViews(appData);
+            inp.oninput = () => renderMoneyViews(appData);
+        }
+    });
 
     document.getElementById('impulse-form').onsubmit = (e) => {
         e.preventDefault();
@@ -490,9 +488,9 @@ function renderMoneyViews(appData) {
 
     let customVal = null;
     if (dateFilter === 'specific-day') customVal = document.getElementById('tx-custom-date').value;
-    if (dateFilter === 'specific-month') customVal = document.getElementById('tx-custom-month').value;
-    if (dateFilter === 'specific-year') customVal = document.getElementById('tx-custom-year').value;
-    if (dateFilter === 'specific-week') customVal = document.getElementById('tx-custom-week').value;
+    else if (dateFilter === 'specific-month') customVal = document.getElementById('tx-custom-month').value;
+    else if (dateFilter === 'specific-year') customVal = document.getElementById('tx-custom-year').value;
+    else if (dateFilter === 'specific-week') customVal = document.getElementById('tx-custom-week').value;
 
     const txs = (appData.money?.transactions || []).filter(t => {
         const matchSearch = t.description.toLowerCase().includes(searchTerm) || t.category.toLowerCase().includes(searchTerm);
@@ -502,7 +500,6 @@ function renderMoneyViews(appData) {
     });
 
     const displayTxs = showAllTxs ? txs.slice().reverse() : txs.slice(-5).reverse();
-
     txList.innerHTML = displayTxs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen transacties gevonden.</p>' : displayTxs.map(t => `
         <li onclick="window.openEditTxModal(${t.id})" class="flex justify-between items-center p-3 rounded-xl text-xs border cursor-pointer hover:bg-gray-50/80 transition ${t.amount >= 0 ? 'bg-green-50/40 border-green-100 text-green-950' : 'bg-red-50/40 border-red-100 text-red-950'}">
             <div>
@@ -555,17 +552,13 @@ function renderMoneyViews(appData) {
         }
     };
 
-    // Verwachte uitgaven & dynamisch totaal
+    // Verwachte uitgaven
     const expList = document.getElementById('expected-expense-list');
     const expenses = appData.money?.expectedExpenses || [];
     let totalExpectedAmount = 0;
-
-    expenses.forEach(e => {
-        if (!e.completed) totalExpectedAmount += e.amount;
-    });
-
+    expenses.forEach(e => { if (!e.completed) totalExpectedAmount += e.amount; });
     document.getElementById('expected-total-label').textContent = `Totaal nog te verwachten: € ${totalExpectedAmount.toFixed(2)}`;
-
+    
     expList.innerHTML = expenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen verwachte uitgaven ingesteld.</p>' : expenses.map(e => `
         <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs ${e.completed ? 'opacity-50 line-through' : ''}">
             <div onclick="window.openEditExpectedModal(${e.id})" class="cursor-pointer flex-1">
@@ -613,12 +606,12 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
-    // Ruimte-Kompas (Financiële Projecten & Vrijheids-Horizon totaal)
+    // Financiële Projecten
     const projList = document.getElementById('financial-projects-list');
     const projects = appData.money?.financialProjects || [];
     let totalFreedGlobal = 0;
     let totalTargetGlobal = 0;
-
+    
     projList.innerHTML = projects.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen financiële projecten of leningen ingevoerd.</p>' : projects.map(p => {
         totalFreedGlobal += p.freed;
         totalTargetGlobal += p.target;
@@ -688,7 +681,7 @@ function renderMoneyViews(appData) {
     const rest = Math.max(0, study.total - study.paid);
     const monthsLeft = study.monthly > 0 ? Math.ceil(rest / study.monthly) : 0;
     const yearsLeft = (monthsLeft / 12).toFixed(1);
-
+    
     studySummary.innerHTML = `
         <div class="flex justify-between"><span>Totale schuld:</span><span class="font-bold">€ ${study.total.toFixed(2)}</span></div>
         <div class="flex justify-between"><span>Reeds afgelost:</span><span class="font-bold text-green-700">€ ${study.paid.toFixed(2)}</span></div>
