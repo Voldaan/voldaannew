@@ -3,78 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voldaan — Jouw Zachte Kompas</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Voldaan</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        input, select, textarea, button { font-size: 16px !important; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-50 text-gray-800 antialiased min-h-screen flex flex-col pb-24">
-
+<body class="bg-gray-50 text-gray-900 font-sans pb-24">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-100 sticky top-0 z-40 px-4 py-3 shadow-sm">
-        <div class="max-w-3xl mx-auto flex justify-between items-center">
-            <h1 class="text-lg font-bold text-indigo-950 flex items-center gap-2">
-                <span>🪷</span> Voldaan
-            </h1>
-            <span class="text-xs text-indigo-600 font-medium bg-indigo-50 px-2.5 py-1 rounded-full">Zacht & Zonder Oordeel</span>
+    <header class="bg-white border-b border-gray-100 py-3 px-4 sticky top-0 z-40 flex items-center justify-between shadow-xs max-w-md mx-auto w-full">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">V</div>
+            <div>
+                <h1 class="text-sm font-bold text-indigo-950 leading-tight">Voldaan</h1>
+                <p class="text-[10px] text-gray-400">Jouw zachte anker</p>
+            </div>
+        </div>
+        <div id="header-status-badge" class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
+            Actief ✨
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-3xl w-full mx-auto p-4 flex-1">
-        <!-- 1. Vandaag -->
-        <section id="vandaag" class="view-section"></section>
-        <!-- 2. Planbord -->
-        <section id="plannen" class="view-section hidden"></section>
-        <!-- 3. Vitaliteit -->
-        <section id="vitality" class="view-section hidden"></section>
-        <!-- 4. Geld -->
-        <section id="geld" class="view-section hidden"></section>
-        <!-- 5. Ideeënkluis -->
-        <section id="ideeen" class="view-section hidden"></section>
-        <!-- 6. Kennis & Hacks -->
-        <section id="kennis" class="view-section hidden"></section>
-        <!-- 7. Inzichten -->
-        <section id="inzichten" class="view-section hidden"></section>
-        <!-- 8. Luchtig -->
-        <section id="luchtig" class="view-section hidden"></section>
+    <!-- Main App Content Container -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        <div id="vandaag" class="tab-content"></div>
+        <div id="plannen" class="tab-content hidden"></div>
+        <div id="vitality" class="tab-content hidden"></div>
+        <div id="geld" class="tab-content hidden"></div>
+        <div id="ideeen" class="tab-content hidden"></div>
+        <div id="kennis" class="tab-content hidden"></div>
+        <div id="inzichten" class="tab-content hidden"></div>
+        <div id="luchtig" class="tab-content hidden"></div>
     </main>
 
-    <!-- Meescrollende Onderste Navigatiebalk (Mobiel geoptimaliseerd) -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg">
-        <div class="max-w-3xl mx-auto flex overflow-x-auto no-scrollbar py-2 px-2 gap-1 justify-start sm:justify-center">
-            <button data-target="vandaag" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap bg-indigo-600 text-white shadow-sm">
-                <span>✨</span><span>Vandaag</span>
+    <!-- Onderste Menubalk -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 py-2 px-2 z-40 max-w-md mx-auto shadow-lg">
+        <div class="grid grid-cols-8 gap-0.5 text-center text-[10px] font-medium">
+            <button data-tab="vandaag" class="nav-btn flex flex-col items-center justify-center py-1 text-indigo-600">
+                <span class="text-base">✨</span><span>Vandaag</span>
             </button>
-            <button data-target="plannen" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>🎯</span><span>Planbord</span>
+            <button data-tab="plannen" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">🎯</span><span>Plannen</span>
             </button>
-            <button data-target="vitality" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>⚡</span><span>Vitaliteit</span>
+            <button data-tab="vitality" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">⚡</span><span>Vitaliteit</span>
             </button>
-            <button data-target="geld" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>💶</span><span>Geld</span>
+            <button data-tab="geld" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">💶</span><span>Geld</span>
             </button>
-            <button data-target="ideeen" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>💡</span><span>Ideeën</span>
+            <button data-tab="ideeen" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">📌</span><span>Ideeën</span>
             </button>
-            <button data-target="kennis" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>🧠</span><span>Kennis</span>
+            <button data-tab="kennis" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">📚</span><span>Kennis</span>
             </button>
-            <button data-target="inzichten" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>📊</span><span>Inzichten</span>
+            <button data-tab="inzichten" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">📊</span><span>Inzichten</span>
             </button>
-            <button data-target="luchtig" class="nav-tab-btn flex flex-col items-center px-3 py-1.5 rounded-xl text-[11px] font-medium transition whitespace-nowrap text-gray-600 hover:bg-gray-100">
-                <span>🎈</span><span>Luchtig</span>
+            <button data-tab="luchtig" class="nav-btn flex flex-col items-center justify-center py-1 text-gray-400 hover:text-indigo-600">
+                <span class="text-base">🍃</span><span>Luchtig</span>
             </button>
         </div>
     </nav>
 
-    <!-- App Entry Script -->
-    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
