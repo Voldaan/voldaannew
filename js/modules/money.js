@@ -6,7 +6,8 @@ const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaa
 const PERIODIC_OPTIONS = ['Eenmalig', 'Wekelijks', 'Maandelijks', 'Jaarlijks'];
 
 export function initMoneyModule(appData) {
-    const container = document.getElementById('geld');
+    // Ondersteunt zowel id="geld" als id="money" uit de index.html
+    const container = document.getElementById('geld') || document.getElementById('money');
     if (!container) return;
 
     if (!appData.money) appData.money = {};
@@ -136,13 +137,12 @@ export function initMoneyModule(appData) {
         </div>
     `;
 
-    // Voeg modals toe aan DOM voordat we handlers koppelen
     initMoneyModals(appData);
     initMoneyLogic(appData);
 }
 
 function initMoneyModals(appData) {
-    if (document.getElementById('tx-modal')) return; // Voorkom dubbele injectie
+    if (document.getElementById('tx-modal')) return;
 
     const txModalHTML = `
         <div id="tx-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
@@ -552,7 +552,6 @@ function renderMoneyViews(appData) {
         }
     };
 
-    // Verwachte uitgaven
     const expList = document.getElementById('expected-expense-list');
     const expenses = appData.money?.expectedExpenses || [];
     let totalExpectedAmount = 0;
@@ -606,7 +605,6 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
-    // Financiële Projecten
     const projList = document.getElementById('financial-projects-list');
     const projects = appData.money?.financialProjects || [];
     let totalFreedGlobal = 0;
@@ -675,7 +673,6 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
-    // Studieschuld
     const studySummary = document.getElementById('study-debt-summary');
     const study = appData.money?.studyDebt || { total: 41939, paid: 477.35, monthly: 477.35 };
     const rest = Math.max(0, study.total - study.paid);
@@ -689,7 +686,6 @@ function renderMoneyViews(appData) {
         <div class="flex justify-between pt-1 border-t"><span>Geschatte looptijd:</span><span class="font-bold">${monthsLeft} maanden (${yearsLeft} jaar)</span></div>
     `;
 
-    // Impuls Wachtkamer
     const impulseList = document.getElementById('impulse-list');
     const impulses = appData.money?.impulseWants || [];
     impulseList.innerHTML = impulses.length === 0 ? '<p class="italic text-gray-400">Geen aankopen in de wachtkamer.</p>' : impulses.map(i => `
