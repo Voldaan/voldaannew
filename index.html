@@ -8,14 +8,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        /* Verberg scrollbar maar behoud scroll-functionaliteit voor de menubalk */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="bg-indigo-50/40 text-gray-800 font-sans min-h-screen flex flex-col antialiased pb-20">
+<body class="bg-indigo-50/40 text-gray-800 font-sans min-h-screen flex flex-col antialiased pb-24">
 
-    <!-- Header / Logo bovenaan -->
+    <!-- Header / Logo bovenaan met de originele zachte subtekst -->
     <header class="bg-white border-b border-indigo-100 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-center gap-2">
-            <span class="text-xl">🪷</span>
-            <h1 class="text-base font-bold text-indigo-950 tracking-tight">Voldaan</h1>
+        <div class="max-w-md mx-auto px-4 py-3 text-center">
+            <div class="flex items-center justify-center gap-1.5 mb-0.5">
+                <span class="text-xl">🪷</span>
+                <h1 class="text-base font-bold text-indigo-950 tracking-tight">Voldaan</h1>
+            </div>
+            <p class="text-[11px] text-gray-500 font-medium">Zonder oordeel, in jouw eigen tempo</p>
         </div>
     </header>
 
@@ -38,30 +46,30 @@
         </div>
     </main>
 
-    <!-- Vaste Navigatiebalk ONDERAAN met Iconen -->
+    <!-- Vaste Navigatiebalk ONDERAAN (Horizontaal scrollbaar voor alle tabbladen) -->
     <nav id="app-nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-indigo-100 z-50 shadow-lg py-2 px-3">
-        <div class="max-w-md mx-auto flex justify-around items-center text-[10px] font-semibold text-gray-500">
-            <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition text-indigo-600">
+        <div class="max-w-md mx-auto flex items-center gap-3 overflow-x-auto no-scrollbar text-[11px] font-semibold text-gray-500 justify-start sm:justify-around">
+            <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition text-indigo-600 flex-shrink-0">
                 <span class="text-lg">☀️</span>
                 <span>Vandaag</span>
             </button>
-            <button data-tab="plannen" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+            <button data-tab="plannen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">📅</span>
                 <span>Plannen</span>
             </button>
-            <button data-tab="money" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+            <button data-tab="money" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">💰</span>
                 <span>Geld</span>
             </button>
-            <button data-tab="vitality" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+            <button data-tab="vitality" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">🌱</span>
                 <span>Vitaliteit</span>
             </button>
-            <button data-tab="ideeen" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+            <button data-tab="ideeen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">💡</span>
                 <span>Ideeën</span>
             </button>
-            <button data-tab="inzichten" class="tab-btn flex flex-col items-center gap-0.5 p-1 transition hover:text-indigo-600">
+            <button data-tab="inzichten" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
                 <span class="text-lg">🔍</span>
                 <span>Inzichten</span>
             </button>
