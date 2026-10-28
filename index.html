@@ -3,90 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voldaan - Jouw Zachte Dashboard</title>
+    <title>Voldaan</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
+    <!-- Matter.js voor de fysica in de Trots-Kluis -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <style>
-        /* Verberg scrollbar maar behoud scroll-functionaliteit voor de menubalk */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </head>
-<body class="bg-indigo-50/40 text-gray-800 font-sans min-h-screen flex flex-col antialiased pb-24">
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col justify-between pb-20">
 
-    <!-- Header / Logo bovenaan met de originele zachte subtekst -->
-    <header class="bg-white border-b border-indigo-100 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-md mx-auto px-4 py-3 text-center">
-            <div class="flex items-center justify-center gap-1.5 mb-0.5">
-                <span class="text-xl">🪷</span>
-                <h1 class="text-base font-bold text-indigo-950 tracking-tight">Voldaan</h1>
-            </div>
-            <p class="text-[11px] text-gray-500 font-medium">Zonder oordeel, in jouw eigen tempo</p>
-        </div>
+    <!-- Header -->
+    <header class="w-full bg-white border-b border-gray-100 py-4 px-6 text-center shadow-sm">
+        <h1 class="text-xl font-bold text-indigo-950 flex items-center justify-center gap-2">
+            <span>🪷</span> Voldaan
+        </h1>
+        <p class="text-xs text-gray-500 mt-0.5">Zonder oordeel, in jouw eigen tempo</p>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-md mx-auto px-4 py-5 flex-1 w-full">
-        <!-- Alle 8 Tabbladen Secties (Containers) -->
-        <div id="vandaag" class="tab-content"></div>
-        <div id="plannen" class="tab-content hidden"></div>
-        <div id="money" class="tab-content hidden"></div>
-        <div id="vitality" class="tab-content hidden"></div>
-        <div id="ideeen" class="tab-content hidden"></div>
-        <div id="kennis" class="tab-content hidden"></div>
-        <div id="luchtig" class="tab-content hidden"></div>
-        <div id="inzichten" class="tab-content hidden">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h2 class="text-base font-bold text-indigo-950 mb-1">🔍 Inzichten & Verbanden</h2>
-                <p class="text-xs text-gray-500 mb-4">Hier komen straks alle trends en koppelingen samen.</p>
-                <div id="inzichten-content" class="space-y-3 text-xs text-gray-600">
-                    <p class="italic">Alle Historie & Trends van de tabbladen worden hier binnenkort gekoppeld voor diepe inzichten!</p>
-                </div>
+    <!-- Main Content Container (Tabs) -->
+    <main class="max-w-4xl w-full mx-auto p-4 flex-1">
+        <!-- Vandaag Tab -->
+        <div id="vandaag" class="tab-content">
+            <!-- Dit verborgen filterboxje zorgt dat het datumfilter voor de Trots-Kluis altijd direct in de DOM staat -->
+            <div id="marble-custom-filter-box" class="hidden pt-1">
+                <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+                <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
             </div>
         </div>
+
+        <!-- Plannen Tab -->
+        <div id="plannen" class="tab-content hidden"></div>
+
+        <!-- Geld Tab (ondersteunt zowel id="geld" als id="money") -->
+        <div id="geld" class="tab-content hidden"></div>
+        <div id="money" class="tab-content hidden"></div>
+
+        <!-- Vitaliteit Tab -->
+        <div id="vitaliteit" class="tab-content hidden"></div>
+
+        <!-- Ideeën Tab -->
+        <div id="ideeen" class="tab-content hidden"></div>
+
+        <!-- Kennis Tab -->
+        <div id="kennis" class="tab-content hidden"></div>
+
+        <!-- Luchtig Tab -->
+        <div id="luchtig" class="tab-content hidden"></div>
     </main>
 
-    <!-- Vaste Navigatiebalk ONDERAAN (Horizontaal scrollbaar voor alle 8 tabbladen) -->
-    <nav id="app-nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-indigo-100 z-50 shadow-lg py-2 px-3">
-        <div class="max-w-md mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar text-[11px] font-semibold text-gray-500 justify-start">
-            <button data-tab="vandaag" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition text-indigo-600 flex-shrink-0">
-                <span class="text-lg">☀️</span>
+    <!-- Vaste Navigatiebalk onderaan -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 py-2 px-4 shadow-lg z-40">
+        <div class="max-w-md mx-auto flex justify-between items-center text-xs font-semibold text-gray-600">
+            <button onclick="switchTab('vandaag')" data-tab="vandaag" class="nav-btn flex flex-col items-center gap-1 text-indigo-600 transition">
+                <span class="text-lg">✨</span>
                 <span>Vandaag</span>
             </button>
-            <button data-tab="plannen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+            <button onclick="switchTab('plannen')" data-tab="plannen" class="nav-btn flex flex-col items-center gap-1 hover:text-indigo-600 transition">
                 <span class="text-lg">📅</span>
                 <span>Plannen</span>
             </button>
-            <button data-tab="money" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">💰</span>
+            <button onclick="switchTab('geld')" data-tab="geld" class="nav-btn flex flex-col items-center gap-1 hover:text-indigo-600 transition">
+                <span class="text-lg">💶</span>
                 <span>Geld</span>
             </button>
-            <button data-tab="vitality" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+            <button onclick="switchTab('vitaliteit')" data-tab="vitaliteit" class="nav-btn flex flex-col items-center gap-1 hover:text-indigo-600 transition">
                 <span class="text-lg">🌱</span>
                 <span>Vitaliteit</span>
             </button>
-            <button data-tab="ideeen" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+            <button onclick="switchTab('ideeen')" data-tab="ideeen" class="nav-btn flex flex-col items-center gap-1 hover:text-indigo-600 transition">
                 <span class="text-lg">💡</span>
                 <span>Ideeën</span>
             </button>
-            <button data-tab="kennis" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+            <button onclick="switchTab('kennis')" data-tab="kennis" class="nav-btn flex flex-col items-center gap-1 hover:text-indigo-600 transition">
                 <span class="text-lg">🧠</span>
                 <span>Kennis</span>
             </button>
-            <button data-tab="luchtig" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
+            <button onclick="switchTab('luchtig')" data-tab="luchtig" class="nav-btn flex flex-col items-center gap-1 hover:text-indigo-600 transition">
                 <span class="text-lg">🎈</span>
                 <span>Luchtig</span>
-            </button>
-            <button data-tab="inzichten" class="tab-btn flex flex-col items-center gap-0.5 px-3 py-1 transition hover:text-indigo-600 flex-shrink-0">
-                <span class="text-lg">🔍</span>
-                <span>Inzichten</span>
             </button>
         </div>
     </nav>
 
-    <!-- App JavaScript Entry Point -->
-    <script type="module" src="js/app.js?v=4.0"></script>
+    <!-- Toast / Meldingen Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 pointer-events-none space-y-2"></div>
+
+    <!-- Hoofd JavaScript module met cache-breker v=6.0 -->
+    <script type="module" src="js/app.js?v=6.0"></script>
 </body>
 </html>
