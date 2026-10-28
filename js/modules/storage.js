@@ -1,11 +1,10 @@
 // js/modules/storage.js
-
 const STORAGE_KEY = 'voldaan_app_data_v2';
 
 export function loadAppData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     
-    // Controleer ook op losse oude backup-sleutels
+    // Controleer ook op losse oude backup-sleutels voor naadloze migratie
     const legacyIdeas = localStorage.getItem('voldaan_ideas');
     const legacyTasks = localStorage.getItem('voldaan_tasks');
     const legacyMarbles = localStorage.getItem('voldaan_marbles');
@@ -40,7 +39,6 @@ export function saveAppData(appData) {
 
 function migrateDataStructure(data) {
     if (!data) return getInitialAppData();
-
     let parsedTasks = [];
     let parsedMarbles = [];
     let parsedMoods = [];
@@ -157,25 +155,42 @@ export function getInitialAppData() {
     return migrateDataStructure({});
 }
 
-// Uitgebreide datumfilter logica voor alle tabbladen
+// Uitgebreide datumfilter logica voor alle tabbladen (Vandaag, Trots-Kluis, Planbord, Geld, etc.)
 export function checkDateFilter(dateString, filterType, customValue = null) {
     if (!dateString) return true;
     const itemDate = new Date(dateString);
     const now = new Date();
 
     if (filterType === 'all') return true;
+    
+    // Simpelweg vandaag
     if (filterType === 'today') {
         return itemDate.toDateString() === now.toDateString();
     }
+    
+    // Specifieke dag
     if (filterType === 'specific-day' && customValue) {
         return itemDate.toDateString() === new Date(customValue).toDateString();
     }
+    
+    // Specifieke week of deze week
     if (filterType === 'week') {
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
         startOfWeek.setHours(0,0,0,0);
         return itemDate >= startOfWeek;
     }
+    if (filterType === 'specific-week' && customValue) {
+        const targetDate = new Date(customValue);
+        const targetWeekStart = new Date(targetDate);
+        targetWeekStart.setDate(targetDate.getDate() - targetDate.getDay() + (targetDate.getDay() === 0 ? -6 : 1));
+        targetWeekStart.setHours(0,0,0,0);
+        const targetWeekEnd = new Date(targetWeekStart);
+        targetWeekEnd.setDate(targetWeekStart.getDate() + 7);
+        return itemDate >= targetWeekStart && itemDate < targetWeekEnd;
+    }
+    
+    // Specifieke maand of deze maand
     if (filterType === 'month') {
         return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
     }
@@ -183,10 +198,16 @@ export function checkDateFilter(dateString, filterType, customValue = null) {
         const [year, month] = customValue.split('-');
         return itemDate.getFullYear() === parseInt(year) && (itemDate.getMonth() + 1) === parseInt(month);
     }
-    if (filterType === 'year' || filterType === 'specific-year') {
-        const targetYear = customValue ? parseInt(customValue) : now.getFullYear();
+    
+    // Specifieke jaar of dit jaar
+    if (filterType === 'year') {
+        return itemDate.getFullYear() === now.getFullYear();
+    }
+    if (filterType === 'specific-year' && customValue) {
+        const targetYear = parseInt(customValue);
         return itemDate.getFullYear() === targetYear;
     }
+
     return true;
 }
 
@@ -199,16 +220,13 @@ export function showToast(msg) {
         container.className = 'fixed bottom-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none items-center w-full max-w-xs px-4';
         document.body.appendChild(container);
     }
-
     const toast = document.createElement('div');
     toast.className = 'bg-indigo-950 text-white px-4 py-2.5 rounded-xl text-xs font-medium shadow-lg transition transform duration-300 pointer-events-auto opacity-0 translate-y-2 w-full text-center';
     toast.textContent = msg;
     container.appendChild(toast);
-
     setTimeout(() => {
         toast.classList.remove('opacity-0', 'translate-y-2');
     }, 20);
-
     setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 300);
