@@ -45,7 +45,6 @@ export function initVandaagModule(appData) {
                     </button>
                 `).join('')}
             </div>
-
             <div id="mood-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
                 <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="grid grid-cols-2 gap-2">
@@ -72,12 +71,10 @@ export function initVandaagModule(appData) {
                         <input type="week" id="mood-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-2">
                     <button id="mood-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
                     <button id="mood-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
                 </div>
-
                 <div id="mood-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
                 <div id="mood-history-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
             </div>
@@ -100,7 +97,6 @@ export function initVandaagModule(appData) {
                 <canvas id="marble-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></canvas>
                 <div class="absolute bottom-2 text-[10px] text-indigo-900 font-semibold bg-white/80 px-2.5 py-0.5 rounded-full shadow-sm pointer-events-none">💡 Sleep met je muis/vinger aan de knikkers!</div>
             </div>
-
             <div id="marble-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
                 <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="grid grid-cols-2 gap-2">
@@ -128,12 +124,10 @@ export function initVandaagModule(appData) {
                         <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-2">
                     <button id="marble-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
                     <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
                 </div>
-
                 <div id="marble-chart-container" class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl"></div>
                 <div id="marble-list" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
             </div>
@@ -146,12 +140,10 @@ export function initVandaagModule(appData) {
                 <span class="px-3 py-1 bg-indigo-600 text-white rounded-xl font-semibold shadow-sm">Direct Afvinken</span>
             </div>
             <p class="text-gray-500">Hier verzamelen we de belangrijkste zaken van jouw andere tabbladen. Vink ze hier direct af!</p>
-
             <div class="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1">
                 <p class="font-bold text-indigo-950">🌙 JOUW AVOND-PACT VOOR VANDAAG:</p>
                 <div id="actie-hub-pact-container" class="text-gray-700 font-medium">Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!</div>
             </div>
-
             <div class="space-y-2">
                 <div class="flex justify-between items-center">
                     <p class="font-bold text-indigo-950">🎯 FOCUS-TAKEN (NIEUWSTE EERST):</p>
@@ -159,7 +151,6 @@ export function initVandaagModule(appData) {
                 </div>
                 <div id="actie-hub-tasks-list" class="space-y-2"></div>
             </div>
-
             <div class="space-y-2 pt-2 border-t border-gray-100">
                 <div class="flex justify-between items-center">
                     <p class="font-bold text-indigo-950">🧭 DOELEN CHECK-IN:</p>
@@ -213,7 +204,6 @@ function initPhysicsMarblePot(appData) {
     canvas.height = height;
 
     const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint } = Matter;
-
     const engine = Engine.create();
 
     const render = Render.create({
@@ -280,6 +270,8 @@ function initPhysicsMarblePot(appData) {
 }
 
 function initVandaagModals(appData) {
+    if (document.getElementById('buddy-beheer-modal')) return;
+
     const buddyModalHTML = `
         <div id="buddy-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
