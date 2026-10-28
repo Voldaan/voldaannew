@@ -40,7 +40,7 @@ export function initVandaagModule(appData) {
             
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                 ${MOOD_TYPES.map(m => `
-                    <button data-mood="${m.label}" data-icon="${m.icon}" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm text-center">
+                    <button data-mood="${m.label}" data-icon="${m.icon}" class="mood-btn p-2.5 bg-[#f0f4f8] border border-[#d9e2ec] rounded-xl text-xs font-medium hover:bg-[#e2e8f0] transition flex items-center justify-center gap-1.5 shadow-sm text-center text-indigo-950">
                         <span class="text-sm">${m.icon}</span> <span class="truncate">${m.label}</span>
                     </button>
                 `).join('')}
