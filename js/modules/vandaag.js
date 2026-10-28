@@ -9,7 +9,7 @@ export function initVandaagModule(appData) {
 
     container.innerHTML = `
         <!-- 1. Mijn Dag Begint Nu & Mood Tracker -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">✨ Mijn Dag Begint Nu</h2>
                 <button id="toggle-mood-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
@@ -19,16 +19,16 @@ export function initVandaagModule(appData) {
             <p class="text-xs text-gray-500 mb-3">Waar staat je brein op dit moment naar?</p>
             
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <button data-mood="Wazig / Moe" data-icon="🌫️" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5">
+                <button data-mood="Wazig / Moe" data-icon="🌫️" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
                     <span>🌫️</span> Wazig / Moe
                 </button>
-                <button data-mood="Chaotisch / Vol" data-icon="⚡" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5">
+                <button data-mood="Chaotisch / Vol" data-icon="⚡" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
                     <span>⚡</span> Chaotisch / Vol
                 </button>
-                <button data-mood="Rustig / Oké" data-icon="🪨" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5">
+                <button data-mood="Rustig / Oké" data-icon="🪨" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
                     <span>🪨</span> Rustig / Oké
                 </button>
-                <button data-mood="Gefocust" data-icon="🚀" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5">
+                <button data-mood="Gefocust" data-icon="🚀" class="mood-btn p-2.5 bg-white border border-gray-200 rounded-xl text-xs font-medium hover:bg-indigo-50 transition flex items-center justify-center gap-1.5 shadow-sm">
                     <span>🚀</span> Gefocust
                 </button>
             </div>
@@ -50,7 +50,7 @@ export function initVandaagModule(appData) {
         </div>
 
         <!-- 2. De Trots-Kluis (Visuele Knikkerpot) -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🏺 De Trots-Kluis</h2>
                 <span id="marble-count-badge" class="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-[11px] font-bold">0 Knikkers</span>
@@ -64,40 +64,50 @@ export function initVandaagModule(appData) {
                 <div id="marble-visual-pot" class="flex flex-wrap gap-1.5 justify-center max-h-28 overflow-y-auto p-2 w-full"></div>
             </div>
 
-            <div class="flex flex-col gap-2 mb-3">
+            <!-- Uitgebreide Filters voor De Trots-Kluis -->
+            <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <div class="grid grid-cols-2 gap-2">
-                    <select id="marble-cat-filter" class="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-xl">
+                    <select id="marble-cat-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
                         <option value="Alle">Alle categorieën</option>
                         ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
                     </select>
-                    <select id="marble-date-filter" class="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-xl">
-                        <option value="all">Alles</option>
+                    <select id="marble-date-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                        <option value="all">Alle data</option>
                         <option value="today">Vandaag</option>
                         <option value="week">Deze week</option>
+                        <option value="specific-week">Specifieke week...</option>
                         <option value="month">Deze maand</option>
-                        <option value="specific">Specifieke dag...</option>
+                        <option value="specific-month">Specifieke maand...</option>
+                        <option value="year">Dit jaar</option>
+                        <option value="specific-year">Specifiek jaar...</option>
+                        <option value="specific-day">Specifieke dag...</option>
                     </select>
                 </div>
-                <div id="marble-specific-date-box" class="hidden">
-                    <input type="date" id="marble-specific-date" class="w-full px-3 py-2 text-xs bg-white border border-gray-200 rounded-xl">
+                <!-- Dynamisch invoerveld voor specifieke datumfilters -->
+                <div id="marble-custom-filter-box" class="hidden">
+                    <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl hidden">
+                    <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl hidden">
+                    <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl hidden">
+                    <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl hidden">
                 </div>
-                <button id="open-marble-modal-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">
-                    + Knikker erbij ✨
-                </button>
             </div>
+
+            <button id="open-marble-modal-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm mb-3">
+                + Knikker erbij ✨
+            </button>
 
             <div id="marble-list" class="space-y-2"></div>
         </div>
 
         <!-- 3. Actie-Hub voor Vandaag -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <h2 class="text-base font-bold text-indigo-950 mb-1">🎯 Actie-Hub voor Vandaag</h2>
             <p class="text-xs text-gray-500 mb-3">Jouw compacte overzicht van openstaande focus-taken.</p>
             <div id="actie-hub-list" class="space-y-2"></div>
         </div>
 
         <!-- 4. Idee van de Dag -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <h2 class="text-base font-bold text-indigo-950 mb-1">💡 Idee van de Dag</h2>
             <p class="text-xs text-gray-500 mb-3">Een willekeurige vonk uit je kluis.</p>
             <div id="idea-of-day-card" class="p-3.5 bg-yellow-50/70 border border-yellow-200 rounded-xl space-y-2">
@@ -110,26 +120,14 @@ export function initVandaagModule(appData) {
         </div>
 
         <!-- 5. Zachte Buddy-Lijn -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
             <h2 class="text-base font-bold text-indigo-950 mb-1">💬 Zachte Buddy-Lijn</h2>
             <p class="text-xs text-gray-500 mb-3">Lichte signalen om op tijd eerlijk te zijn.</p>
             <div class="grid grid-cols-2 gap-2">
-                <a href="https://wa.me/?text=Hoi,%20het%20is%20even%20wat%20druk%20in%20mijn%20hoofd." target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition">💚 Vol hoofd</a>
-                <a href="https://wa.me/?text=Hoi,%20ik%20neem%20vandaag%20een%20zachte%20start." target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition">☕ Zachte start</a>
-                <a href="https://wa.me/?text=Hoi,%20lukt%20het%20om%20even%20kort%20te%20schakelen?" target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition">📞 Kort schakelen</a>
-                <a href="https://wa.me/?text=Alles%20oké,%20ik%20rust%20even%20uit." target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition">🛋️ Even rust</a>
-            </div>
-        </div>
-
-        <!-- 6. Gegevensbeheer & Backup -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <h2 class="text-base font-bold text-indigo-950 mb-1">💾 Gegevensbeheer & Backup</h2>
-            <p class="text-xs text-gray-500 mb-3">Bewaar je opgebouwde progressie veilig op je eigen toestel.</p>
-            <div class="flex gap-2">
-                <button id="export-json-btn" class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition">Exporteer JSON</button>
-                <label class="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold text-center cursor-pointer transition">
-                    Importeer JSON <input type="file" id="import-json-file" class="hidden" accept=".json">
-                </label>
+                <a href="https://wa.me/?text=Hoi,%20het%20is%20even%20wat%20druk%20in%20mijn%20hoofd." target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition shadow-sm">💚 Vol hoofd</a>
+                <a href="https://wa.me/?text=Hoi,%20ik%20neem%20vandaag%20een%20zachte%20start." target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition shadow-sm">☕ Zachte start</a>
+                <a href="https://wa.me/?text=Hoi,%20lukt%20het%20om%20even%20kort%20te%20schakelen?" target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition shadow-sm">📞 Kort schakelen</a>
+                <a href="https://wa.me/?text=Alles%20oké,%20ik%20rust%20even%20uit." target="_blank" class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] font-semibold text-emerald-800 text-center hover:bg-emerald-100 transition shadow-sm">🛋️ Even rust</a>
             </div>
         </div>
     `;
@@ -146,14 +144,11 @@ function initVandaagLogic(appData) {
         btn.addEventListener('click', () => {
             const mood = btn.getAttribute('data-mood');
             const icon = btn.getAttribute('data-icon');
-            const newMood = { id: Date.now(), mood, icon, date: new Date().toISOString() };
-            appData.moods.push(newMood);
+            appData.moods.push({ id: Date.now(), mood, icon, date: new Date().toISOString() });
             
-            // Automatisch knikker erbij voor dagstart check-in
             voegTrotsKnikkerToe(appData, `Dagstart check-in: ${mood}`, 'Dagstart');
             saveAppData(appData);
             
-            showToast(`Mood geregistreerd: ${icon} ${mood} 🪷`);
             renderMoodHistory(appData);
             renderTrotsKluis(appData);
         });
@@ -165,13 +160,11 @@ function initVandaagLogic(appData) {
         historyBox.classList.toggle('hidden');
         if (!historyBox.classList.contains('hidden')) renderMoodHistory(appData);
     });
-
     document.getElementById('mood-filter-date').addEventListener('change', () => renderMoodHistory(appData));
 
     renderTrotsKluis(appData);
     renderActieHub(appData);
     renderIdeeVanDeDag(appData);
-    initBackupLogic(appData);
 }
 
 function renderTrotsKluis(appData) {
@@ -180,15 +173,42 @@ function renderTrotsKluis(appData) {
     const visualPot = document.getElementById('marble-visual-pot');
     const catFilter = document.getElementById('marble-cat-filter').value;
     const dateFilter = document.getElementById('marble-date-filter').value;
-    const specificDateInput = document.getElementById('marble-specific-date').value;
-    const specificBox = document.getElementById('marble-specific-date-box');
 
-    specificBox.classList.toggle('hidden', dateFilter !== 'specific');
+    const customBox = document.getElementById('marble-custom-filter-box');
+    const dateInput = document.getElementById('marble-custom-date');
+    const monthInput = document.getElementById('marble-custom-month');
+    const yearInput = document.getElementById('marble-custom-year');
+    const weekInput = document.getElementById('marble-custom-week');
+
+    // Verberg alle specifieke inputs standaard
+    dateInput.classList.add('hidden');
+    monthInput.classList.add('hidden');
+    yearInput.classList.add('hidden');
+    weekInput.classList.add('hidden');
+    customBox.classList.add('hidden');
+
+    let customVal = null;
+    if (dateFilter === 'specific-day') {
+        customBox.classList.remove('hidden');
+        dateInput.classList.remove('hidden');
+        customVal = dateInput.value;
+    } else if (dateFilter === 'specific-month') {
+        customBox.classList.remove('hidden');
+        monthInput.classList.remove('hidden');
+        customVal = monthInput.value;
+    } else if (dateFilter === 'specific-year') {
+        customBox.classList.remove('hidden');
+        yearInput.classList.remove('hidden');
+        customVal = yearInput.value;
+    } else if (dateFilter === 'specific-week') {
+        customBox.classList.remove('hidden');
+        weekInput.classList.remove('hidden');
+        customVal = weekInput.value;
+    }
 
     const marbles = appData.marbles || [];
     countBadge.textContent = `${marbles.length} Knikkers`;
 
-    // Visuele knikkerpot vullen met gekleurde knikkers
     const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-rose-500', 'bg-teal-500'];
     visualPot.innerHTML = marbles.length === 0 ? '<p class="text-[11px] text-indigo-400 italic">Nog geen knikkers in de pot. Voltooi taken of check-ins!</p>' : marbles.map((m, idx) => {
         const colorClass = colors[idx % colors.length];
@@ -197,10 +217,7 @@ function renderTrotsKluis(appData) {
 
     const filtered = marbles.filter(m => {
         const matchCat = catFilter === 'Alle' || (m.category || 'Algemeen') === catFilter;
-        let matchDate = checkDateFilter(m.date, dateFilter);
-        if (dateFilter === 'specific' && specificDateInput) {
-            matchDate = new Date(m.date).toDateString() === new Date(specificDateInput).toDateString();
-        }
+        const matchDate = checkDateFilter(m.date, dateFilter, customVal);
         return matchCat && matchDate;
     });
 
@@ -209,11 +226,9 @@ function renderTrotsKluis(appData) {
             <div>
                 <span class="font-bold text-indigo-900 px-2 py-0.5 bg-indigo-100/70 rounded-md mr-1.5">[${m.category || 'Algemeen'}]</span> 
                 <span class="text-gray-800">${m.text || m.reason || 'Knikker'}</span>
+                <span class="text-[10px] text-gray-400 block mt-0.5">${new Date(m.date || Date.now()).toLocaleDateString('nl-NL')}</span>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-gray-400 text-[10px]">${new Date(m.date || Date.now()).toLocaleDateString('nl-NL')}</span>
-                <button onclick="window.deleteMarble(${m.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
-            </div>
+            <button onclick="window.deleteMarble(${m.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
         </div>
     `).join('');
 
@@ -221,12 +236,14 @@ function renderTrotsKluis(appData) {
         appData.marbles = appData.marbles.filter(x => x.id !== id);
         saveAppData(appData);
         renderTrotsKluis(appData);
-        showToast("Knikker verwijderd.");
     };
 
     document.getElementById('marble-cat-filter').onchange = () => renderTrotsKluis(appData);
     document.getElementById('marble-date-filter').onchange = () => renderTrotsKluis(appData);
-    document.getElementById('marble-specific-date').onchange = () => renderTrotsKluis(appData);
+    dateInput.onchange = () => renderTrotsKluis(appData);
+    monthInput.onchange = () => renderTrotsKluis(appData);
+    yearInput.oninput = () => renderTrotsKluis(appData);
+    weekInput.onchange = () => renderTrotsKluis(appData);
 }
 
 function initMarbleModal(appData) {
@@ -240,7 +257,7 @@ function initMarbleModal(appData) {
                 <form id="marble-modal-form" class="space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Waar ben je trots op?</label>
-                        <textarea id="modal-marble-text" rows="2" placeholder="Bijv. Rustig gebleven bij een drukke planning..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500" required></textarea>
+                        <textarea id="modal-marble-text" rows="2" placeholder="Bijv. Rustig gebleven bij een drukke planning..." class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs" required></textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Categorie</label>
@@ -259,11 +276,11 @@ function initMarbleModal(appData) {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
     const modal = document.getElementById('marble-modal');
-    document.getElementById('open-marble-modal-btn').addEventListener('click', () => modal.classList.remove('hidden'));
-    document.getElementById('close-marble-modal').addEventListener('click', () => modal.classList.add('hidden'));
-    document.getElementById('cancel-marble-modal').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('open-marble-modal-btn').onclick = () => modal.classList.remove('hidden');
+    document.getElementById('close-marble-modal').onclick = () => modal.classList.add('hidden');
+    document.getElementById('cancel-marble-modal').onclick = () => modal.classList.add('hidden');
 
-    document.getElementById('marble-modal-form').addEventListener('submit', (e) => {
+    document.getElementById('marble-modal-form').onsubmit = (e) => {
         e.preventDefault();
         const text = document.getElementById('modal-marble-text').value.trim();
         const category = document.getElementById('modal-marble-cat').value;
@@ -273,14 +290,13 @@ function initMarbleModal(appData) {
             e.target.reset();
             renderTrotsKluis(appData);
         }
-    });
+    };
 }
 
 function renderMoodHistory(appData) {
     const listEl = document.getElementById('mood-history-list');
     const barsEl = document.getElementById('mood-chart-bars');
     const filter = document.getElementById('mood-filter-date').value;
-
     const moods = (appData.moods || []).filter(m => checkDateFilter(m.date, filter));
 
     listEl.innerHTML = moods.length === 0 ? `<p class="italic text-gray-400">Geen check-ins in deze periode.</p>` : moods.slice(-6).reverse().map(m => `
@@ -297,7 +313,6 @@ function renderMoodHistory(appData) {
         appData.moods = appData.moods.filter(x => x.id !== id);
         saveAppData(appData);
         renderMoodHistory(appData);
-        showToast("Check-in verwijderd.");
     };
 
     const counts = {};
@@ -326,9 +341,9 @@ function renderActieHub(appData) {
     const openTasks = allTasks.filter(t => !t.archived && !t.done && !t.completed).slice(0, 5);
     
     listEl.innerHTML = openTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande focus-taken vandaag. Mooi op tijd rust!</p>' : openTasks.map(t => `
-        <div class="flex justify-between items-center p-2.5 bg-white border border-gray-100 rounded-xl text-xs">
-            <div><span class="font-bold text-indigo-700 mr-1">[${t.category || 'Algemeen'}]</span> <span class="text-gray-800">${t.text}</span></div>
-            <button onclick="window.quickCompleteTask(${t.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-semibold hover:bg-indigo-100">Klaar ✨</button>
+        <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl text-xs shadow-sm">
+            <div><span class="font-bold text-indigo-700 mr-1">[${t.category || 'Algemeen'}]</span> <span class="text-gray-800 font-medium">${t.text}</span></div>
+            <button onclick="window.quickCompleteTask(${t.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">Klaar ✨</button>
         </div>
     `).join('');
 
@@ -340,7 +355,6 @@ function renderActieHub(appData) {
             voegTrotsKnikkerToe(appData, `Taak volbracht: ${task.text}`, task.category || 'Taken');
             saveAppData(appData);
             renderActieHub(appData);
-            renderTrotsKluis(appData);
         }
     };
 }
@@ -349,61 +363,17 @@ function renderIdeeVanDeDag(appData) {
     const textEl = document.getElementById('idea-day-text');
     const allIdeas = [...(appData.ideasModule?.ideas || []), ...(appData.ideas || [])].filter(i => !i.archived);
     const randomIdea = allIdeas.length > 0 ? allIdeas[Math.floor(Math.random() * allIdeas.length)] : null;
-
+    
     if (!randomIdea) {
         textEl.textContent = 'Nog geen ideeën in de kluis. Voeg er eentje toe via de Ideeënkluis!';
         return;
     }
-
     textEl.textContent = randomIdea.text;
 
     document.getElementById('grabbel-idea-btn').onclick = () => renderIdeeVanDeDag(appData);
     document.getElementById('idea-to-plan-btn').onclick = () => {
-        if (!appData.tasks) appData.tasks = [];
-        appData.tasks.push({ id: Date.now(), text: `Idee: ${randomIdea.text}`, category: randomIdea.category || 'Algemeen', completed: false, archived: false, date: new Date().toISOString() });
+        if (!appData.plans.tasks) appData.plans.tasks = [];
+        appData.plans.tasks.push({ id: Date.now(), text: `Idee: ${randomIdea.text}`, category: randomIdea.category || 'Algemeen', completed: false, archived: false, date: new Date().toISOString() });
         saveAppData(appData);
-        showToast("Idee overgebracht naar het Planbord! 🎯");
     };
-}
-
-function initBackupLogic(appData) {
-    document.getElementById('export-json-btn').addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `voldaan_backup_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("Backup succesvol geëxporteerd! 💾");
-    });
-
-    document.getElementById('import-json-file').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const parsed = JSON.parse(event.target.result);
-                if (parsed) {
-                    localStorage.setItem('voldaan_app_data_v2', JSON.stringify(parsed));
-                    location.reload();
-                }
-            } catch (err) {
-                alert("Ongeldig JSON-bestand.");
-            }
-        };
-        reader.readAsText(file);
-    });
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-950 text-white px-4 py-2.5 rounded-xl text-xs font-medium shadow-lg z-50 transition transform duration-300';
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
 }
