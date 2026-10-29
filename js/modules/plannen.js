@@ -22,7 +22,7 @@ export function initPlannenModule(appData) {
     if (!appData.knowledgeVault) appData.knowledgeVault = [];
 
     container.innerHTML = `
-        <!-- 1. Het Avond-Pact (Met zachte sfeer-glow en eigen invoer + beheer) -->
+        <!-- 1. Het Avond-Pact (Met zachte sfeer-glow en eigen beheer) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(99, 102, 241, 0.08); border-color: rgba(199, 210, 254, 0.8);">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950 flex items-center gap-1.5"><span>🌙</span> Het Avond-Pact</h2>
@@ -37,7 +37,7 @@ export function initPlannenModule(appData) {
             </div>
         </div>
 
-        <!-- 2. Het Zachte Planbord (Met eigen invoer, uitklapbare filter en strakke afvinkknoppen) -->
+        <!-- 2. Het Zachte Planbord -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">🎯 Het Zachte Planbord</h2>
@@ -86,7 +86,6 @@ export function initPlannenModule(appData) {
                     </div>
                 </div>
 
-                <!-- Lijst met openstaande taken -->
                 <div id="planboard-tasks-list" class="space-y-2 pt-1"></div>
             </div>
         </div>
@@ -100,7 +99,7 @@ export function initPlannenModule(appData) {
             <p id="hack-text" class="text-amber-900/90 leading-relaxed"></p>
         </div>
 
-        <!-- 3. Het Zachte Kompas (Met eigen invoer, zacht schild en beheer-knop) -->
+        <!-- 3. Het Zachte Kompas (Met de gevraagde velden uit de oude setup in strakke lay-out) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">🧭 Het Zachte Kompas</h2>
@@ -109,13 +108,9 @@ export function initPlannenModule(appData) {
             <p class="text-xs text-gray-500 mb-3">Langetermijn voornemens met een ingebouwd veiligheidsnet.</p>
             
             <div class="space-y-3">
-                <input type="text" id="goal-input-field" placeholder="Doel (bijv. 10 minuten gitaar)..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                <input type="text" id="goal-shield-field" placeholder="Zacht schild (als het tegenzit)..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                <select id="goal-priority-select" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                    <option value="Laag">Prioriteit: Laag</option>
-                    <option value="Normaal">Prioriteit: Normaal</option>
-                    <option value="Hoog">Prioriteit: Hoog</option>
-                </select>
+                <input type="text" id="goal-title-field" placeholder="🎯 Wat wil je opbouwen?" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                <input type="text" id="goal-pitfall-field" placeholder="🌑 Bekende valkuil?" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                <input type="text" id="goal-shield-field" placeholder="🛡️ Zacht Schild op zware dagen?" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                 <button id="add-goal-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Doel Toevoegen</button>
                 
                 <div id="compass-goals-list" class="space-y-2 pt-1 text-xs"></div>
@@ -131,12 +126,13 @@ export function initPlannenModule(appData) {
 function initPlannenModals(appData) {
     if (document.getElementById('plan-beheer-modal')) return;
 
-    // Uitgebreide Beheer Modal voor Categorieën en Archief (Planbord, Kompas & Pacten)
+    // Afzonderlijke Modals per onderwerp voor eigen functionaliteit en beheer
     const modalsHTML = `
+        <!-- Planbord & Categorieën Beheer Modal -->
         <div id="plan-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer, Categorieën & Archief</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Planbord, Categorieën & Archief</h3>
                     <button id="close-plan-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 
@@ -150,7 +146,7 @@ function initPlannenModals(appData) {
                 </div>
 
                 <div class="pt-2 border-t space-y-2">
-                    <h4 class="font-bold text-indigo-900">Archief Voltooide Taken & Doelen</h4>
+                    <h4 class="font-bold text-indigo-900">Archief Voltooide Taken</h4>
                     <div id="beheer-archive-list" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
                 </div>
 
@@ -159,20 +155,57 @@ function initPlannenModals(appData) {
                 </div>
             </div>
         </div>
+
+        <!-- Avond-Pact Beheer Modal -->
+        <div id="pact-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">🌙 Beheer Avond-Pact Historie</h3>
+                    <button id="close-pact-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <div id="pact-archive-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                <div class="pt-2">
+                    <button id="close-pact-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zachte Kompas Beheer Modal -->
+        <div id="compass-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">🧭 Beheer Zachte Kompas Doelen</h3>
+                    <button id="close-compass-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <div id="compass-archive-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                <div class="pt-2">
+                    <button id="close-compass-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
+                </div>
+            </div>
+        </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalsHTML);
 
-    const beheerModal = document.getElementById('plan-beheer-modal');
-    document.getElementById('open-plan-beheer-btn').onclick = () => { beheerModal.classList.remove('hidden'); renderBeheerContent(appData); };
-    document.getElementById('open-compass-beheer-btn').onclick = () => { beheerModal.classList.remove('hidden'); renderBeheerContent(appData); };
-    document.getElementById('open-pact-beheer-btn').onclick = () => { beheerModal.classList.remove('hidden'); renderBeheerContent(appData); };
+    // Modal koppelingen
+    const planModal = document.getElementById('plan-beheer-modal');
+    const pactModal = document.getElementById('pact-beheer-modal');
+    const compassModal = document.getElementById('compass-beheer-modal');
 
-    document.getElementById('close-plan-beheer').onclick = () => beheerModal.classList.add('hidden');
-    document.getElementById('close-beheer-bottom').onclick = () => beheerModal.classList.add('hidden');
+    document.getElementById('open-plan-beheer-btn').onclick = () => { planModal.classList.remove('hidden'); renderPlanBeheerContent(appData); };
+    document.getElementById('close-plan-beheer').onclick = () => planModal.classList.add('hidden');
+    document.getElementById('close-beheer-bottom').onclick = () => planModal.classList.add('hidden');
+
+    document.getElementById('open-pact-beheer-btn').onclick = () => { pactModal.classList.remove('hidden'); renderPactBeheerContent(appData); };
+    document.getElementById('close-pact-beheer').onclick = () => pactModal.classList.add('hidden');
+    document.getElementById('close-pact-bottom').onclick = () => pactModal.classList.add('hidden');
+
+    document.getElementById('open-compass-beheer-btn').onclick = () => { compassModal.classList.remove('hidden'); renderCompassBeheerContent(appData); };
+    document.getElementById('close-compass-beheer').onclick = () => compassModal.classList.add('hidden');
+    document.getElementById('close-compass-bottom').onclick = () => compassModal.classList.add('hidden');
 }
 
 function initPlannenLogic(appData) {
-    // Kennis hack verversen & opslaan voor Kennis-tabblad
+    // Kennis hack verversen
     document.getElementById('next-hack-btn').onclick = () => {
         appData.knowledgeHacksIndex = ((appData.knowledgeHacksIndex || 0) + 1) % KNOWLEDGE_HACKS.length;
         const currentHack = KNOWLEDGE_HACKS[appData.knowledgeHacksIndex];
@@ -185,7 +218,7 @@ function initPlannenLogic(appData) {
         renderKnowledgeHack(appData);
     };
 
-    // Uitklapbare filter bar voor het planbord
+    // Filter bar toggle
     const toggleFilterBtn = document.getElementById('toggle-plan-filter-bar');
     const filterContent = document.getElementById('plan-filter-content');
     toggleFilterBtn.onclick = () => {
@@ -223,15 +256,24 @@ function initPlannenLogic(appData) {
         }
     };
 
-    // Doel toevoegen aan Het Zachte Kompas
+    // Doel toevoegen aan Het Zachte Kompas (met de nieuwe velden)
     document.getElementById('add-goal-btn').onclick = () => {
-        const title = document.getElementById('goal-input-field').value.trim();
+        const title = document.getElementById('goal-title-field').value.trim();
+        const pitfall = document.getElementById('goal-pitfall-field').value.trim();
         const shield = document.getElementById('goal-shield-field').value.trim();
-        const priority = document.getElementById('goal-priority-select').value;
+        
         if (title) {
-            appData.plans.goals.push({ id: Date.now(), title, shield: shield || 'Geen', priority, status: 'open', date: new Date().toISOString() });
+            appData.plans.goals.push({ 
+                id: Date.now(), 
+                title, 
+                pitfall: pitfall || 'Geen', 
+                shield: shield || 'Geen', 
+                status: 'open', 
+                date: new Date().toISOString() 
+            });
             saveAppData(appData);
-            document.getElementById('goal-input-field').value = '';
+            document.getElementById('goal-title-field').value = '';
+            document.getElementById('goal-pitfall-field').value = '';
             document.getElementById('goal-shield-field').value = '';
             renderCompassGoals(appData);
             showToast("Doel toegevoegd aan je kompas! 🧭");
@@ -246,18 +288,6 @@ function renderKnowledgeHack(appData) {
     const hack = KNOWLEDGE_HACKS[idx];
     document.getElementById('hack-title').textContent = hack.title;
     document.getElementById('hack-text').textContent = hack.text;
-}
-
-function updateCategorySelects(appData) {
-    const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
-    const select1 = document.getElementById('task-category-select');
-    const select2 = document.getElementById('plan-cat-filter');
-    if (!select1 || !select2) return;
-
-    const html1 = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-    const html2 = `<option value="Alle">Alle categorieën</option>` + html1;
-    select1.innerHTML = html1;
-    select2.innerHTML = html2;
 }
 
 function renderPlanboardViews(appData) {
@@ -330,26 +360,29 @@ function renderCompassGoals(appData) {
     const goals = (appData.plans?.goals || []).filter(g => g.status === 'open');
 
     listEl.innerHTML = goals.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen doelen ingesteld.</p>' : goals.map(g => `
-        <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs">
-            <div>
-                <span class="font-bold text-indigo-950">🎯 ${g.title}</span>
-                <span class="text-[10px] text-gray-500 block">Zacht schild: ${g.shield || 'Geen'} • Prioriteit: ${g.priority || 'Normaal'}</span>
-            </div>
-            <div class="flex gap-1.5 items-center">
-                <button onclick="window.completeGoal(${g.id})" class="px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold text-xs shadow-sm" title="Voltooien">✓ Voltooid</button>
+        <div class="p-3.5 bg-white border border-gray-100 rounded-xl shadow-sm text-xs space-y-1.5 relative">
+            <div class="flex justify-between items-start">
+                <span class="font-bold text-indigo-950 text-sm">🎯 ${g.title}</span>
                 <button onclick="window.deleteGoal(${g.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+            </div>
+            <p class="text-gray-600">🌑 Valkuil: ${g.pitfall || 'Geen'}</p>
+            <p class="text-indigo-900 font-medium">🛡️ Zacht Schild: ${g.shield || 'Geen'}</p>
+            <div class="flex gap-1.5 pt-2 border-t border-gray-50">
+                <button onclick="window.completeGoal(${g.id}, 'Volledig')" class="px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold text-xs shadow-sm">✓ Volledig</button>
+                <button onclick="window.completeGoal(${g.id}, 'Zacht Schild')" class="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg font-semibold text-xs shadow-sm">🛡️ Zacht Schild</button>
+                <button onclick="window.completeGoal(${g.id}, 'Rustdag')" class="px-2.5 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-semibold text-xs">🌱 Rustdag</button>
             </div>
         </div>
     `).join('');
 
-    window.completeGoal = (id) => {
+    window.completeGoal = (id, actie) => {
         const g = appData.plans.goals.find(x => x.id === id);
         if (g) {
-            g.status = 'volledig';
-            voegTrotsKnikkerToe(appData, `Doel volbracht: ${g.title}`, 'Doelen');
+            g.status = actie;
+            voegTrotsKnikkerToe(appData, `Kompas doel (${actie}): ${g.title}`, 'Doelen');
             saveAppData(appData);
             renderPlanboardViews(appData);
-            showToast("Doel volbracht en knikker toegevoegd! 🎯");
+            showToast(`Doel geupdate (${actie})! 🎯`);
         }
     };
 
@@ -361,7 +394,8 @@ function renderCompassGoals(appData) {
     };
 }
 
-function renderBeheerContent(appData) {
+// Eigen beheer voor het Planbord
+function renderPlanBeheerContent(appData) {
     const tagsList = document.getElementById('categories-tags-list');
     const archiveList = document.getElementById('beheer-archive-list');
     const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
@@ -380,8 +414,7 @@ function renderBeheerContent(appData) {
             appData.plans.categories = cats;
             saveAppData(appData);
             input.value = '';
-            renderBeheerContent(appData);
-            updateCategorySelects(appData);
+            renderPlanBeheerContent(appData);
             showToast("Categorie toegevoegd! ✨");
         }
     };
@@ -389,50 +422,95 @@ function renderBeheerContent(appData) {
     window.deletePlanCat = (catName) => {
         appData.plans.categories = cats.filter(c => c !== catName);
         saveAppData(appData);
-        renderBeheerContent(appData);
-        updateCategorySelects(appData);
+        renderPlanBeheerContent(appData);
         showToast("Categorie verwijderd.");
     };
 
-    const allTasks = appData.plans?.tasks || [];
-    const allGoals = appData.plans?.goals || [];
-    const completedTasks = allTasks.filter(t => t.completed || t.done || t.archived);
-    const completedGoals = allGoals.filter(g => g.status && g.status !== 'open');
-    const totalArchive = [...completedTasks.map(t => ({...t, isTask: true})), ...completedGoals.map(g => ({...g, text: g.title, isTask: false}))];
-
-    archiveList.innerHTML = totalArchive.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen voltooide items in het archief.</p>' : totalArchive.map(item => `
+    const completedTasks = (appData.plans?.tasks || []).filter(t => t.completed || t.done || t.archived);
+    archiveList.innerHTML = completedTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen voltooide taken in archief.</p>' : completedTasks.map(t => `
         <div class="flex justify-between items-center p-2 bg-gray-50 border rounded-xl text-xs">
-            <span class="line-through text-gray-500 truncate max-w-[170px]">${item.text}</span>
+            <span class="line-through text-gray-500 truncate max-w-[170px]">${t.text}</span>
             <div class="flex gap-2 items-center font-semibold text-xs">
-                <button onclick="window.restoreArchivedItem(${item.id}, ${item.isTask})" class="text-indigo-600 hover:underline">Terugzetten</button>
-                <button onclick="window.deleteArchivedItem(${item.id}, ${item.isTask})" class="text-red-600 hover:underline">Verwijderen</button>
+                <button onclick="window.restoreTask(${t.id})" class="text-indigo-600 hover:underline">Terugzetten</button>
+                <button onclick="window.permDeleteTask(${t.id})" class="text-red-600 hover:underline">Verwijderen</button>
             </div>
         </div>
     `).join('');
 
-    window.restoreArchivedItem = (id, isTask) => {
-        if (isTask) {
-            const t = appData.plans.tasks.find(x => x.id === id);
-            if (t) { t.completed = false; t.done = false; t.archived = false; }
-        } else {
-            const g = appData.plans.goals.find(x => x.id === id);
-            if (g) { g.status = 'open'; }
-        }
+    window.restoreTask = (id) => {
+        const t = appData.plans.tasks.find(x => x.id === id);
+        if (t) { t.completed = false; t.done = false; t.archived = false; }
         saveAppData(appData);
-        renderBeheerContent(appData);
+        renderPlanBeheerContent(appData);
         renderPlanboardViews(appData);
-        showToast("Item teruggezet! ✨");
+        showToast("Taak teruggezet! ✨");
     };
 
-    window.deleteArchivedItem = (id, isTask) => {
-        if (isTask) {
-            appData.plans.tasks = appData.plans.tasks.filter(x => x.id !== id);
-        } else {
-            appData.plans.goals = appData.plans.goals.filter(x => x.id !== id);
-        }
+    window.permDeleteTask = (id) => {
+        appData.plans.tasks = appData.plans.tasks.filter(x => x.id !== id);
         saveAppData(appData);
-        renderBeheerContent(appData);
+        renderPlanBeheerContent(appData);
         renderPlanboardViews(appData);
-        showToast("Item definitief verwijderd.");
+        showToast("Taak definitief verwijderd.");
+    };
+}
+
+// Eigen onafhankelijk beheer voor Het Avond-Pact
+function renderPactBeheerContent(appData) {
+    const listEl = document.getElementById('pact-archive-list');
+    const pacts = appData.plans?.eveningPacts || [];
+
+    listEl.innerHTML = pacts.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen avond-pacten in historie.</p>' : pacts.map(p => `
+        <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
+            <div>
+                <span class="text-gray-800 font-medium">${p.text}</span>
+                <span class="text-[10px] text-gray-400 block">📅 ${new Date(p.date || Date.now()).toLocaleDateString('nl-NL')}</span>
+            </div>
+            <button onclick="window.deletePact(${p.id})" class="text-red-600 hover:underline font-semibold">Verwijderen</button>
+        </div>
+    `).join('');
+
+    window.deletePact = (id) => {
+        appData.plans.eveningPacts = appData.plans.eveningPacts.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderPactBeheerContent(appData);
+        renderPlanboardViews(appData);
+        showToast("Avond-pact verwijderd.");
+    };
+}
+
+// Eigen onafhankelijk beheer voor Het Zachte Kompas
+function renderCompassBeheerContent(appData) {
+    const listEl = document.getElementById('compass-archive-list');
+    const goals = (appData.plans?.goals || []).filter(g => g.status && g.status !== 'open');
+
+    listEl.innerHTML = goals.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen voltooide of gearchiveerde doelen.</p>' : goals.map(g => `
+        <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
+            <div>
+                <span class="font-bold text-indigo-950">${g.title}</span>
+                <span class="text-[10px] text-indigo-600 block">Status: ${g.status}</span>
+            </div>
+            <div class="flex gap-2 items-center font-semibold text-xs">
+                <button onclick="window.restoreGoal(${g.id})" class="text-indigo-600 hover:underline">Terugzetten</button>
+                <button onclick="window.permDeleteGoal(${g.id})" class="text-red-600 hover:underline">Verwijderen</button>
+            </div>
+        </div>
+    `).join('');
+
+    window.restoreGoal = (id) => {
+        const g = appData.plans.goals.find(x => x.id === id);
+        if (g) { g.status = 'open'; }
+        saveAppData(appData);
+        renderCompassBeheerContent(appData);
+        renderPlanboardViews(appData);
+        showToast("Doel teruggezet naar openstaand! ✨");
+    };
+
+    window.permDeleteGoal = (id) => {
+        appData.plans.goals = appData.plans.goals.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderCompassBeheerContent(appData);
+        renderPlanboardViews(appData);
+        showToast("Doel definitief verwijderd.");
     };
 }
