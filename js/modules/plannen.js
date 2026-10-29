@@ -22,17 +22,17 @@ export function initPlannenModule(appData) {
     if (!appData.knowledgeVault) appData.knowledgeVault = [];
 
     container.innerHTML = `
-        <!-- 1. Het Avond-Pact (Met warme licht-oranje pastel tint) -->
-        <div class="p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(249, 115, 22, 0.08); background-color: #fdf6f0; border-color: #fbd5be;">
+        <!-- 1. Het Avond-Pact (Met vertrouwde blauwe stijl en lichte gele glow) -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(253, 230, 138, 0.9);">
             <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-orange-950 flex items-center gap-1.5"><span>🌙</span> Het Avond-Pact</h2>
-                <button id="open-pact-beheer-btn" class="px-3 py-1 bg-white/85 text-orange-800 rounded-xl text-xs font-semibold hover:bg-white transition shadow-sm border border-orange-200">Beheer & Archief</button>
+                <h2 class="text-base font-bold text-indigo-950 flex items-center gap-1.5"><span>🌙</span> Het Avond-Pact</h2>
+                <button id="open-pact-beheer-btn" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">Beheer & Archief</button>
             </div>
-            <p class="text-xs text-orange-900/70 mb-3">Wat laat je vandaag achter voor morgen?</p>
+            <p class="text-xs text-gray-500 mb-3">Wat laat je vandaag achter voor morgen?</p>
             
             <div class="space-y-3">
-                <input type="text" id="pact-input-field" placeholder="Bijv. Loslaten wat vandaag niet af is..." class="w-full px-3 py-2 bg-white border border-orange-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-300">
-                <button id="save-pact-btn" class="w-full py-2 bg-orange-600 text-white rounded-xl text-xs font-semibold hover:bg-orange-700 transition shadow-sm">Leg vast voor morgen 🌙</button>
+                <input type="text" id="pact-input-field" placeholder="Bijv. Loslaten wat vandaag niet af is..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                <button id="save-pact-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Leg vast voor morgen 🌙</button>
                 <div id="avond-pact-display" class="text-xs text-gray-500 italic">Geen actief avond-pact.</div>
             </div>
         </div>
@@ -99,7 +99,7 @@ export function initPlannenModule(appData) {
             <p id="hack-text" class="text-amber-900/90 leading-relaxed"></p>
         </div>
 
-        <!-- 3. Het Zachte Kompas (Met inklapbaar formulier) -->
+        <!-- 3. Het Zachte Kompas -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">🧭 Het Zachte KomPAS</h2>
@@ -181,12 +181,12 @@ function initPlannenModals(appData) {
         <div id="pact-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-orange-950">🌙 Beheer Avond-Pact Historie</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">🌙 Beheer Avond-Pact Historie</h3>
                     <button id="close-pact-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 <div id="pact-archive-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
                 <div class="pt-2">
-                    <button id="close-pact-bottom" class="w-full py-2 bg-orange-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
+                    <button id="close-pact-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
                 </div>
             </div>
         </div>
@@ -201,6 +201,41 @@ function initPlannenModals(appData) {
                 <div id="compass-archive-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
                 <div class="pt-2">
                     <button id="close-compass-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taak Bewerken Modal -->
+        <div id="edit-task-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">✏️ Taak Bewerken & Details</h3>
+                    <button id="close-edit-task" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <input type="hidden" id="edit-task-id">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Taakomschrijving</label>
+                        <input type="text" id="edit-task-text" class="w-full px-3 py-2 border rounded-xl">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Categorie</label>
+                            <select id="edit-task-cat" class="w-full px-3 py-2 border rounded-xl bg-white"></select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Prioriteit</label>
+                            <select id="edit-task-priority" class="w-full px-3 py-2 border rounded-xl bg-white">
+                                <option value="Laag">Laag</option>
+                                <option value="Normaal">Normaal</option>
+                                <option value="Hoog">Hoog</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" id="cancel-edit-task" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
+                        <button type="button" id="save-edit-task-btn" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Opslaan ✨</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -257,6 +292,7 @@ function initPlannenModals(appData) {
     const planModal = document.getElementById('plan-beheer-modal');
     const pactModal = document.getElementById('pact-beheer-modal');
     const compassModal = document.getElementById('compass-beheer-modal');
+    const editTaskModal = document.getElementById('edit-task-modal');
     const editGoalModal = document.getElementById('edit-goal-modal');
 
     document.getElementById('open-plan-beheer-btn').onclick = () => { planModal.classList.remove('hidden'); renderPlanBeheerContent(appData); };
@@ -271,8 +307,29 @@ function initPlannenModals(appData) {
     document.getElementById('close-compass-beheer').onclick = () => compassModal.classList.add('hidden');
     document.getElementById('close-compass-bottom').onclick = () => compassModal.classList.add('hidden');
 
+    document.getElementById('close-edit-task').onclick = () => editTaskModal.classList.add('hidden');
+    document.getElementById('cancel-edit-task').onclick = () => editTaskModal.classList.add('hidden');
+
     document.getElementById('close-edit-goal').onclick = () => editGoalModal.classList.add('hidden');
     document.getElementById('cancel-edit-goal').onclick = () => editGoalModal.classList.add('hidden');
+
+    document.getElementById('save-edit-task-btn').onclick = () => {
+        const id = Number(document.getElementById('edit-task-id').value);
+        const text = document.getElementById('edit-task-text').value.trim();
+        const category = document.getElementById('edit-task-cat').value;
+        const priority = document.getElementById('edit-task-priority').value;
+
+        const task = (appData.plans?.tasks || []).find(t => t.id === id);
+        if (task && text) {
+            task.text = text;
+            task.category = category;
+            task.priority = priority;
+            saveAppData(appData);
+            editTaskModal.classList.add('hidden');
+            renderPlanboardViews(appData);
+            showToast("Taak bijgewerkt! ✨");
+        }
+    };
 
     document.getElementById('save-edit-goal-btn').onclick = () => {
         const id = Number(document.getElementById('edit-goal-id').value);
@@ -310,7 +367,6 @@ function initPlannenLogic(appData) {
         renderKnowledgeHack(appData);
     };
 
-    // Uitklapgedrag Kompas formulier bij focussen in hoofdtitel
     const goalTitleInput = document.getElementById('goal-title-field');
     const extraFields = document.getElementById('compass-extra-fields');
     const cancelGoalBtn = document.getElementById('cancel-goal-btn');
@@ -426,10 +482,10 @@ function renderPlanboardViews(appData) {
     if (pactDisplay) {
         if (pacts.length > 0) {
             pactDisplay.textContent = pacts[pacts.length - 1].text;
-            pactDisplay.className = "text-xs text-orange-950 font-medium p-3 bg-white/80 rounded-xl border border-orange-200 shadow-sm";
+            pactDisplay.className = "text-xs text-indigo-950 font-medium p-3 bg-white/80 rounded-xl border border-indigo-100 shadow-sm";
         } else {
             pactDisplay.textContent = 'Geen actief avond-pact.';
-            pactDisplay.className = "text-xs text-orange-900/60 italic";
+            pactDisplay.className = "text-xs text-gray-500 italic";
         }
     }
 
@@ -453,7 +509,7 @@ function renderPlanboardTasks(appData) {
     });
 
     listEl.innerHTML = filtered.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken.</p>' : filtered.map(t => `
-        <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs cursor-pointer hover:border-indigo-200 transition" onclick="window.completePlanTask(${t.id})">
+        <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs cursor-pointer hover:border-indigo-200 transition" onclick="window.editPlanTask(${t.id})">
             <div>
                 <span class="font-bold text-indigo-900 mr-1">[${t.category || 'Algemeen'}]</span> 
                 <span class="text-gray-900 font-medium">${t.text}</span>
@@ -485,6 +541,20 @@ function renderPlanboardTasks(appData) {
         saveAppData(appData);
         renderPlanboardViews(appData);
         showToast("Taak verwijderd.");
+    };
+
+    window.editPlanTask = (id) => {
+        const t = appData.plans.tasks.find(x => x.id === id);
+        if (t) {
+            const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
+            const catSelect = document.getElementById('edit-task-cat');
+            catSelect.innerHTML = cats.map(c => `<option value="${c}" ${t.category === c ? 'selected' : ''}>${c}</option>`).join('');
+
+            document.getElementById('edit-task-id').value = t.id;
+            document.getElementById('edit-task-text').value = t.text;
+            document.getElementById('edit-task-priority').value = t.priority || 'Normaal';
+            document.getElementById('edit-task-modal').classList.remove('hidden');
+        }
     };
 }
 
