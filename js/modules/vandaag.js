@@ -29,7 +29,7 @@ export function initVandaagModule(appData) {
 
     container.innerHTML = `
         <!-- 1. Mijn Dag Begint Nu & Mood Tracker -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(253, 230, 138, 0.9);">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">✨ Mijn Dag Begint Nu</h2>
                 <button id="toggle-mood-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
