@@ -476,20 +476,13 @@ function renderKnowledgeHack(appData) {
     if (textEl) textEl.textContent = hack.text;
 }
 
-const pactDisplay = document.getElementById('avond-pact-display');
-    const pacts = (appData.plans?.eveningPacts || []).filter(p => !p.completed && !p.done);
+function renderPlanboardViews(appData) {
+    const pactDisplay = document.getElementById('avond-pact-display');
+    const pacts = appData.plans?.eveningPacts || [];
     if (pactDisplay) {
         if (pacts.length > 0) {
-            const p = pacts[pacts.length - 1];
-            pactDisplay.innerHTML = `
-                <div class="flex justify-between items-center bg-white p-2.5 border border-indigo-100 rounded-xl shadow-sm text-xs">
-                    <span class="text-gray-900 font-medium">${p.text}</span>
-                    <button onclick="window.completePlannenPact(${p.id})" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center gap-1">
-                        <span>✓</span> Afvinken
-                    </button>
-                </div>
-            `;
-            pactDisplay.className = ""; // Verwijdert eventuele oude italic styling zodat het strak aansluit
+            pactDisplay.textContent = pacts[pacts.length - 1].text;
+            pactDisplay.className = "text-xs text-indigo-950 font-medium p-3 bg-white/80 rounded-xl border border-indigo-100 shadow-sm";
         } else {
             pactDisplay.textContent = 'Geen actief avond-pact.';
             pactDisplay.className = "text-xs text-gray-500 italic";
@@ -530,18 +523,6 @@ function renderPlanboardTasks(appData) {
             </div>
         </div>
     `).join('');
-
-    window.completePlannenPact = (id) => {
-        const pact = (appData.plans?.eveningPacts || []).find(x => x.id === id);
-        if (pact) {
-            pact.completed = true;
-            pact.done = true;
-            voegTrotsKnikkerToe(appData, `Avond-pact volbracht: ${pact.text}`, 'Avond-Pact');
-            saveAppData(appData);
-            renderPlanboardViews(appData);
-            showToast("Avond-pact volbracht en knikker toegevoegd! ✨");
-        }
-    }
 
     window.completePlanTask = (id) => {
         const t = appData.plans.tasks.find(x => x.id === id);
