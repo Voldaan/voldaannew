@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) {
             target.classList.remove('hidden');
         } else {
+            tabId = 'vandaag';
             const fallback = document.getElementById('vandaag');
             if (fallback) fallback.classList.remove('hidden');
         }
@@ -46,6 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Sla het actieve tabblad op zodat het onthouden wordt bij verversen
+        localStorage.setItem('activeTab', tabId);
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -58,4 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Herstel het laatst bezochte tabblad bij opstarten of verversen
+    const savedTab = localStorage.getItem('activeTab') || 'vandaag';
+    window.switchTab(savedTab);
 });
