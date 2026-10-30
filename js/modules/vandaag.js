@@ -141,31 +141,32 @@ export function initVandaagModule(appData) {
                 <div class="absolute bottom-2 text-[10px] text-indigo-900 font-semibold bg-white/80 px-2.5 py-0.5 rounded-full shadow-sm pointer-events-none">💡 Sleep met je muis/vinger aan de knikkers!</div>
             </div>
             <div id="marble-history-box" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs">
-                <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div class="grid grid-cols-2 gap-2">
-                        <select id="marble-cat-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
-                            <option value="Alle">Alle categorieën</option>
-                            ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
-                        </select>
-                        <select id="marble-date-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
-                            <option value="all">Alle data</option>
-                            <option value="today">Vandaag</option>
-                            <option value="week">Deze week</option>
-                            <option value="specific-week">Specifieke week...</option>
-                            <option value="month">Deze maand</option>
-                            <option value="specific-month">Specifieke maand...</option>
-                            <option value="year">Dit jaar</option>
-                            <option value="specific-year">Specifiek jaar...</option>
-                            <option value="specific-day">Specifieke dag...</option>
-                        </select>
-                    </div>
-                    <div id="marble-custom-filter-box" class="hidden pt-1">
-                        <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                        <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                        <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                        <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
-                    </div>
-                </div>
+    <div class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+        <div class="grid grid-cols-2 gap-2">
+            <select id="marble-cat-filter" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                <option value="Alle">Alle categorieën</option>
+                ${CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+            <!-- LET OP: gewijzigd van marble-date-filter naar marble-filter-date -->
+            <select id="marble-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                <option value="all">Alle data</option>
+                <option value="today">Vandaag</option>
+                <option value="week">Deze week</option>
+                <option value="specific-week">Specifieke week...</option>
+                <option value="month">Deze maand</option>
+                <option value="specific-month">Specifieke maand...</option>
+                <option value="year">Dit jaar</option>
+                <option value="specific-year">Specifiek jaar...</option>
+                <option value="specific-day">Specifieke dag...</option>
+            </select>
+        </div>
+        <div id="marble-custom-filter-box" class="hidden pt-1">
+            <input type="date" id="marble-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+            <input type="month" id="marble-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+            <input type="number" id="marble-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+            <input type="week" id="marble-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden">
+        </div>
+    </div>
                 <div class="flex justify-end gap-2">
                     <button id="marble-view-bars" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-semibold">Categorie %</button>
                     <button id="marble-view-chart" class="px-2.5 py-1 bg-white border text-gray-700 rounded-lg font-semibold">Tijdlijn met Datums</button>
@@ -392,7 +393,8 @@ function initVandaagLogic(appData) {
 
     // Categorie en datum filter voor De Trots-Kluis
     document.getElementById('marble-cat-filter').addEventListener('change', () => renderTrotsKluis(appData));
-    setupDateFilterListeners('marble', () => renderTrotsKluis(appData));
+document.getElementById('marble-filter-date').addEventListener('change', () => renderTrotsKluis(appData));
+setupDateFilterListeners('marble', () => renderTrotsKluis(appData));
 
     document.getElementById('marble-view-bars').addEventListener('click', () => {
         currentMarbleViewMode = 'bars';
@@ -460,7 +462,7 @@ function renderTrotsKluis(appData) {
     const containerEl = document.getElementById('marble-chart-container');
     
     const catFilter = document.getElementById('marble-cat-filter').value;
-    const dateFilter = document.getElementById('marble-date-filter').value;
+const dateFilter = document.getElementById('marble-filter-date').value;
 
     const dateInput = document.getElementById('marble-custom-date');
     const monthInput = document.getElementById('marble-custom-month');
