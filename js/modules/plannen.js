@@ -197,10 +197,24 @@ function initPlannenModals(appData) {
         <div id="compass-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">🧭 Beheer Zachte Kompas Doelen</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Kompas, Categorieën & Doelen</h3>
                     <button id="close-compass-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <div id="compass-archive-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-indigo-900">Categorieën Beheren</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="compass-new-cat-input" placeholder="Nieuwe categorie..." class="flex-1 px-3 py-1.5 border rounded-xl">
+                        <button id="compass-add-cat-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen</button>
+                    </div>
+                    <div id="compass-categories-tags-list" class="flex flex-wrap gap-1.5 pt-1"></div>
+                </div>
+
+                <div class="pt-2 border-t space-y-2">
+                    <h4 class="font-bold text-indigo-900">Doelen Zoeken, Filteren & Archief</h4>
+                    <div id="compass-archive-list" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+                </div>
+
                 <div class="pt-2">
                     <button id="close-compass-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
                 </div>
@@ -675,6 +689,8 @@ function renderPlanBeheerContent(appData) {
                 saveAppData(appData);
                 input.value = '';
                 renderPlanBeheerContent(appData);
+                renderCompassBeheerContent(appData); // Synchroniseer direct met kompas beheer
+                initPlannenModule(appData); // Herlaad om selects direct bij te werken
                 showToast("Categorie toegevoegd! ✨");
             }
         };
@@ -684,6 +700,8 @@ function renderPlanBeheerContent(appData) {
         appData.plans.categories = cats.filter(c => c !== catName);
         saveAppData(appData);
         renderPlanBeheerContent(appData);
+        renderCompassBeheerContent(appData);
+        initPlannenModule(appData);
         showToast("Categorie verwijderd.");
     };
 
@@ -817,7 +835,6 @@ function renderPlanBeheerFilteredList(appData) {
                     </span>
                 </div>
 
-                <!-- Bewerkingsbox (standaard verborgen) -->
                 <div id="plan-edit-box-${t.id}" class="hidden space-y-2 pt-2 border-t border-gray-100">
                     <input type="text" id="plan-edit-text-${t.id}" value="${t.text}" class="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                     <div class="grid grid-cols-2 gap-2">
@@ -836,7 +853,6 @@ function renderPlanBeheerFilteredList(appData) {
                     </div>
                 </div>
 
-                <!-- Actieknoppen -->
                 <div id="plan-actions-${t.id}" class="flex gap-2 justify-end pt-2 border-t border-gray-50">
                     <button onclick="window.toggleBeheerEditTask(${t.id}, true)" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition">Bewerken ✏️</button>
                     <button onclick="window.toggleRestoreBeheerTask(${t.id})" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition">
@@ -1050,14 +1066,48 @@ function renderPactBeheerContent(appData) {
 }
 
 function renderCompassBeheerContent(appData) {
-    const listEl = document.getElementById('compass-archive-list');
-    if (!listEl) return;
+    window.currentCompassBeheerAppDataRef = appData;
+    const tagsList = document.getElementById('compass-categories-tags-list');
+    const beheerContainer = document.getElementById('compass-archive-list');
+    if (!tagsList || !beheerContainer) return;
 
     const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
-    const goals = appData.plans?.goals || [];
 
-    listEl.innerHTML = `
-        <div class="space-y-3 pt-1">
+    tagsList.innerHTML = cats.map(c => `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-xl text-xs font-medium">
+            ${c} <button onclick="window.deleteCompassCat('${c}')" class="text-red-500 font-bold hover:text-red-700 ml-0.5">✕</button>
+        </span>
+    `).join('');
+
+    const addCatBtn = document.getElementById('compass-add-cat-btn');
+    if (addCatBtn) {
+        addCatBtn.onclick = () => {
+            const input = document.getElementById('compass-new-cat-input');
+            const val = input.value.trim();
+            if (val && !cats.includes(val)) {
+                cats.push(val);
+                appData.plans.categories = cats;
+                saveAppData(appData);
+                input.value = '';
+                renderCompassBeheerContent(appData);
+                renderPlanBeheerContent(appData); // Synchroniseer direct met planbord beheer
+                initPlannenModule(appData); // Herlaad de module om selects bij te werken
+                showToast("Categorie toegevoegd! ✨");
+            }
+        };
+    }
+
+    window.deleteCompassCat = (catName) => {
+        appData.plans.categories = cats.filter(c => c !== catName);
+        saveAppData(appData);
+        renderCompassBeheerContent(appData);
+        renderPlanBeheerContent(appData);
+        initPlannenModule(appData);
+        showToast("Categorie verwijderd.");
+    };
+
+    beheerContainer.innerHTML = `
+        <div class="space-y-3 pt-2">
             <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <input type="text" id="compass-beheer-search" placeholder="🔍 Zoek in alle doelen..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                 <div class="grid grid-cols-2 gap-2">
@@ -1186,7 +1236,6 @@ function renderCompassBeheerFilteredList(appData) {
                     </span>
                 </div>
 
-                <!-- Bewerkingsbox (standaard verborgen) -->
                 <div id="goal-edit-box-${g.id}" class="hidden space-y-2 pt-2 border-t border-gray-100">
                     <input type="text" id="goal-edit-title-${g.id}" value="${g.title}" class="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs text-gray-900">
                     <select id="goal-edit-cat-${g.id}" class="w-full px-3 py-1.5 bg-white border rounded-xl text-xs">
@@ -1214,7 +1263,6 @@ function renderCompassBeheerFilteredList(appData) {
                     </div>
                 </div>
 
-                <!-- Actieknoppen -->
                 <div id="goal-actions-${g.id}" class="flex gap-2 justify-end pt-2 border-t border-gray-50">
                     <button onclick="window.toggleBeheerEditGoal(${g.id}, true)" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition">Bewerken ✏️</button>
                     <button onclick="window.toggleArchiveCompassGoal(${g.id})" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition">
