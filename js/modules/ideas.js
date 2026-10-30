@@ -3,6 +3,23 @@ import { saveAppData, showToast } from './storage.js';
 
 const DEFAULT_IDEA_CATEGORIES = ['Algemeen', 'Voldaan', 'Creatief', 'Werk / Studie', 'Privé / Thuis'];
 
+// Vaste zachte pastelkleuren gekoppeld aan categorieën (met fallback voor eigen categorieën)
+const CATEGORY_COLORS = {
+    'Algemeen': { bg: 'bg-slate-50/90', border: 'border-slate-200', badgeBg: 'bg-slate-100', badgeText: 'text-slate-700' },
+    'Voldaan': { bg: 'bg-amber-50/90', border: 'border-amber-200', badgeBg: 'bg-amber-100', badgeText: 'text-amber-800' },
+    'Creatief': { bg: 'bg-purple-50/90', border: 'border-purple-200', badgeBg: 'bg-purple-100', badgeText: 'text-purple-800' },
+    'Werk / Studie': { bg: 'bg-sky-50/90', border: 'border-sky-200', badgeBg: 'bg-sky-100', badgeText: 'text-sky-800' },
+    'Privé / Thuis': { bg: 'bg-emerald-50/90', border: 'border-emerald-200', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-800' }
+};
+
+function getCategoryColorStyle(category) {
+    if (CATEGORY_COLORS[category]) {
+        return CATEGORY_COLORS[category];
+    }
+    // Fallback voor zelf toegevoegde categorieën (zacht roze/indigo tint)
+    return { bg: 'bg-rose-50/90', border: 'border-rose-200', badgeBg: 'bg-rose-100', badgeText: 'text-rose-800' };
+}
+
 export function initIdeasModule(appData) {
     const container = document.getElementById('ideeen');
     if (!container) return;
@@ -19,8 +36,8 @@ export function initIdeasModule(appData) {
     if (!appData.ideasModule.categories) appData.ideasModule.categories = [...DEFAULT_IDEA_CATEGORIES];
 
     container.innerHTML = `
-        <!-- 1. Ideeënkluis & Post-its -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100 mb-4">
+        <!-- 1. Ideeënkluis & Post-its met stijlvolle glow-rand -->
+        <div class="bg-white p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(99,102,241,0.15)] border border-indigo-200/80 mb-4 transition-all">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">📌 Ideeënkluis & Post-its</h2>
                 <div class="flex gap-2">
@@ -52,8 +69,8 @@ export function initIdeasModule(appData) {
             <div id="idea-expand-toggle-container" class="text-center"></div>
         </div>
 
-        <!-- 2. Projecten-Hub -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-100">
+        <!-- 2. Projecten-Hub in dezelfde strakke stijl -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🚀 Projecten-Hub</h2>
                 <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Nieuw Project</button>
@@ -185,7 +202,6 @@ function initIdeasModals(appData) {
             if (!appData.ideasModule.projects) appData.ideasModule.projects = [];
             appData.ideasModule.projects.push({ id: Date.now(), title, description, timeGoal, subtasks, date: new Date().toISOString() });
             
-            // Als het vanuit een post-it komt, deze eventueel archiveren of markeren
             if (sourceId) {
                 const item = appData.ideasModule.ideas.find(x => x.id == sourceId);
                 if (item) {
@@ -304,10 +320,11 @@ function renderIdeasView(appData) {
     const displayIdeas = showAllIdeas ? ideas.slice().reverse() : ideas.slice(-5).reverse();
 
     grid.innerHTML = displayIdeas.length === 0 ? '<p class="text-xs text-gray-400 italic">Nog geen post-its op het bord.</p>' : displayIdeas.map(i => {
+        const colors = getCategoryColorStyle(i.category);
         return `
-            <div class="p-3.5 bg-yellow-50/90 border border-yellow-200 rounded-xl relative flex flex-col gap-1.5 shadow-sm">
+            <div class="p-3.5 ${colors.bg} border ${colors.border} rounded-xl relative flex flex-col gap-1.5 shadow-sm transition-all">
                 <div class="flex justify-between items-start">
-                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">[${i.category}]</span>
+                    <span class="text-[10px] font-bold ${colors.badgeText} ${colors.badgeBg} px-2 py-0.5 rounded-full">[${i.category}]</span>
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
                         <!-- 3-puntjes menu knop -->
@@ -340,7 +357,6 @@ function renderIdeasView(appData) {
     };
 
     window.toggleIdeaMenu = (id) => {
-        // Sluit eventueel andere openstaande menu's
         document.querySelectorAll('[id^="idea-menu-"]').forEach(el => {
             if (el.id !== `idea-menu-${id}`) el.classList.add('hidden');
         });
@@ -415,19 +431,22 @@ function renderModalAllIdeas(appData) {
         const selCat = catFilter.value;
         const filtered = pool.filter(i => i.text.toLowerCase().includes(query) && (selCat === 'Alle' || i.category === selCat));
 
-        listEl.innerHTML = filtered.length === 0 ? '<p class="text-gray-400 italic">Geen ideeën gevonden.</p>' : filtered.map(i => `
-            <li class="p-3 bg-gray-50 border rounded-xl flex justify-between items-center">
-                <div>
-                    <span class="font-bold text-indigo-900">[${i.category}]</span> ${i.text}
-                    <span class="text-[10px] text-gray-400 block">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
-                </div>
-                ${showArchived ? `
-                    <button onclick="window.restoreIdeaModal(${i.id})" class="text-indigo-600 font-semibold">Terugzetten</button>
-                ` : `
-                    <button onclick="window.archiveIdeaModal(${i.id})" class="text-red-500 font-semibold">Archiveren</button>
-                `}
-            </li>
-        `).join('');
+        listEl.innerHTML = filtered.length === 0 ? '<p class="text-gray-400 italic">Geen ideeën gevonden.</p>' : filtered.map(i => {
+            const colors = getCategoryColorStyle(i.category);
+            return `
+                <li class="p-3 ${colors.bg} border ${colors.border} rounded-xl flex justify-between items-center">
+                    <div>
+                        <span class="font-bold ${colors.badgeText}">[${i.category}]</span> ${i.text}
+                        <span class="text-[10px] text-gray-400 block">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
+                    </div>
+                    ${showArchived ? `
+                        <button onclick="window.restoreIdeaModal(${i.id})" class="text-indigo-600 font-semibold">Terugzetten</button>
+                    ` : `
+                        <button onclick="window.archiveIdeaModal(${i.id})" class="text-red-500 font-semibold">Archiveren</button>
+                    `}
+                </li>
+            `;
+        }).join('');
     }
 
     searchInput.oninput = draw;
@@ -469,7 +488,7 @@ function renderProjectsView(appData) {
     const projects = (appData.ideasModule.projects || []).filter(p => !p.archived);
 
     listEl.innerHTML = projects.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen actieve projecten.</p>' : projects.map(p => `
-        <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
+        <div class="p-3.5 bg-gray-50 border border-indigo-100 rounded-xl space-y-2 text-xs">
             <div class="flex justify-between items-center">
                 <span class="font-bold text-indigo-950 text-sm">📁 ${p.title}</span>
                 <button onclick="window.archiveProject(${p.id})" class="text-gray-400 hover:text-red-500 font-bold">Archiveren</button>
@@ -502,7 +521,6 @@ function renderProjectsView(appData) {
     window.archiveProject = (id) => {
         const proj = appData.ideasModule.projects.find(x => x.id === id);
         if (proj) {
-            appData.ideasModule.ideas = appData.ideasModule.projects.filter(x => x.id !== id); // of archivedProjects
             appData.ideasModule.projects = appData.ideasModule.projects.filter(x => x.id !== id);
             if (!appData.ideasModule.archivedProjects) appData.ideasModule.archivedProjects = [];
             appData.ideasModule.archivedProjects.push(proj);
