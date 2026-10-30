@@ -51,7 +51,9 @@ export function initVitalityModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🏅 Fitheid & Sport Log</h2>
-                <button id="manage-sports-btn" class="text-xs text-indigo-600 hover:underline">Sporten Beheren</button>
+                <button id="toggle-sport-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
+                    Historie<br><span class="text-[10px] text-gray-500">& Trends</span>
+                </button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Log je beweging of workout op jouw eigen tempo.</p>
             
@@ -59,7 +61,10 @@ export function initVitalityModule(appData) {
                 <select id="sport-type" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs bg-white"></select>
                 <button type="submit" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Sport Log Toevoegen</button>
             </form>
-            <ul id="sport-list" class="space-y-1.5 text-xs text-gray-600"></ul>
+            <ul id="sport-list" class="space-y-1.5 text-xs text-gray-600 mb-2"></ul>
+            
+            <!-- Historie & Trends Container voor Sport (inclusief sporten beheren knop hierin verwerkt) -->
+            <div id="sport-history-box" class="hidden space-y-2 pt-3 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 4. Voeding & Balans -->
@@ -148,6 +153,12 @@ function initVitalityLogic(appData) {
         if (!stepsHistoryBox.classList.contains('hidden')) renderVitalityViews(appData);
     };
 
+    const sportHistoryBox = document.getElementById('sport-history-box');
+    document.getElementById('toggle-sport-history').onclick = () => {
+        sportHistoryBox.classList.toggle('hidden');
+        if (!sportHistoryBox.classList.contains('hidden')) renderVitalityViews(appData);
+    };
+
     updateSportDropdown(appData);
     document.getElementById('sport-form').onsubmit = (e) => {
         e.preventDefault();
@@ -159,27 +170,6 @@ function initVitalityLogic(appData) {
         saveAppData(appData);
         renderVitalityViews(appData);
         showToast(`Sport gelogd: ${type} 🏅`);
-    };
-
-    document.getElementById('manage-sports-btn').onclick = () => {
-        const action = prompt("Wil je een sportcategorie Toevoegen of Verwijderen? Typ 'toevoegen' of 'verwijderen':");
-        if (action && action.toLowerCase() === 'toevoegen') {
-            const newSport = prompt("Naam van nieuwe sportcategorie:");
-            if (newSport && !appData.vitality.sportTypes.includes(newSport)) {
-                appData.vitality.sportTypes.push(newSport);
-                saveAppData(appData);
-                updateSportDropdown(appData);
-                showToast("Sportcategorie toegevoegd!");
-            }
-        } else if (action && action.toLowerCase() === 'verwijderen') {
-            const remSport = prompt(`Welke sport verwijderen? (${appData.vitality.sportTypes.join(', ')})`);
-            if (remSport && appData.vitality.sportTypes.includes(remSport)) {
-                appData.vitality.sportTypes = appData.vitality.sportTypes.filter(s => s !== remSport);
-                saveAppData(appData);
-                updateSportDropdown(appData);
-                showToast("Sportcategorie verwijderd.");
-            }
-        }
     };
 
     const todayStr = new Date().toDateString();
@@ -318,9 +308,33 @@ function renderVitalityViews(appData) {
         renderVitalityViews(appData);
     };
 
-    const sportList = document.getElementById('sport-list');
+    // Sport Historie & Trends renderen
+    const sportHistoryBox = document.getElementById('sport-history-box');
     const sports = appData.vitality?.sport || [];
-    sportList.innerHTML = sports.length === 0 ? '<p class="italic text-gray-400">Nog geen sport-logs ingevoerd.</p>' : sports.slice(-6).reverse().map(s => `
+    const sportTypes = appData.vitality?.sportTypes || DEFAULT_SPORTS;
+
+    const sportCounts = {};
+    sports.forEach(s => sportCounts[s.type] = (sportCounts[s.type] || 0) + 1);
+    const sportTotal = sports.length;
+
+    sportHistoryBox.innerHTML = `
+        <div class="flex justify-between items-center mb-1">
+            <p class="font-bold text-indigo-900">Sport Verloop & Trends (${sportTotal} logs)</p>
+            <button onclick="window.manageSportsModal()" class="text-[11px] text-indigo-600 hover:underline font-medium">Sporten Beheren ⚙️</button>
+        </div>
+        <div class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl mb-2">
+            ${sportTotal === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen sport data geregistreerd.</p>' : Object.entries(sportCounts).map(([type, count]) => {
+                const pct = Math.round((count / sportTotal) * 100);
+                return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${type}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
+            }).join('')}
+        </div>
+        <div class="space-y-1 max-h-32 overflow-y-auto">
+            ${sports.slice(-6).reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🏅 ${s.type} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
+        </div>
+    `;
+
+    const sportList = document.getElementById('sport-list');
+    sportList.innerHTML = sports.length === 0 ? '<p class="italic text-gray-400 text-xs">Nog geen sport-logs ingevoerd voor vandaag.</p>' : sports.slice(-4).reverse().map(s => `
         <li class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
             <span>🏅 ${s.type} <span class="text-gray-400 text-[10px]">(${new Date(s.date).toLocaleDateString('nl-NL')})</span></span>
             <button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
@@ -331,6 +345,29 @@ function renderVitalityViews(appData) {
         appData.vitality.sport = appData.vitality.sport.filter(x => x.id !== id);
         saveAppData(appData);
         renderVitalityViews(appData);
+    };
+
+    window.manageSportsModal = () => {
+        const action = prompt("Wil je een sportcategorie Toevoegen of Verwijderen? Typ 'toevoegen' of 'verwijderen':");
+        if (action && action.toLowerCase() === 'toevoegen') {
+            const newSport = prompt("Naam van nieuwe sportcategorie:");
+            if (newSport && !appData.vitality.sportTypes.includes(newSport)) {
+                appData.vitality.sportTypes.push(newSport);
+                saveAppData(appData);
+                updateSportDropdown(appData);
+                renderVitalityViews(appData);
+                showToast("Sportcategorie toegevoegd!");
+            }
+        } else if (action && action.toLowerCase() === 'verwijderen') {
+            const remSport = prompt(`Welke sport verwijderen? (${sportTypes.join(', ')})`);
+            if (remSport && appData.vitality.sportTypes.includes(remSport)) {
+                appData.vitality.sportTypes = appData.vitality.sportTypes.filter(s => s !== remSport);
+                saveAppData(appData);
+                updateSportDropdown(appData);
+                renderVitalityViews(appData);
+                showToast("Sportcategorie verwijderd.");
+            }
+        }
     };
 
     const statsBox = document.getElementById('vitality-horizon-stats');
