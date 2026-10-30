@@ -3,7 +3,6 @@ import { saveAppData, showToast } from './storage.js';
 
 const DEFAULT_IDEA_CATEGORIES = ['Algemeen', 'Voldaan', 'Creatief', 'Werk / Studie', 'Privé / Thuis'];
 
-// Vaste zachte pastelkleuren gekoppeld aan categorieën (met fallback voor eigen categorieën)
 const CATEGORY_COLORS = {
     'Algemeen': { bg: 'bg-slate-50/90', border: 'border-slate-200', badgeBg: 'bg-slate-100', badgeText: 'text-slate-700' },
     'Voldaan': { bg: 'bg-amber-50/90', border: 'border-amber-200', badgeBg: 'bg-amber-100', badgeText: 'text-amber-800' },
@@ -16,7 +15,6 @@ function getCategoryColorStyle(category) {
     if (CATEGORY_COLORS[category]) {
         return CATEGORY_COLORS[category];
     }
-    // Fallback voor zelf toegevoegde categorieën (zacht roze/indigo tint)
     return { bg: 'bg-rose-50/90', border: 'border-rose-200', badgeBg: 'bg-rose-100', badgeText: 'text-rose-800' };
 }
 
@@ -36,7 +34,6 @@ export function initIdeasModule(appData) {
     if (!appData.ideasModule.categories) appData.ideasModule.categories = [...DEFAULT_IDEA_CATEGORIES];
 
     container.innerHTML = `
-        <!-- 1. Ideeënkluis & Post-its met stijlvolle glow-rand -->
         <div class="bg-white p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(99,102,241,0.15)] border border-indigo-200/80 mb-4 transition-all">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">📌 Ideeënkluis & Post-its</h2>
@@ -47,7 +44,6 @@ export function initIdeasModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Schrijf je gedachten van je af en laat ze rustig sudderen.</p>
             
-            <!-- Inline Categorie Beheer Box -->
             <div id="idea-cat-manager-box" class="hidden mb-3 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2 text-xs">
                 <p class="font-bold text-indigo-950">Categorieën Beheren</p>
                 <div class="flex gap-2">
@@ -69,7 +65,6 @@ export function initIdeasModule(appData) {
             <div id="idea-expand-toggle-container" class="text-center"></div>
         </div>
 
-        <!-- 2. Projecten-Hub in dezelfde strakke stijl -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🚀 Projecten-Hub</h2>
@@ -167,7 +162,9 @@ function initIdeasModals(appData) {
         </div>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', allIdeasModalHTML + projectModalHTML + editIdeaModalHTML);
+    if (!document.getElementById('all-ideas-modal')) {
+        document.body.insertAdjacentHTML('beforeend', allIdeasModalHTML + projectModalHTML + editIdeaModalHTML);
+    }
 
     const allModal = document.getElementById('all-ideas-modal');
     document.getElementById('open-all-ideas-modal').onclick = () => {
@@ -264,10 +261,12 @@ function initIdeasLogic(appData) {
         const text = document.getElementById('idea-text').value.trim();
         const category = document.getElementById('idea-cat').value;
         if (text) {
-            ideasMod.ideas.push({ id: Date.now(), text, category, date: new Date().toISOString() });
-            saveAppData(appData);
+            if (!appData.ideasModule.ideas) appData.ideasModule.ideas = [];
+            appData.ideasModule.ideas.push({ id: Date.now(), text, category, date: new Date().toISOString() });
+            saveAppData(appData); // Sla direct op in localStorage via storage.js
             e.target.reset();
             renderIdeasView(appData);
+            showToast("Post-it toegevoegd! 📌");
         }
     };
 
@@ -327,7 +326,6 @@ function renderIdeasView(appData) {
                     <span class="text-[10px] font-bold ${colors.badgeText} ${colors.badgeBg} px-2 py-0.5 rounded-full">[${i.category}]</span>
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] text-gray-400">${new Date(i.date).toLocaleDateString('nl-NL')}</span>
-                        <!-- 3-puntjes menu knop -->
                         <div class="relative">
                             <button onclick="window.toggleIdeaMenu(${i.id})" class="text-gray-500 hover:text-gray-800 font-bold px-1 text-sm">⋮</button>
                             <div id="idea-menu-${i.id}" class="hidden absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 text-xs">
