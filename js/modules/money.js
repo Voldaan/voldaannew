@@ -5,6 +5,42 @@ const MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwac
 const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaankoop', 'Noodzakelijk/Vaste last', 'Investeer in mezelf'];
 const PERIODIC_OPTIONS = ['Eenmalig', 'Wekelijks', 'Maandelijks', 'Jaarlijks'];
 
+// Uitgebreide databank met Kennis & Hacks specifiek voor Geld & Financiën
+const MONEY_HACKS_DB = [
+    {
+        title: "🛡️ De 24-Uurs Wachtkamer Regel",
+        text: "Ervaar je de neiging om een impulsieve aankoop te doen? Parkeer het artikel altijd eerst minimaal 24 uur in de wachtkamer hieronder. Vaak ebt de acute koopdrang vanzelf weg."
+    },
+    {
+        title: "💡 Zero-Based Budgeting Principe",
+        text: "Geef elke euro vooraf een bestemming (sparen, vaste lasten, aflossen of plezier). Wat niet geoormerkt is, lekt vaak ongemerkt weg aan kleine uitgaven."
+    },
+    {
+        title: "🔄 Automatiseer je Aflossingen",
+        text: "Zet de overboeking voor je spaargeld of lening-aflossing direct op de dag dat je loon binnenkomt. Wat je niet op je betaalrekening ziet staan, geef je ook niet uit."
+    },
+    {
+        title: "☕ De Kracht van Kleine Betalingen",
+        text: "Die dagelijkse 'kleine' uitgave van € 3,50 lijkt niets, maar tikt op jaarbasis aan tot ruim € 1.200. Bewustwording via labels helpt je de controle te behouden."
+    },
+    {
+        title: "🎯 Focus op de Sneeuwbal-methode",
+        text: "Los bij schulden of leningen eerst de kleinste post af voor snelle succesbelevingen, of juist de duurste (hoogste rente) om financieel slim te optimaliseren."
+    },
+    {
+        title: "📊 Vaste Lasten APK'tje",
+        text: "Loop elk kwartaal je abonnementen en automatische incasso's na. Vaak betaal je voor diensten die je nauwelijks tot niet meer gebruikt."
+    },
+    {
+        title: "💶 De 50/30/20 Richtlijn voor Rust",
+        text: "Probeer globaal 50% van je inkomen te besteden aan vaste lasten/noodzakelijk, 30% aan wensen/vrije tijd, en 20% aan sparen of versneld aflossen."
+    },
+    {
+        title: "🧭 Vrijheids-Horizon Focus",
+        text: "Elke euro die je extra aflost of bespaart, vergroot direct je financiële bewegingsruimte en brengt je een stap dichter bij totale rust in je hoofd."
+    }
+];
+
 export function initMoneyModule(appData) {
     // Ondersteunt zowel id="geld" als id="money" uit de index.html
     const container = document.getElementById('geld') || document.getElementById('money');
@@ -89,6 +125,20 @@ export function initMoneyModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven. Klik om te bewerken of vink af.</p>
             <ul id="expected-expense-list" class="space-y-2"></ul>
+        </div>
+
+        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET (NIEUW) -->
+        <div class="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50/60 p-4 rounded-2xl shadow-sm border border-emerald-200/60 mb-4">
+            <div class="flex justify-between items-start mb-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-sm">🧠</span>
+                    <h3 id="money-hack-title" class="text-xs font-bold text-indigo-900 uppercase tracking-wide"></h3>
+                </div>
+                <button id="refresh-money-hack-btn" title="Toon andere financiële tip" class="text-[11px] bg-white/80 hover:bg-white text-indigo-700 border border-emerald-200 px-2.5 py-1 rounded-xl shadow-sm transition font-medium flex items-center gap-1">
+                    <span>🔄</span> <span>Ververs Tip</span>
+                </button>
+            </div>
+            <p id="money-hack-text" class="text-xs text-gray-600 leading-relaxed"></p>
         </div>
 
         <!-- 3. Het Ruimte-Kompas -->
@@ -399,6 +449,28 @@ function setupModalHandlers(type, appData) {
 }
 
 function initMoneyLogic(appData) {
+    // Initialiseer Kennis & Hacks widget
+    let currentMoneyHackIndex = Math.floor(Math.random() * MONEY_HACKS_DB.length);
+    const renderCurrentMoneyHack = () => {
+        const hack = MONEY_HACKS_DB[currentMoneyHackIndex];
+        const titleEl = document.getElementById('money-hack-title');
+        const textEl = document.getElementById('money-hack-text');
+        if (titleEl && textEl) {
+            titleEl.textContent = hack.title;
+            textEl.textContent = hack.text;
+        }
+    };
+    renderCurrentMoneyHack();
+
+    const refreshMoneyHackBtn = document.getElementById('refresh-money-hack-btn');
+    if (refreshMoneyHackBtn) {
+        refreshMoneyHackBtn.onclick = () => {
+            currentMoneyHackIndex = (currentMoneyHackIndex + 1) % MONEY_HACKS_DB.length;
+            renderCurrentMoneyHack();
+            showToast("Nieuwe financiële tip geladen! 💡");
+        };
+    }
+
     document.getElementById('edit-balance-btn').onclick = () => {
         const val = prompt("Voer je actuele banksaldo in:", appData.money.balance || 0);
         if (val !== null && !isNaN(parseFloat(val))) {
