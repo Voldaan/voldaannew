@@ -14,7 +14,7 @@ export function initInsightsModule(appData) {
     }
 
     container.innerHTML = `
-        <!-- Hoofdblok: Intro, Subtiele Export & Geavanceerde Filters -->
+        <!-- Hoofdblok: Intro, Subtiele Export & Geavanceerde Datum- & Domeinfilters -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
@@ -25,7 +25,7 @@ export function initInsightsModule(appData) {
                             <span>📥</span> <span class="hidden sm:inline">Exporteer</span>
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-0.5">Elk cijfer is gekoppeld aan je actuele logboekregistraties. Hier zie je exact waar de data op gebaseerd is.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Elk cijfer is gekoppeld aan je actuele logboekregistraties en gekoppeld aan je kennisbank.</p>
                 </div>
                 
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -50,24 +50,24 @@ export function initInsightsModule(appData) {
                 </div>
             </div>
 
-            <!-- Dynamische Specifieke Datum Input Container -->
+            <!-- Dynamische Specifieke Datum Input Container (Uitgebreid met alle opties) -->
             <div id="insights-custom-filter-box" class="hidden mb-4 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                <input type="date" id="insights-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
-                <input type="month" id="insights-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
-                <input type="number" id="insights-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                <input type="date" id="insights-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs mb-2" placeholder="Selecteer specifieke dag">
+                <input type="month" id="insights-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs mb-2">
+                <input type="number" id="insights-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs mb-2">
                 <input type="week" id="insights-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
             </div>
 
-            <!-- Metrieken Grid met expliciete bronvermelding en index-uitleg -->
+            <!-- Metrieken Grid met expliciete bronvermelding -->
             <div id="insights-metrics-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
-                <!-- Wordt dynamisch gevuld -->
+                <!-- Dynamisch gevuld -->
             </div>
             <div class="text-[10px] text-gray-400 italic text-right" id="metrics-scope-label">
-                * Getallen zijn gefilterd op basis van de geselecteerde periode en domeinen.
+                * Getallen zijn gefilterd op basis van het gekozen datumbereik en actieve domeinen.
             </div>
         </div>
 
-        <!-- Live Kruisbestuiving, Context & Streaks -->
+        <!-- Live Kruisbestuiving, Context & Gekoppelde Kennis & Hacks -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div class="bg-gradient-to-br from-indigo-900 to-indigo-950 text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                 <div>
@@ -77,29 +77,24 @@ export function initInsightsModule(appData) {
                     <p id="insights-correlation-text" class="text-xs leading-relaxed text-indigo-100 font-medium"></p>
                 </div>
                 <div class="mt-4 pt-3 border-t border-indigo-800/60 text-[10px] text-indigo-300 flex justify-between items-center">
-                    <span>Gebaseerd op jouw ingevoerde gewoonten</span>
+                    <span>Inzichten gekoppeld aan gewoonten</span>
                     <span id="streak-counter-badge" class="bg-indigo-800/80 px-2 py-0.5 rounded-md text-indigo-100 font-bold">🔥 Streak: 0 dagen</span>
                 </div>
             </div>
 
+            <!-- Nieuw: Gekoppelde Kennis & Hacks op basis van je data -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <p class="text-[11px] text-indigo-600 font-bold uppercase">🎯 Zacht Kompas & Balans Score</p>
-                        <span class="text-[10px] text-gray-400" title="Index berekend uit ratio voltooid vs ingepland">ℹ️ Hoe wordt dit berekend?</span>
+                        <p class="text-[11px] text-indigo-600 font-bold uppercase">🧠 Aanbevolen Kennis & Hacks</p>
+                        <span class="text-[10px] text-gray-400">Gekoppeld aan je huidige status</span>
                     </div>
-                    <div class="space-y-3 text-xs">
-                        <div>
-                            <div class="flex justify-between font-semibold text-gray-700 mb-1">
-                                <span id="balance-score-label">Algemene Balans Index</span>
-                                <span id="balance-score-pct">0%</span>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                                <div id="balance-progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <p id="balance-advice-text" class="text-gray-500 italic leading-relaxed"></p>
+                    <div id="insights-linked-hacks" class="space-y-2 text-xs">
+                        <!-- Dynamisch gevuld op basis van actieve data -->
                     </div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-gray-100 text-[10px] text-gray-400 italic">
+                    💡 Tip: Voeg hacks toe in je Kennis-module om hier slimme aanbevelingen te krijgen.
                 </div>
             </div>
         </div>
@@ -234,6 +229,7 @@ function renderInsightsDashboard(appData) {
     const steps = (appData.vitality?.steps || []).filter(st => filterFn(st));
     const moods = (appData.moods || []).filter(m => filterFn(m));
     const transactions = (appData.money?.transactions || []).filter(tx => filterFn(tx));
+    const knowledgeItems = appData.knowledge || appData.hacks || []; // Koppeling met Kennis & Hacks module
 
     const completedTasks = tasks.filter(t => t.completed || t.done);
     const totalMarbles = marbles.length;
@@ -280,14 +276,6 @@ function renderInsightsDashboard(appData) {
         `;
     }
 
-    // Balans Index & Advies
-    const balancePct = Math.min(100, Math.round(((completedTasks.length + totalMarbles + totalSports) / Math.max(1, (tasks.length + totalMarbles + totalSports + 3))) * 100));
-    document.getElementById('balance-score-pct').textContent = `${balancePct}%`;
-    document.getElementById('balance-progress-bar').style.width = `${balancePct}%`;
-    document.getElementById('balance-advice-text').textContent = balancePct > 70 
-        ? "Uitstekende score! Je productiviteit en acties zijn optimaal in balans met je ingeplande doelen." 
-        : "Rustige periode of openstaande taken. Gebruik je avond-pact om de dag rustig af te sluiten.";
-
     // Correlatie tekst
     const corrText = document.getElementById('insights-correlation-text');
     const goodSleeps = sleeps.filter(s => s.quality?.includes('Goed')).length;
@@ -299,6 +287,30 @@ function renderInsightsDashboard(appData) {
             msg += `Index-status: Blijf gestaag bouwen aan je gewoonten. Elk gelogd onderdeel vergroot de nauwkeurigheid van je persoonlijke inzichten.`;
         }
         corrText.textContent = msg;
+    }
+
+    // --- Gekoppelde Kennis & Hacks renderen ---
+    const hacksBox = document.getElementById('insights-linked-hacks');
+    if (hacksBox) {
+        if (knowledgeItems.length > 0) {
+            // Filter of pak een paar relevante hacks (bijv. op basis van tags of willekeurig uit de lijst)
+            const sampleHacks = knowledgeItems.slice(0, 2);
+            hacksBox.innerHTML = sampleHacks.map(h => `
+                <div class="p-2 bg-indigo-50/60 border border-indigo-100 rounded-xl flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-indigo-900">${h.title || h.name || 'Hack / Notitie'}</span>
+                        <p class="text-[10px] text-gray-500 truncate max-w-[200px]">${h.description || h.content || ''}</p>
+                    </div>
+                    <span class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-lg font-medium">Bekijk</span>
+                </div>
+            `).join('');
+        } else {
+            hacksBox.innerHTML = `
+                <div class="p-2.5 bg-gray-50 border border-gray-100 rounded-xl text-center text-gray-400 italic text-xs">
+                    Nog geen kennis-items gekoppeld. Voeg nuttige hacks toe om hier gerichte tips te zien!
+                </div>
+            `;
+        }
     }
 
     // --- Chart 1: Trendlijn (Productiviteit) ---
