@@ -179,7 +179,7 @@ export function initVandaagModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-950">💬 Zachte Buddy-Lijn</h2>
-                <button id="open-buddy-beheer-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition">Beheer & Berichten</button>
+                <button id="open-buddy-beheer-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition">Beheer</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Lichte signalen om op tijd eerlijk te zijn.</p>
             <div id="buddy-buttons-grid" class="grid grid-cols-2 gap-2"></div>
