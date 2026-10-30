@@ -55,9 +55,9 @@ export function initMoneyModule(appData) {
     }
 
     container.innerHTML = `
-        <!-- Bovenste Grid: Saldo & Paydayradar -->
+        <!-- Bovenste Grid: Saldo (met dynamische pastel gloed) & compacte Paydayradar -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 flex flex-col justify-between">
+            <div id="balance-card" class="bg-white p-5 rounded-2xl shadow-sm border-2 flex flex-col justify-between transition-all duration-300">
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <p class="text-xs text-gray-500 uppercase font-semibold">Actueel Banksaldo</p>
@@ -67,12 +67,14 @@ export function initMoneyModule(appData) {
                 </div>
                 <p class="text-[11px] text-gray-400 mt-3">Transacties passen dit automatisch aan.</p>
             </div>
-            <div class="bg-indigo-900 text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+            
+            <!-- Aangepast: Zachtere kleur en compacter formaat voor Paydayradar -->
+            <div class="bg-indigo-50/80 border border-indigo-100 p-4 rounded-2xl shadow-sm flex flex-col justify-between text-indigo-950">
                 <div>
-                    <p class="text-xs text-indigo-200 uppercase font-semibold mb-1">Paydayradar</p>
-                    <p id="payday-countdown" class="text-xl font-bold">Aftellen naar loon...</p>
+                    <p class="text-[11px] text-indigo-500 uppercase font-bold mb-0.5">Paydayradar</p>
+                    <p id="payday-countdown" class="text-base font-bold text-indigo-900">Aftellen naar loon...</p>
                 </div>
-                <p class="text-[11px] text-indigo-300 mt-3">Automatische telling naar de 23e om 08:00 uur (vrijdag ervoor indien weekend).</p>
+                <p class="text-[10px] text-gray-400 mt-2">Automatische telling naar de 23e om 08:00 uur (vrijdag ervoor indien weekend).</p>
             </div>
         </div>
 
@@ -127,7 +129,7 @@ export function initMoneyModule(appData) {
             <ul id="expected-expense-list" class="space-y-2"></ul>
         </div>
 
-        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET (NIEUW) -->
+        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET -->
         <div class="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50/60 p-4 rounded-2xl shadow-sm border border-emerald-200/60 mb-4">
             <div class="flex justify-between items-start mb-1.5">
                 <div class="flex items-center gap-1.5">
@@ -548,9 +550,26 @@ let showAllTxs = false;
 
 function renderMoneyViews(appData) {
     const balanceEl = document.getElementById('current-balance');
+    const balanceCard = document.getElementById('balance-card');
     const balance = appData.money?.balance || 0;
+    
     balanceEl.textContent = `€ ${balance.toFixed(2)}`;
     balanceEl.className = balance < 0 ? "text-2xl font-bold text-red-600" : "text-2xl font-bold text-indigo-900";
+
+    // Dynamische pastelgroene gloed of pastelroder bij lager dan € -350
+    if (balanceCard) {
+        if (balance < -350) {
+            // Zachte pastelrode kleur & gloed
+            balanceCard.style.borderColor = 'rgba(254, 202, 202, 0.9)';
+            balanceCard.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.15)';
+            balanceCard.style.backgroundColor = 'rgba(254, 242, 242, 0.4)';
+        } else {
+            // Mooie zachte pastelgroene gloed voor veilige/gezonde zone
+            balanceCard.style.borderColor = 'rgba(167, 243, 208, 0.9)';
+            balanceCard.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.15)';
+            balanceCard.style.backgroundColor = 'rgba(236, 253, 245, 0.4)';
+        }
+    }
 
     const txList = document.getElementById('transaction-list');
     const toggleContainer = document.getElementById('tx-expand-toggle-container');
