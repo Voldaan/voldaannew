@@ -494,15 +494,26 @@ function initPlannenLogic(appData) {
     renderPlanboardViews(appData);
 }
 
-const pactSearchInput = document.getElementById('pact-search-input');
-    const pactDateFilter = document.getElementById('pact-filter-date');
-    if (pactSearchInput) pactSearchInput.oninput = () => renderPactBeheerContent(appData);
+const pactDateFilter = document.getElementById('pact-filter-date');
     if (pactDateFilter) {
         pactDateFilter.onchange = () => {
             setupPactDateFilterListeners();
             renderPactBeheerContent(appData);
         };
     }
+
+    // En vergeet niet om ook te luisteren naar wijzigingen in de specifieke invoervelden zelf:
+    ['pact-custom-date', 'pact-custom-month', 'pact-custom-year', 'pact-custom-week'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                if (window.currentPactAppDataRef) renderPactBeheerContent(window.currentPactAppDataRef);
+            });
+            el.addEventListener('change', () => {
+                if (window.currentPactAppDataRef) renderPactBeheerContent(window.currentPactAppDataRef);
+            });
+        }
+    });
 
 function renderKnowledgeHack(appData) {
     const idx = appData.knowledgeHacksIndex || 0;
@@ -799,36 +810,70 @@ function renderPactBeheerContent(appData) {
     listEl.innerHTML = filtered.length === 0 ? 
         '<p class="text-xs text-gray-400 italic text-center py-3">Geen avond-pacts gevonden met deze filters.</p>' : 
         filtered.slice().reverse().map(p => `
-            <div class="flex flex-col gap-1.5 p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs">
+            <div id="pact-card-${p.id}" class="flex flex-col gap-2 p-3.5 bg-white border border-indigo-100 rounded-2xl shadow-sm text-xs">
                 <div class="flex justify-between items-start">
-                    <div>
-                        <span class="font-medium text-gray-900 text-sm">${p.text}</span>
-                        <span class="text-[10px] text-gray-400 block mt-0.5">📅 Ingegeven op: ${new Date(p.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                    <div class="w-full pr-2">
+                        <span class="font-medium text-gray-900 text-sm block mb-1">${p.text}</span>
+                        <span class="text-[10px] text-gray-400 block">📅 Ingegeven op: ${new Date(p.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                     </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${p.completed || p.done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${p.completed || p.done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                         ${p.completed || p.done ? 'Volbracht' : 'Actief'}
                     </span>
                 </div>
-                <div class="flex gap-2 justify-end pt-1 border-t border-gray-50">
-                    <button onclick="window.editEveningPact(${p.id})" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200">Bewerken ✏️</button>
-                    <button onclick="window.toggleRestoreEveningPact(${p.id})" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100">
+
+                <!-- Bewerkingsbox (standaard verborgen) -->
+                <div id="pact-edit-box-${p.id}" class="hidden space-y-2 pt-2 border-t border-gray-100">
+                    <input type="text" id="pact-edit-input-${p.id}" value="${p.text}" class="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    <div class="flex gap-2 justify-end">
+                        <button onclick="window.saveEveningPact(${p.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">Opslaan ✨</button>
+                        <button onclick="window.cancelEditEveningPact(${p.id})" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50">Annuleren</button>
+                    </div>
+                </div>
+
+                <!-- Knoppenbalk -->
+                <div id="pact-actions-${p.id}" class="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                    <button onclick="window.toggleEditEveningPact(${p.id}, true)" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition">Bewerken ✏️</button>
+                    <button onclick="window.toggleRestoreEveningPact(${p.id})" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition">
                         ${p.completed || p.done ? 'Terugzetten 🔄' : 'Markeer Voltooid ✓'}
                     </button>
-                    <button onclick="window.deletePact(${p.id})" class="px-2 py-1 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100">Verwijderen ✕</button>
+                    <button onclick="window.deletePact(${p.id})" class="px-2.5 py-1.5 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition">Verwijderen ✕</button>
                 </div>
             </div>
         `).join('');
 
-    window.editEveningPact = (id) => {
+    // Functies voor in-line bewerken
+    window.toggleEditEveningPact = (id, show) => {
+        const editBox = document.getElementById(`pact-edit-box-${id}`);
+        const actions = document.getElementById(`pact-actions-${id}`);
+        if (editBox && actions) {
+            if (show) {
+                editBox.classList.remove('hidden');
+                actions.classList.add('hidden');
+            } else {
+                editBox.classList.add('hidden');
+                actions.classList.remove('hidden');
+            }
+        }
+    };
+
+    window.cancelEditEveningPact = (id) => {
+        window.toggleEditEveningPact(id, false);
+    };
+
+    window.saveEveningPact = (id) => {
+        const inputEl = document.getElementById(`pact-edit-input-${id}`);
         const pact = appData.plans.eveningPacts.find(x => x.id === id);
-        if (!pact) return;
-        const newText = prompt("Bewerk je avond-pact:", pact.text);
-        if (newText !== null && newText.trim() !== '') {
-            pact.text = newText.trim();
-            saveAppData(appData);
-            renderPactBeheerContent(appData);
-            renderPlanboardViews(appData);
-            showToast("Avond-pact bijgewerkt! ✨");
+        if (pact && inputEl) {
+            const newText = inputEl.value.trim();
+            if (newText !== '') {
+                pact.text = newText;
+                saveAppData(appData);
+                renderPactBeheerContent(appData);
+                renderPlanboardViews(appData);
+                showToast("Avond-pact bijgewerkt! ✨");
+            } else {
+                showToast("Tekst mag niet leeg zijn.");
+            }
         }
     };
 
