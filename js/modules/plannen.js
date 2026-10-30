@@ -58,33 +58,6 @@ export function initPlannenModule(appData) {
                     </select>
                 </div>
                 <button id="add-task-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Taak Toevoegen</button>
-                
-                <!-- Uitklapbare Zoek & Uitgebreide Filters -->
-                <div class="border border-gray-200 rounded-xl overflow-hidden">
-                    <button id="toggle-plan-filter-bar" class="w-full p-2.5 bg-gray-50 text-indigo-900 font-semibold text-xs flex items-center justify-between hover:bg-gray-100 transition">
-                        <span>▼ 🔍 Zoek & Uitgebreide Filters</span>
-                    </button>
-                    <div id="plan-filter-content" class="p-3 bg-white border-t border-gray-200 space-y-2">
-                        <input type="text" id="plan-search-input" placeholder="Zoek taak..." class="w-full px-3 py-1.5 border rounded-lg text-xs">
-                        <div class="grid grid-cols-2 gap-2">
-                            <select id="plan-cat-filter" class="px-3 py-1.5 border rounded-lg text-xs">
-                                <option value="Alle">Alle categorieën</option>
-                                ${appData.plans.categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                            </select>
-                            <select id="plan-date-filter" class="px-3 py-1.5 border rounded-lg text-xs">
-                                <option value="all">Alle data</option>
-                                <option value="today">Vandaag</option>
-                                <option value="week">Deze week</option>
-                                <option value="specific-week">Specifieke week...</option>
-                                <option value="month">Deze maand</option>
-                                <option value="specific-month">Specifieke maand...</option>
-                                <option value="year">Dit jaar</option>
-                                <option value="specific-year">Specifiek jaar...</option>
-                                <option value="specific-day">Specifieke dag...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
                 <div id="planboard-tasks-list" class="space-y-2 pt-1"></div>
             </div>
@@ -167,7 +140,7 @@ function initPlannenModals(appData) {
                 </div>
 
                 <div class="pt-2 border-t space-y-2">
-                    <h4 class="font-bold text-indigo-900">Archief Voltooide Taken</h4>
+                    <h4 class="font-bold text-indigo-900">Taken Zoeken, Filteren & Archief</h4>
                     <div id="beheer-archive-list" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
                 </div>
 
@@ -413,22 +386,6 @@ function initPlannenLogic(appData) {
         };
     }
 
-    const toggleFilterBtn = document.getElementById('toggle-plan-filter-bar');
-    const filterContent = document.getElementById('plan-filter-content');
-    if (toggleFilterBtn && filterContent) {
-        toggleFilterBtn.onclick = () => {
-            filterContent.classList.toggle('hidden');
-            toggleFilterBtn.querySelector('span').textContent = filterContent.classList.contains('hidden') ? '▶ 🔍 Zoek & Uitgebreide Filters' : '▼ 🔍 Zoek & Uitgebreide Filters';
-        };
-    }
-
-    const searchInput = document.getElementById('plan-search-input');
-    const catFilter = document.getElementById('plan-cat-filter');
-    const dateFilter = document.getElementById('plan-date-filter');
-    if (searchInput) searchInput.oninput = () => renderPlanboardTasks(appData);
-    if (catFilter) catFilter.onchange = () => renderPlanboardTasks(appData);
-    if (dateFilter) dateFilter.onchange = () => renderPlanboardTasks(appData);
-
     const savePactBtn = document.getElementById('save-pact-btn');
     if (savePactBtn) {
         savePactBtn.onclick = () => {
@@ -491,10 +448,10 @@ function initPlannenLogic(appData) {
         };
     }
 
-    renderPlanboardViews(appData);
-}
-
-const pactDateFilter = document.getElementById('pact-filter-date');
+    // Event listener voor Avond-Pact datumfilter in de modal
+    const pactSearchInput = document.getElementById('pact-search-input');
+    const pactDateFilter = document.getElementById('pact-filter-date');
+    if (pactSearchInput) pactSearchInput.oninput = () => renderPactBeheerContent(appData);
     if (pactDateFilter) {
         pactDateFilter.onchange = () => {
             setupPactDateFilterListeners();
@@ -502,7 +459,6 @@ const pactDateFilter = document.getElementById('pact-filter-date');
         };
     }
 
-    // En vergeet niet om ook te luisteren naar wijzigingen in de specifieke invoervelden zelf:
     ['pact-custom-date', 'pact-custom-month', 'pact-custom-year', 'pact-custom-week'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -514,6 +470,9 @@ const pactDateFilter = document.getElementById('pact-filter-date');
             });
         }
     });
+
+    renderPlanboardViews(appData);
+}
 
 function renderKnowledgeHack(appData) {
     const idx = appData.knowledgeHacksIndex || 0;
@@ -564,19 +523,10 @@ function renderPlanboardViews(appData) {
 function renderPlanboardTasks(appData) {
     const listEl = document.getElementById('planboard-tasks-list');
     if (!listEl) return;
-    const searchTerm = document.getElementById('plan-search-input')?.value.toLowerCase() || '';
-    const catFilter = document.getElementById('plan-cat-filter')?.value || 'Alle';
-    const dateFilter = document.getElementById('plan-date-filter')?.value || 'all';
 
     const tasks = (appData.plans?.tasks || []).filter(t => !t.archived && !t.completed && !t.done);
-    const filtered = tasks.filter(t => {
-        const matchSearch = t.text.toLowerCase().includes(searchTerm);
-        const matchCat = catFilter === 'Alle' || t.category === catFilter;
-        const matchDate = checkDateFilter(t.date || new Date().toISOString(), dateFilter, null);
-        return matchSearch && matchCat && matchDate;
-    });
 
-    listEl.innerHTML = filtered.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken.</p>' : filtered.map(t => `
+    listEl.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken.</p>' : tasks.map(t => `
         <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs cursor-pointer hover:border-indigo-200 transition" onclick="window.editPlanTask(${t.id})">
             <div>
                 <span class="font-bold text-indigo-900 mr-1">[${t.category || 'Algemeen'}]</span> 
@@ -681,9 +631,11 @@ function renderCompassGoals(appData) {
 }
 
 function renderPlanBeheerContent(appData) {
+    window.currentPlanBeheerAppDataRef = appData;
     const tagsList = document.getElementById('categories-tags-list');
-    const archiveList = document.getElementById('beheer-archive-list');
-    if (!tagsList || !archiveList) return;
+    const beheerContainer = document.getElementById('beheer-archive-list');
+    if (!tagsList || !beheerContainer) return;
+
     const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
 
     tagsList.innerHTML = cats.map(c => `
@@ -715,32 +667,223 @@ function renderPlanBeheerContent(appData) {
         showToast("Categorie verwijderd.");
     };
 
-    const completedTasks = (appData.plans?.tasks || []).filter(t => t.completed || t.done || t.archived);
-    archiveList.innerHTML = completedTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen voltooide taken in archief.</p>' : completedTasks.map(t => `
-        <div class="flex justify-between items-center p-2 bg-gray-50 border rounded-xl text-xs">
-            <span class="line-through text-gray-500 truncate max-w-[170px]">${t.text}</span>
-            <div class="flex gap-2 items-center font-semibold text-xs">
-                <button onclick="window.restoreTask(${t.id})" class="text-indigo-600 hover:underline">Terugzetten</button>
-                <button onclick="window.permDeleteTask(${t.id})" class="text-red-600 hover:underline">Verwijderen</button>
+    beheerContainer.innerHTML = `
+        <div class="space-y-3 pt-2">
+            <!-- Zoekbalk & Datumfilters -->
+            <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <input type="text" id="plan-beheer-search" placeholder="🔍 Zoek in alle taken..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="plan-beheer-cat" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="Alle">Alle categorieën</option>
+                        ${cats.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+                    <select id="plan-beheer-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="all">Alle data</option>
+                        <option value="today">Vandaag</option>
+                        <option value="week">Deze week</option>
+                        <option value="specific-week">Specifieke week...</option>
+                        <option value="month">Deze maand</option>
+                        <option value="specific-month">Specifieke maand...</option>
+                        <option value="year">Dit jaar</option>
+                        <option value="specific-year">Specifiek jaar...</option>
+                        <option value="specific-day">Specifieke dag...</option>
+                    </select>
+                </div>
+                <div id="plan-beheer-custom-filter-box" class="hidden pt-1">
+                    <input type="date" id="plan-beheer-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="month" id="plan-beheer-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="number" id="plan-beheer-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="week" id="plan-beheer-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                </div>
             </div>
-        </div>
-    `).join('');
 
-    window.restoreTask = (id) => {
-        const t = appData.plans.tasks.find(x => x.id === id);
-        if (t) { t.completed = false; t.done = false; t.archived = false; }
-        saveAppData(appData);
-        renderPlanBeheerContent(appData);
-        renderPlanboardViews(appData);
-        showToast("Taak teruggezet! ✨");
+            <div id="plan-beheer-filtered-list" class="space-y-2 max-h-56 overflow-y-auto"></div>
+        </div>
+    `;
+
+    setupPlanBeheerListeners(appData);
+    renderPlanBeheerFilteredList(appData);
+}
+
+function setupPlanBeheerListeners(appData) {
+    const searchInput = document.getElementById('plan-beheer-search');
+    const catSelect = document.getElementById('plan-beheer-cat');
+    const dateSelect = document.getElementById('plan-beheer-date');
+
+    if (searchInput) searchInput.oninput = () => renderPlanBeheerFilteredList(appData);
+    if (catSelect) catSelect.onchange = () => renderPlanBeheerFilteredList(appData);
+    if (dateSelect) {
+        dateSelect.onchange = () => {
+            setupPlanBeheerDateFilter();
+            renderPlanBeheerFilteredList(appData);
+        };
+    }
+
+    ['plan-beheer-custom-date', 'plan-beheer-custom-month', 'plan-beheer-custom-year', 'plan-beheer-custom-week'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => renderPlanBeheerFilteredList(appData));
+            el.addEventListener('change', () => renderPlanBeheerFilteredList(appData));
+        }
+    });
+}
+
+function setupPlanBeheerDateFilter() {
+    const dateFilterSelect = document.getElementById('plan-beheer-date');
+    const customBox = document.getElementById('plan-beheer-custom-filter-box');
+    const dateInput = document.getElementById('plan-beheer-custom-date');
+    const monthInput = document.getElementById('plan-beheer-custom-month');
+    const yearInput = document.getElementById('plan-beheer-custom-year');
+    const weekInput = document.getElementById('plan-beheer-custom-week');
+
+    if (!dateFilterSelect) return;
+
+    if (customBox) customBox.classList.add('hidden');
+    if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
+    if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
+    if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
+    if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
+
+    const val = dateFilterSelect.value;
+    if (val.startsWith('specific-')) {
+        if (customBox) customBox.classList.remove('hidden');
+        if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+        if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+        if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+        if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
+    }
+}
+
+function renderPlanBeheerFilteredList(appData) {
+    const listEl = document.getElementById('plan-beheer-filtered-list');
+    if (!listEl) return;
+
+    const searchTerm = (document.getElementById('plan-beheer-search')?.value || '').toLowerCase();
+    const catFilter = document.getElementById('plan-beheer-cat')?.value || 'Alle';
+    const dateFilter = document.getElementById('plan-beheer-date')?.value || 'all';
+
+    const dateInput = document.getElementById('plan-beheer-custom-date');
+    const monthInput = document.getElementById('plan-beheer-custom-month');
+    const yearInput = document.getElementById('plan-beheer-custom-year');
+    const weekInput = document.getElementById('plan-beheer-custom-week');
+
+    let customVal = null;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
+
+    const tasks = appData.plans?.tasks || [];
+
+    const filtered = tasks.filter(t => {
+        const matchSearch = t.text.toLowerCase().includes(searchTerm);
+        const matchCat = catFilter === 'Alle' || t.category === catFilter;
+        const matchDate = checkDateFilter(t.date || new Date().toISOString(), dateFilter, customVal);
+        return matchSearch && matchCat && matchDate;
+    });
+
+    listEl.innerHTML = filtered.length === 0 ? 
+        '<p class="text-xs text-gray-400 italic text-center py-3">Geen taken gevonden in dit beheer.</p>' : 
+        filtered.slice().reverse().map(t => `
+            <div class="flex flex-col gap-2 p-3.5 bg-white border border-indigo-100 rounded-2xl shadow-sm text-xs">
+                <div class="flex justify-between items-start">
+                    <div class="w-full pr-2">
+                        <span class="font-bold text-indigo-900 mr-1">[${t.category || 'Algemeen'}]</span>
+                        <span class="font-medium text-gray-900 text-sm block mt-0.5">${t.text}</span>
+                        <span class="text-[10px] text-gray-400 block mt-1">📅 ${new Date(t.date || Date.now()).toLocaleDateString('nl-NL')} • Prioriteit: ${t.priority || 'Normaal'}</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${t.completed || t.done || t.archived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                        ${t.completed || t.done || t.archived ? 'Voltooid' : 'Openstaand'}
+                    </span>
+                </div>
+
+                <!-- Bewerkingsbox (standaard verborgen) -->
+                <div id="plan-edit-box-${t.id}" class="hidden space-y-2 pt-2 border-t border-gray-100">
+                    <input type="text" id="plan-edit-text-${t.id}" value="${t.text}" class="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="plan-edit-cat-${t.id}" class="px-3 py-1.5 bg-white border rounded-xl text-xs">
+                            ${(appData.plans.categories || []).map(c => `<option value="${c}" ${t.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                        </select>
+                        <select id="plan-edit-pri-${t.id}" class="px-3 py-1.5 bg-white border rounded-xl text-xs">
+                            <option value="Laag" ${t.priority === 'Laag' ? 'selected' : ''}>Laag</option>
+                            <option value="Normaal" ${t.priority === 'Normaal' || !t.priority ? 'selected' : ''}>Normaal</option>
+                            <option value="Hoog" ${t.priority === 'Hoog' ? 'selected' : ''}>Hoog</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2 justify-end pt-1">
+                        <button onclick="window.saveBeheerTask(${t.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">Opslaan ✨</button>
+                        <button onclick="window.toggleBeheerEditTask(${t.id}, false)" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50">Annuleren</button>
+                    </div>
+                </div>
+
+                <!-- Actieknoppen -->
+                <div id="plan-actions-${t.id}" class="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                    <button onclick="window.toggleBeheerEditTask(${t.id}, true)" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition">Bewerken ✏️</button>
+                    <button onclick="window.toggleRestoreBeheerTask(${t.id})" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition">
+                        ${t.completed || t.done || t.archived ? 'Terugzetten 🔄' : 'Markeer Voltooid ✓'}
+                    </button>
+                    <button onclick="window.permDeleteBeheerTask(${t.id})" class="px-2.5 py-1.5 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition">Verwijderen ✕</button>
+                </div>
+            </div>
+        `).join('');
+
+    window.toggleBeheerEditTask = (id, show) => {
+        const editBox = document.getElementById(`plan-edit-box-${id}`);
+        const actions = document.getElementById(`plan-actions-${id}`);
+        if (editBox && actions) {
+            if (show) {
+                editBox.classList.remove('hidden');
+                actions.classList.add('hidden');
+            } else {
+                editBox.classList.add('hidden');
+                actions.classList.remove('hidden');
+            }
+        }
     };
 
-    window.permDeleteTask = (id) => {
-        appData.plans.tasks = appData.plans.tasks.filter(x => x.id !== id);
+    window.saveBeheerTask = (id) => {
+        const textInput = document.getElementById(`plan-edit-text-${id}`);
+        const catSelect = document.getElementById(`plan-edit-cat-${id}`);
+        const priSelect = document.getElementById(`plan-edit-pri-${id}`);
+        const task = appData.plans.tasks.find(x => x.id === id);
+
+        if (task && textInput) {
+            const newText = textInput.value.trim();
+            if (newText !== '') {
+                task.text = newText;
+                task.category = catSelect ? catSelect.value : task.category;
+                task.priority = priSelect ? priSelect.value : task.priority;
+                saveAppData(appData);
+                renderPlanBeheerContent(appData);
+                renderPlanboardViews(appData);
+                showToast("Taak bijgewerkt! ✨");
+            } else {
+                showToast("Taaktekst mag niet leeg zijn.");
+            }
+        }
+    };
+
+    window.toggleRestoreBeheerTask = (id) => {
+        const task = appData.plans.tasks.find(x => x.id === id);
+        if (!task) return;
+        const isCurrentlyDone = task.completed || task.done || task.archived;
+        task.completed = !isCurrentlyDone;
+        task.done = !isCurrentlyDone;
+        task.archived = !isCurrentlyDone;
         saveAppData(appData);
         renderPlanBeheerContent(appData);
         renderPlanboardViews(appData);
-        showToast("Taak definitief verwijderd.");
+        showToast(isCurrentlyDone ? "Taak teruggezet naar openstaand! 🔄" : "Taak gemarkeerd als voltooid! ✓");
+    };
+
+    window.permDeleteBeheerTask = (id) => {
+        if (confirm("Weet je zeker dat je deze taak wilt verwijderen?")) {
+            appData.plans.tasks = appData.plans.tasks.filter(x => x.id !== id);
+            saveAppData(appData);
+            renderPlanBeheerContent(appData);
+            renderPlanboardViews(appData);
+            showToast("Taak verwijderd! 🗑️");
+        }
     };
 }
 
@@ -769,16 +912,6 @@ function setupPactDateFilterListeners() {
         if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
     }
 }
-
-// Luister naar wijzigingen in de specifieke datuminvoervelden
-['pact-custom-date', 'pact-custom-month', 'pact-custom-year', 'pact-custom-week'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-        el.addEventListener('input', () => {
-            if (window.currentPactAppDataRef) renderPactBeheerContent(window.currentPactAppDataRef);
-        });
-    }
-});
 
 function renderPactBeheerContent(appData) {
     window.currentPactAppDataRef = appData;
@@ -841,7 +974,6 @@ function renderPactBeheerContent(appData) {
             </div>
         `).join('');
 
-    // Functies voor in-line bewerken
     window.toggleEditEveningPact = (id, show) => {
         const editBox = document.getElementById(`pact-edit-box-${id}`);
         const actions = document.getElementById(`pact-actions-${id}`);
