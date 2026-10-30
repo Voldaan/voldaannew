@@ -8,13 +8,14 @@ export function initVitalityModule(appData) {
     if (!container) return;
 
     if (!appData.vitality) {
-        appData.vitality = { sleep: [], steps: [], sport: [], sportTypes: [...DEFAULT_SPORTS], nutrition: [], snackWaits: [], dailyLogs: {} };
+        appData.vitality = { sleep: [], steps: [], sport: [], sportTypes: [...DEFAULT_SPORTS], nutrition: [], snackWaits: [], dailyLogs: {}, cigaretteGoal: 5 };
     }
     if (!appData.vitality.sportTypes) appData.vitality.sportTypes = [...DEFAULT_SPORTS];
+    if (appData.vitality.cigaretteGoal === undefined) appData.vitality.cigaretteGoal = 5;
 
     container.innerHTML = `
-        <!-- 1. Nachtrust & Herstel -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
+        <!-- 1. Nachtrust & Herstel (met gouden gloed) -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(253, 230, 138, 0.9);">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🌙 Nachtrust & Herstel</h2>
                 <button id="toggle-sleep-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
@@ -26,8 +27,9 @@ export function initVitalityModule(appData) {
                 <button data-sleep="Goed / Voldoende" class="sleep-btn p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition text-center shadow-sm">✨ Goed / Voldoende geslapen</button>
                 <button data-sleep="Onrustig / Korter" class="sleep-btn p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs font-semibold text-amber-900 hover:bg-amber-100 transition text-center shadow-sm">⚡ Onrustig / Korter geslapen</button>
             </div>
+            
             <!-- Historie & Trends Container voor Nachtrust -->
-            <div id="sleep-history-box" class="hidden space-y-2 pt-3 border-t border-gray-100 text-xs"></div>
+            <div id="sleep-history-box" class="hidden space-y-3 pt-3 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 2. Beweging & Stappen-Anker -->
@@ -43,8 +45,9 @@ export function initVitalityModule(appData) {
                 <button data-steps="8000+" class="steps-btn p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs font-semibold text-indigo-900 hover:bg-indigo-100 transition text-center shadow-sm">🚀 Yes! 8000+ gehaald</button>
                 <button data-steps="Minder" class="steps-btn p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 transition text-center shadow-sm">🛋️ Vandaag wat minder stappen</button>
             </div>
+            
             <!-- Historie & Trends Container voor Stappen -->
-            <div id="steps-history-box" class="hidden space-y-2 pt-3 border-t border-gray-100 text-xs"></div>
+            <div id="steps-history-box" class="hidden space-y-3 pt-3 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 3. Fitheid & Sport Log -->
@@ -63,13 +66,18 @@ export function initVitalityModule(appData) {
             </form>
             <ul id="sport-list" class="space-y-1.5 text-xs text-gray-600 mb-2"></ul>
             
-            <!-- Historie & Trends Container voor Sport (inclusief sporten beheren knop hierin verwerkt) -->
-            <div id="sport-history-box" class="hidden space-y-2 pt-3 border-t border-gray-100 text-xs"></div>
+            <!-- Historie & Trends Container voor Sport -->
+            <div id="sport-history-box" class="hidden space-y-3 pt-3 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 4. Voeding & Balans -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <h2 class="text-base font-bold text-indigo-900 mb-1">🥗 Voeding & Balans</h2>
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-base font-bold text-indigo-900">🥗 Voeding & Balans</h2>
+                <button id="toggle-nutrition-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
+                    Historie<br><span class="text-[10px] text-gray-500">& Trends</span>
+                </button>
+            </div>
             <p class="text-xs text-gray-500 mb-3">Geen strenge regels. Alleen zachte stempels voor bewustwording.</p>
             
             <div class="grid grid-cols-2 gap-2 mb-3">
@@ -78,19 +86,28 @@ export function initVitalityModule(appData) {
             </div>
             <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
                 <div class="flex justify-between items-center">
-                    <span class="font-semibold text-gray-700">Tabak / Sigaretten vandaag:</span>
+                    <span class="font-semibold text-gray-700">Tabak / Sigaretten vandaag (Doel: <span id="current-cig-goal-label">5</span>):</span>
                     <span id="cigarette-count" class="font-bold text-indigo-900">0 stuks</span>
                 </div>
                 <div class="flex gap-2">
                     <button id="minus-cig-btn" class="px-3 py-1.5 bg-white border rounded-lg font-bold shadow-sm">-</button>
                     <button id="plus-cig-btn" class="flex-1 py-1.5 bg-amber-600 text-white rounded-lg font-semibold shadow-sm">+ 1 Sigaret Loggen</button>
+                    <button id="set-cig-goal-btn" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg font-semibold shadow-sm">Doel ⚙️</button>
                 </div>
             </div>
+
+            <!-- Historie & Trends Container voor Voeding & Balans -->
+            <div id="nutrition-history-box" class="hidden space-y-3 pt-3 border-t border-gray-100 text-xs mt-3"></div>
         </div>
 
         <!-- 5. Snaai-wachtkamer -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <h2 class="text-base font-bold text-indigo-900 mb-1">🍿 Snaai-wachtkamer (15 min. Pauze)</h2>
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-base font-bold text-indigo-900">🍿 Snaai-wachtkamer (15 min. Pauze)</h2>
+                <button id="toggle-snack-history" class="text-xs text-indigo-600 hover:underline font-medium text-right leading-tight">
+                    Historie<br><span class="text-[10px] text-gray-500">& Trends</span>
+                </button>
+            </div>
             <p class="text-xs text-gray-500 mb-3">Trek in een ondoordachte snack? Zet de timer.</p>
             
             <div class="space-y-2 mb-3">
@@ -98,7 +115,10 @@ export function initVitalityModule(appData) {
                 <button type="button" id="start-snack-timer" class="w-full py-2.5 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition shadow-sm">Start 15-min Pauze</button>
             </div>
             
-            <div id="snack-timer-display" class="text-center font-bold text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs">Klaar voor de pauze?</div>
+            <div id="snack-timer-display" class="text-center font-bold text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs mb-2">Klaar voor de pauze?</div>
+
+            <!-- Historie & Trends Container voor Snaai-wachtkamer -->
+            <div id="snack-history-box" class="hidden space-y-3 pt-3 border-t border-gray-100 text-xs"></div>
         </div>
 
         <!-- 6. Vitaliteits-Horizon -->
@@ -141,22 +161,35 @@ function initVitalityLogic(appData) {
         };
     });
 
+    // Toggle Historie & Trends knoppen
     const sleepHistoryBox = document.getElementById('sleep-history-box');
     document.getElementById('toggle-sleep-history').onclick = () => {
         sleepHistoryBox.classList.toggle('hidden');
-        if (!sleepHistoryBox.classList.contains('hidden')) renderVitalityViews(appData);
+        if (!sleepHistoryBox.classList.contains('hidden')) renderSleepHistory(appData);
     };
 
     const stepsHistoryBox = document.getElementById('steps-history-box');
     document.getElementById('toggle-steps-history').onclick = () => {
         stepsHistoryBox.classList.toggle('hidden');
-        if (!stepsHistoryBox.classList.contains('hidden')) renderVitalityViews(appData);
+        if (!stepsHistoryBox.classList.contains('hidden')) renderStepsHistory(appData);
     };
 
     const sportHistoryBox = document.getElementById('sport-history-box');
     document.getElementById('toggle-sport-history').onclick = () => {
         sportHistoryBox.classList.toggle('hidden');
-        if (!sportHistoryBox.classList.contains('hidden')) renderVitalityViews(appData);
+        if (!sportHistoryBox.classList.contains('hidden')) renderSportHistory(appData);
+    };
+
+    const nutritionHistoryBox = document.getElementById('nutrition-history-box');
+    document.getElementById('toggle-nutrition-history').onclick = () => {
+        nutritionHistoryBox.classList.toggle('hidden');
+        if (!nutritionHistoryBox.classList.contains('hidden')) renderNutritionHistory(appData);
+    };
+
+    const snackHistoryBox = document.getElementById('snack-history-box');
+    document.getElementById('toggle-snack-history').onclick = () => {
+        snackHistoryBox.classList.toggle('hidden');
+        if (!snackHistoryBox.classList.contains('hidden')) renderSnackHistory(appData);
     };
 
     updateSportDropdown(appData);
@@ -181,37 +214,41 @@ function initVitalityLogic(appData) {
     const alcBtn = document.getElementById('toggle-alcohol-btn');
     const foodBtn = document.getElementById('toggle-food-btn');
 
-    updateNutritionButtons();
+    updateNutritionUI(appData);
 
     alcBtn.onclick = () => {
         currentDayLog.alcoholFree = !currentDayLog.alcoholFree;
         if (currentDayLog.alcoholFree) voegTrotsKnikkerToe(appData, 'Alcoholvrije Dag 🍷❌', 'Gezondheid');
         saveAppData(appData);
-        updateNutritionButtons();
+        updateNutritionUI(appData);
     };
 
     foodBtn.onclick = () => {
         currentDayLog.healthyFood = !currentDayLog.healthyFood;
         if (currentDayLog.healthyFood) voegTrotsKnikkerToe(appData, 'Gezonde Voeding / Fruit 🥗', 'Gezondheid');
         saveAppData(appData);
-        updateNutritionButtons();
+        updateNutritionUI(appData);
     };
-
-    function updateNutritionButtons() {
-        alcBtn.className = currentDayLog.alcoholFree ? "p-3 bg-emerald-600 text-white border rounded-xl text-xs font-semibold transition text-center shadow-sm" : "p-3 bg-white border rounded-xl text-xs font-semibold transition text-center shadow-sm";
-        foodBtn.className = currentDayLog.healthyFood ? "p-3 bg-emerald-600 text-white border rounded-xl text-xs font-semibold transition text-center shadow-sm" : "p-3 bg-white border rounded-xl text-xs font-semibold transition text-center shadow-sm";
-        document.getElementById('cigarette-count').textContent = `${currentDayLog.cigarettes} stuks`;
-    }
 
     document.getElementById('plus-cig-btn').onclick = () => {
         currentDayLog.cigarettes++;
         saveAppData(appData);
-        updateNutritionButtons();
+        updateNutritionUI(appData);
     };
     document.getElementById('minus-cig-btn').onclick = () => {
         if (currentDayLog.cigarettes > 0) currentDayLog.cigarettes--;
         saveAppData(appData);
-        updateNutritionButtons();
+        updateNutritionUI(appData);
+    };
+
+    document.getElementById('set-cig-goal-btn').onclick = () => {
+        const newGoal = prompt("Wat is je maximale dagdoel voor sigaretten?", appData.vitality.cigaretteGoal || 5);
+        if (newGoal !== null && !isNaN(newGoal)) {
+            appData.vitality.cigaretteGoal = parseInt(newGoal, 10);
+            saveAppData(appData);
+            updateNutritionUI(appData);
+            showToast("Sigaretten dagdoel bijgewerkt! 🎯");
+        }
     };
 
     const snackBtn = document.getElementById('start-snack-timer');
@@ -255,24 +292,201 @@ function updateSportDropdown(appData) {
     select.innerHTML = types.map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
-function renderVitalityViews(appData) {
-    const sleepBox = document.getElementById('sleep-history-box');
-    const sleeps = appData.vitality?.sleep || [];
-    
-    const sleepCounts = {};
-    sleeps.forEach(s => sleepCounts[s.quality] = (sleepCounts[s.quality] || 0) + 1);
-    const sleepTotal = sleeps.length;
+function updateNutritionUI(appData) {
+    const todayStr = new Date().toDateString();
+    const currentDayLog = appData.vitality.dailyLogs[todayStr] || { alcoholFree: false, healthyFood: false, cigarettes: 0 };
+    const goal = appData.vitality.cigaretteGoal || 5;
 
-    sleepBox.innerHTML = `
-        <p class="font-bold text-indigo-900 mb-1">Nachtrust Verloop & Trends (${sleepTotal} nachten)</p>
+    const alcBtn = document.getElementById('toggle-alcohol-btn');
+    const foodBtn = document.getElementById('toggle-food-btn');
+    const cigCountEl = document.getElementById('cigarette-count');
+    const cigGoalLabel = document.getElementById('current-cig-goal-label');
+
+    if (alcBtn) alcBtn.className = currentDayLog.alcoholFree ? "p-3 bg-emerald-600 text-white border rounded-xl text-xs font-semibold transition text-center shadow-sm" : "p-3 bg-white border rounded-xl text-xs font-semibold transition text-center shadow-sm";
+    if (foodBtn) foodBtn.className = currentDayLog.healthyFood ? "p-3 bg-emerald-600 text-white border rounded-xl text-xs font-semibold transition text-center shadow-sm" : "p-3 bg-white border rounded-xl text-xs font-semibold transition text-center shadow-sm";
+    
+    if (cigGoalLabel) cigGoalLabel.textContent = goal;
+    if (cigCountEl) {
+        const diffColor = currentDayLog.cigarettes <= goal ? 'text-emerald-700 font-bold' : 'text-red-600 font-bold';
+        cigCountEl.className = diffColor;
+        cigCountEl.textContent = `${currentDayLog.cigarettes} / ${goal} stuks`;
+    }
+}
+
+function renderVitalityViews(appData) {
+    updateNutritionUI(appData);
+    
+    // Update Horizon Stats
+    const sleeps = appData.vitality?.sleep || [];
+    const steps = appData.vitality?.steps || [];
+    const sports = appData.vitality?.sport || [];
+    const snacks = appData.vitality?.snackWaits || [];
+
+    const statsBox = document.getElementById('vitality-horizon-stats');
+    if (statsBox) {
+        statsBox.innerHTML = `
+            <div class="p-3 bg-indigo-50 rounded-xl">
+                <p class="text-[10px] font-bold text-indigo-600 uppercase">Nachten</p>
+                <p class="text-lg font-bold text-indigo-900">${sleeps.length}</p>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-xl">
+                <p class="text-[10px] font-bold text-emerald-600 uppercase">Stappen</p>
+                <p class="text-lg font-bold text-emerald-900">${steps.length}</p>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl">
+                <p class="text-[10px] font-bold text-amber-600 uppercase">Sport-Logs</p>
+                <p class="text-lg font-bold text-amber-900">${sports.length}</p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-xl">
+                <p class="text-[10px] font-bold text-purple-600 uppercase">Pauzes</p>
+                <p class="text-lg font-bold text-purple-900">${snacks.length}</p>
+            </div>
+        `;
+    }
+
+    // Als historieboxen open zijn, ververs deze direct
+    if (document.getElementById('sleep-history-box') && !document.getElementById('sleep-history-box').classList.contains('hidden')) renderSleepHistory(appData);
+    if (document.getElementById('steps-history-box') && !document.getElementById('steps-history-box').classList.contains('hidden')) renderStepsHistory(appData);
+    if (document.getElementById('sport-history-box') && !document.getElementById('sport-history-box').classList.contains('hidden')) renderSportHistory(appData);
+    if (document.getElementById('nutrition-history-box') && !document.getElementById('nutrition-history-box').classList.contains('hidden')) renderNutritionHistory(appData);
+    if (document.getElementById('snack-history-box') && !document.getElementById('snack-history-box').classList.contains('hidden')) renderSnackHistory(appData);
+
+    const sportList = document.getElementById('sport-list');
+    if (sportList) {
+        sportList.innerHTML = sports.length === 0 ? '<p class="italic text-gray-400 text-xs">Nog geen sport-logs ingevoerd voor vandaag.</p>' : sports.slice(-4).reverse().map(s => `
+            <li class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                <span>🏅 ${s.type} <span class="text-gray-400 text-[10px]">(${new Date(s.date).toLocaleDateString('nl-NL')})</span></span>
+                <button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+            </li>
+        `).join('');
+    }
+
+    window.deleteSport = (id) => {
+        appData.vitality.sport = appData.vitality.sport.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderVitalityViews(appData);
+    };
+}
+
+// ==========================================
+// UNIFORME HISTORIE & TRENDS RENDERING
+// ==========================================
+
+function renderDateFilterControls(prefix) {
+    return `
+        <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100 mb-3">
+            <div class="grid grid-cols-1 gap-2">
+                <select id="${prefix}-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                    <option value="all">Alle data</option>
+                    <option value="today">Vandaag</option>
+                    <option value="week">Deze week</option>
+                    <option value="specific-week">Specifieke week...</option>
+                    <option value="month">Deze maand</option>
+                    <option value="specific-month">Specifieke maand...</option>
+                    <option value="year">Dit jaar</option>
+                    <option value="specific-year">Specifiek jaar...</option>
+                    <option value="specific-day">Specifieke dag...</option>
+                </select>
+            </div>
+            <div id="${prefix}-custom-filter-box" class="hidden pt-1">
+                <input type="date" id="${prefix}-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                <input type="month" id="${prefix}-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                <input type="number" id="${prefix}-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                <input type="week" id="${prefix}-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+            </div>
+        </div>
+    `;
+}
+
+function setupDateFilterListeners(prefix, renderCallback) {
+    const dateFilter = document.getElementById(`${prefix}-filter-date`);
+    const customBox = document.getElementById(`${prefix}-custom-filter-box`);
+    const dateInput = document.getElementById(`${prefix}-custom-date`);
+    const monthInput = document.getElementById(`${prefix}-custom-month`);
+    const yearInput = document.getElementById(`${prefix}-custom-year`);
+    const weekInput = document.getElementById(`${prefix}-custom-week`);
+
+    if (!dateFilter) return;
+
+    dateFilter.onchange = () => {
+        if (customBox) customBox.classList.add('hidden');
+        if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
+        if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
+        if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
+        if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
+
+        const val = dateFilter.value;
+        if (val.startsWith('specific-')) {
+            if (customBox) customBox.classList.remove('hidden');
+            if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+            if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+            if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+            if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
+        }
+        renderCallback();
+    };
+
+    ['custom-date', 'custom-month', 'custom-year', 'custom-week'].forEach(type => {
+        const el = document.getElementById(`${prefix}-${type}`);
+        if (el) {
+            el.oninput = () => renderCallback();
+            el.onchange = () => renderCallback();
+        }
+    });
+}
+
+function getFilteredData(items, prefix) {
+    const dateFilter = document.getElementById(`${prefix}-filter-date`)?.value || 'all';
+    const dateInput = document.getElementById(`${prefix}-custom-date`);
+    const monthInput = document.getElementById(`${prefix}-custom-month`);
+    const yearInput = document.getElementById(`${prefix}-custom-year`);
+    const weekInput = document.getElementById(`${prefix}-custom-week`);
+
+    let customVal = null;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
+
+    return items.filter(item => checkDateFilter(item.date || new Date().toISOString(), dateFilter, customVal));
+}
+
+// 1. Nachtrust Historie
+function renderSleepHistory(appData) {
+    const box = document.getElementById('sleep-history-box');
+    if (!box) return;
+    const prefix = 'sleep-hist';
+
+    box.innerHTML = `
+        <p class="font-bold text-indigo-900">Nachtrust Verloop & Trends</p>
+        ${renderDateFilterControls(prefix)}
+        <div id="${prefix}-content"></div>
+    `;
+
+    setupDateFilterListeners(prefix, () => updateSleepContent(appData));
+    updateSleepContent(appData);
+}
+
+function updateSleepContent(appData) {
+    const prefix = 'sleep-hist';
+    const contentBox = document.getElementById(`${prefix}-content`);
+    if (!contentBox) return;
+
+    const filtered = getFilteredData(appData.vitality?.sleep || [], prefix);
+    const total = filtered.length;
+    const counts = {};
+    filtered.forEach(s => counts[s.quality] = (counts[s.quality] || 0) + 1);
+
+    contentBox.innerHTML = `
         <div class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl mb-2">
-            ${sleepTotal === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen nachtrust data geregistreerd.</p>' : Object.entries(sleepCounts).map(([q, count]) => {
-                const pct = Math.round((count / sleepTotal) * 100);
+            <p class="text-[11px] font-semibold text-indigo-900 mb-1">Geselecteerde periode (${total} nachten)</p>
+            ${total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen nachtrust data in deze selectie.</p>' : Object.entries(counts).map(([q, count]) => {
+                const pct = Math.round((count / total) * 100);
                 return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${q}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
             }).join('')}
         </div>
         <div class="space-y-1 max-h-32 overflow-y-auto">
-            ${sleeps.slice(-6).reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🌙 ${s.quality} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSleep(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
+            ${filtered.slice().reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🌙 ${s.quality} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSleep(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
         </div>
     `;
 
@@ -281,24 +495,44 @@ function renderVitalityViews(appData) {
         saveAppData(appData);
         renderVitalityViews(appData);
     };
+}
 
-    const stepsBox = document.getElementById('steps-history-box');
-    const steps = appData.vitality?.steps || [];
-    
-    const stepsCounts = {};
-    steps.forEach(s => stepsCounts[s.count] = (stepsCounts[s.count] || 0) + 1);
-    const stepsTotal = steps.length;
+// 2. Stappen Historie
+function renderStepsHistory(appData) {
+    const box = document.getElementById('steps-history-box');
+    if (!box) return;
+    const prefix = 'steps-hist';
 
-    stepsBox.innerHTML = `
-        <p class="font-bold text-indigo-900 mb-1">Stappen-Anker Verloop & Trends (${stepsTotal} ankers)</p>
+    box.innerHTML = `
+        <p class="font-bold text-indigo-900">Stappen-Anker Verloop & Trends</p>
+        ${renderDateFilterControls(prefix)}
+        <div id="${prefix}-content"></div>
+    `;
+
+    setupDateFilterListeners(prefix, () => updateStepsContent(appData));
+    updateStepsContent(appData);
+}
+
+function updateStepsContent(appData) {
+    const prefix = 'steps-hist';
+    const contentBox = document.getElementById(`${prefix}-content`);
+    if (!contentBox) return;
+
+    const filtered = getFilteredData(appData.vitality?.steps || [], prefix);
+    const total = filtered.length;
+    const counts = {};
+    filtered.forEach(s => counts[s.count] = (counts[s.count] || 0) + 1);
+
+    contentBox.innerHTML = `
         <div class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl mb-2">
-            ${stepsTotal === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen stappen data geregistreerd.</p>' : Object.entries(stepsCounts).map(([c, count]) => {
-                const pct = Math.round((count / stepsTotal) * 100);
+            <p class="text-[11px] font-semibold text-indigo-900 mb-1">Geselecteerde periode (${total} ankers)</p>
+            ${total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen stappen data in deze selectie.</p>' : Object.entries(counts).map(([c, count]) => {
+                const pct = Math.round((count / total) * 100);
                 return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${c}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
             }).join('')}
         </div>
         <div class="space-y-1 max-h-32 overflow-y-auto">
-            ${steps.slice(-6).reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🚶 ${s.count} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteStep(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
+            ${filtered.slice().reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🚶 ${s.count} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteStep(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
         </div>
     `;
 
@@ -307,47 +541,28 @@ function renderVitalityViews(appData) {
         saveAppData(appData);
         renderVitalityViews(appData);
     };
+}
 
-    // Sport Historie & Trends renderen
-    const sportHistoryBox = document.getElementById('sport-history-box');
-    const sports = appData.vitality?.sport || [];
-    const sportTypes = appData.vitality?.sportTypes || DEFAULT_SPORTS;
+// 3. Sport Historie
+function renderSportHistory(appData) {
+    const box = document.getElementById('sport-history-box');
+    if (!box) return;
+    const prefix = 'sport-hist';
 
-    const sportCounts = {};
-    sports.forEach(s => sportCounts[s.type] = (sportCounts[s.type] || 0) + 1);
-    const sportTotal = sports.length;
-
-    sportHistoryBox.innerHTML = `
+    box.innerHTML = `
         <div class="flex justify-between items-center mb-1">
-            <p class="font-bold text-indigo-900">Sport Verloop & Trends (${sportTotal} logs)</p>
+            <p class="font-bold text-indigo-900">Sport Verloop & Trends</p>
             <button onclick="window.manageSportsModal()" class="text-[11px] text-indigo-600 hover:underline font-medium">Sporten Beheren ⚙️</button>
         </div>
-        <div class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl mb-2">
-            ${sportTotal === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen sport data geregistreerd.</p>' : Object.entries(sportCounts).map(([type, count]) => {
-                const pct = Math.round((count / sportTotal) * 100);
-                return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${type}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
-            }).join('')}
-        </div>
-        <div class="space-y-1 max-h-32 overflow-y-auto">
-            ${sports.slice(-6).reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🏅 ${s.type} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
-        </div>
+        ${renderDateFilterControls(prefix)}
+        <div id="${prefix}-content"></div>
     `;
 
-    const sportList = document.getElementById('sport-list');
-    sportList.innerHTML = sports.length === 0 ? '<p class="italic text-gray-400 text-xs">Nog geen sport-logs ingevoerd voor vandaag.</p>' : sports.slice(-4).reverse().map(s => `
-        <li class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-            <span>🏅 ${s.type} <span class="text-gray-400 text-[10px]">(${new Date(s.date).toLocaleDateString('nl-NL')})</span></span>
-            <button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
-        </li>
-    `).join('');
-
-    window.deleteSport = (id) => {
-        appData.vitality.sport = appData.vitality.sport.filter(x => x.id !== id);
-        saveAppData(appData);
-        renderVitalityViews(appData);
-    };
+    setupDateFilterListeners(prefix, () => updateSportContent(appData));
+    updateSportContent(appData);
 
     window.manageSportsModal = () => {
+        const sportTypes = appData.vitality?.sportTypes || DEFAULT_SPORTS;
         const action = prompt("Wil je een sportcategorie Toevoegen of Verwijderen? Typ 'toevoegen' of 'verwijderen':");
         if (action && action.toLowerCase() === 'toevoegen') {
             const newSport = prompt("Naam van nieuwe sportcategorie:");
@@ -355,7 +570,7 @@ function renderVitalityViews(appData) {
                 appData.vitality.sportTypes.push(newSport);
                 saveAppData(appData);
                 updateSportDropdown(appData);
-                renderVitalityViews(appData);
+                renderSportHistory(appData);
                 showToast("Sportcategorie toegevoegd!");
             }
         } else if (action && action.toLowerCase() === 'verwijderen') {
@@ -364,29 +579,142 @@ function renderVitalityViews(appData) {
                 appData.vitality.sportTypes = appData.vitality.sportTypes.filter(s => s !== remSport);
                 saveAppData(appData);
                 updateSportDropdown(appData);
-                renderVitalityViews(appData);
+                renderSportHistory(appData);
                 showToast("Sportcategorie verwijderd.");
             }
         }
     };
+}
 
-    const statsBox = document.getElementById('vitality-horizon-stats');
-    statsBox.innerHTML = `
-        <div class="p-3 bg-indigo-50 rounded-xl">
-            <p class="text-[10px] font-bold text-indigo-600 uppercase">Nachten</p>
-            <p class="text-lg font-bold text-indigo-900">${sleeps.length}</p>
+function updateSportContent(appData) {
+    const prefix = 'sport-hist';
+    const contentBox = document.getElementById(`${prefix}-content`);
+    if (!contentBox) return;
+
+    const filtered = getFilteredData(appData.vitality?.sport || [], prefix);
+    const total = filtered.length;
+    const counts = {};
+    filtered.forEach(s => counts[s.type] = (counts[s.type] || 0) + 1);
+
+    contentBox.innerHTML = `
+        <div class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl mb-2">
+            <p class="text-[11px] font-semibold text-indigo-900 mb-1">Geselecteerde periode (${total} logs)</p>
+            ${total === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen sport data in deze selectie.</p>' : Object.entries(counts).map(([type, count]) => {
+                const pct = Math.round((count / total) * 100);
+                return `<div><div class="flex justify-between text-[11px] font-semibold text-indigo-900 mb-0.5"><span>${type}</span><span>${count}x (${pct}%)</span></div><div class="w-full bg-indigo-200/50 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div></div></div>`;
+            }).join('')}
         </div>
-        <div class="p-3 bg-emerald-50 rounded-xl">
-            <p class="text-[10px] font-bold text-emerald-600 uppercase">Stappen</p>
-            <p class="text-lg font-bold text-emerald-900">${steps.length}</p>
-        </div>
-        <div class="p-3 bg-amber-50 rounded-xl">
-            <p class="text-[10px] font-bold text-amber-600 uppercase">Sport-Logs</p>
-            <p class="text-lg font-bold text-amber-900">${sports.length}</p>
-        </div>
-        <div class="p-3 bg-purple-50 rounded-xl">
-            <p class="text-[10px] font-bold text-purple-600 uppercase">Pauzes</p>
-            <p class="text-lg font-bold text-purple-900">${(appData.vitality?.snackWaits || []).length}</p>
+        <div class="space-y-1 max-h-32 overflow-y-auto">
+            ${filtered.slice().reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🏅 ${s.type} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSport(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
         </div>
     `;
+}
+
+// 4. Voeding & Balans Historie
+function renderNutritionHistory(appData) {
+    const box = document.getElementById('nutrition-history-box');
+    if (!box) return;
+    const prefix = 'nutri-hist';
+
+    box.innerHTML = `
+        <p class="font-bold text-indigo-900">Voeding & Balans Verloop & Trends</p>
+        ${renderDateFilterControls(prefix)}
+        <div id="${prefix}-content"></div>
+    `;
+
+    setupDateFilterListeners(prefix, () => updateNutritionContent(appData));
+    updateNutritionContent(appData);
+}
+
+function updateNutritionContent(appData) {
+    const prefix = 'nutri-hist';
+    const contentBox = document.getElementById(`${prefix}-content`);
+    if (!contentBox) return;
+
+    const dailyLogs = appData.vitality?.dailyLogs || {};
+    // Converteer dailyLogs object naar array voor filteren
+    const logsArray = Object.entries(dailyLogs).map(([dateStr, log]) => ({
+        date: new Date(dateStr).toISOString(),
+        ...log
+    }));
+
+    const filtered = getFilteredData(logsArray, prefix);
+    const totalDays = filtered.length;
+    let alcFreeDays = 0;
+    let foodDays = 0;
+    let totalCigs = 0;
+
+    filtered.forEach(l => {
+        if (l.alcoholFree) alcFreeDays++;
+        if (l.healthyFood) foodDays++;
+        totalCigs += (l.cigarettes || 0);
+    });
+
+    contentBox.innerHTML = `
+        <div class="space-y-2 bg-indigo-50/50 p-3 rounded-xl mb-2 text-xs">
+            <p class="text-[11px] font-semibold text-indigo-900">Geselecteerde periode (${totalDays} dagen geregistreerd)</p>
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-white p-2 rounded-lg border">
+                    <p class="text-[10px] text-gray-500">Alcoholvrij</p>
+                    <p class="font-bold text-indigo-900">${alcFreeDays}x</p>
+                </div>
+                <div class="bg-white p-2 rounded-lg border">
+                    <p class="text-[10px] text-gray-500">Gezond</p>
+                    <p class="font-bold text-indigo-900">${foodDays}x</p>
+                </div>
+                <div class="bg-white p-2 rounded-lg border">
+                    <p class="text-[10px] text-gray-500">Sigaretten</p>
+                    <p class="font-bold text-indigo-900">${totalCigs} stuks</p>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-1 max-h-32 overflow-y-auto">
+            ${filtered.slice().reverse().map(l => `
+                <div class="flex justify-between items-center py-1.5 border-b text-xs">
+                    <span>📅 ${new Date(l.date).toLocaleDateString('nl-NL')}</span>
+                    <span class="text-gray-600">${l.alcoholFree ? '🍷 Alcoholvrij' : ''} ${l.healthyFood ? '🥑 Gezond' : ''} | Sigaretten: <b>${l.cigarettes || 0}</b></span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// 5. Snaai-wachtkamer Historie
+function renderSnackHistory(appData) {
+    const box = document.getElementById('snack-history-box');
+    if (!box) return;
+    const prefix = 'snack-hist';
+
+    box.innerHTML = `
+        <p class="font-bold text-indigo-900">Snaai-wachtkamer Verloop & Trends</p>
+        ${renderDateFilterControls(prefix)}
+        <div id="${prefix}-content"></div>
+    `;
+
+    setupDateFilterListeners(prefix, () => updateSnackContent(appData));
+    updateSnackContent(appData);
+}
+
+function updateSnackContent(appData) {
+    const prefix = 'snack-hist';
+    const contentBox = document.getElementById(`${prefix}-content`);
+    if (!contentBox) return;
+
+    const filtered = getFilteredData(appData.vitality?.snackWaits || [], prefix);
+    const total = filtered.length;
+
+    contentBox.innerHTML = `
+        <div class="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl mb-2">
+            <p class="text-[11px] font-semibold text-indigo-900 mb-1">Totaal voltooid in deze periode: <span class="font-bold">${total} pauzes</span></p>
+        </div>
+        <div class="space-y-1 max-h-32 overflow-y-auto">
+            ${filtered.slice().reverse().map(s => `<div class="flex justify-between items-center py-1 border-b"><span>🍿 ${s.craving} (${new Date(s.date).toLocaleDateString('nl-NL')})</span><button onclick="window.deleteSnack(${s.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button></div>`).join('')}
+        </div>
+    `;
+
+    window.deleteSnack = (id) => {
+        appData.vitality.snackWaits = appData.vitality.snackWaits.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderVitalityViews(appData);
+    };
 }
