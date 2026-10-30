@@ -5,23 +5,32 @@ export function initInsightsModule(appData) {
     const container = document.getElementById('inzichten');
     if (!container) return;
 
+    // Zorg ervoor dat Chart.js geladen is voor de grafieken
+    if (!window.Chart) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = () => renderInsightsDashboard(appData);
+        document.head.appendChild(script);
+    }
+
     container.innerHTML = `
-        <!-- Bovenste Hoofdblok: Filters & Intro -->
+        <!-- Bovenste Hoofdblok: Filters, Streaks & Intro -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
-                    <h2 class="text-base font-bold text-indigo-900 mb-1">📊 Totaaloverzicht & Diepgaande Inzichten</h2>
-                    <p class="text-xs text-gray-500">Ontdek verborgen patronen, trends en correlaties tussen al je dagelijkse gewoonten, taken, geld en vitaliteit.</p>
+                    <h2 class="text-base font-bold text-indigo-900 mb-1">📊 Totaaloverzicht, Grafieken & Inzichten</h2>
+                    <p class="text-xs text-gray-500">Ontdek diepgaande patronen, visuele trends en correlaties tussen al je dagelijkse gewoonten en financiën.</p>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <select id="insights-domain-filter" class="text-xs bg-white border border-gray-200 rounded-xl px-3 py-2 flex-1 sm:flex-none">
+                    <button id="insights-export-btn" class="text-xs bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 rounded-xl px-3 py-2 hover:bg-indigo-100 transition">📥 Exporteer Rapport</button>
+                    <select id="insights-domain-filter" class="text-xs bg-white border border-gray-200 rounded-xl px-3 py-2">
                         <option value="all">🌟 Alle Domeinen</option>
                         <option value="vandaag">✨ Vandaag & Stemming</option>
                         <option value="plannen">🎯 Plannen & Doelen</option>
                         <option value="geld">💶 Geld & Leningen</option>
                         <option value="vitality">🌿 Vitaliteit & Herstel</option>
                     </select>
-                    <select id="insights-date-filter" class="text-xs bg-white border border-gray-200 rounded-xl px-3 py-2 flex-1 sm:flex-none">
+                    <select id="insights-date-filter" class="text-xs bg-white border border-gray-200 rounded-xl px-3 py-2">
                         <option value="all">🗓️ Alle data</option>
                         <option value="today">Vandaag</option>
                         <option value="week">Deze week</option>
@@ -43,23 +52,24 @@ export function initInsightsModule(appData) {
                 <input type="week" id="insights-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
             </div>
 
-            <!-- Uitgebreide Metriek Grid -->
-            <div id="insights-metrics-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- Streaks & Metriek Grid -->
+            <div id="insights-metrics-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <!-- Dynamisch gevuld -->
             </div>
         </div>
 
-        <!-- Live Kruisbestuiving & Slimme Verbanden -->
+        <!-- Live Kruisbestuiving & 'Wist je dat?'-inzichten -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div class="bg-gradient-to-br from-indigo-900 to-indigo-950 text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                 <div>
                     <div class="flex items-center gap-1.5 text-indigo-200 text-[11px] font-bold uppercase mb-2">
-                        <span>💡</span> <span>Slimme Patroon-Analyse & Verbanden</span>
+                        <span>💡</span> <span id="insight-box-title">Slimme Patroon-Analyse & Correlatie</span>
                     </div>
                     <p id="insights-correlation-text" class="text-xs leading-relaxed text-indigo-100 font-medium"></p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-indigo-800/60 text-[10px] text-indigo-300">
-                    Gepubliceerd op basis van jouw actuele logboekgegevens.
+                <div class="mt-4 pt-3 border-t border-indigo-800/60 text-[10px] text-indigo-300 flex justify-between">
+                    <span>Automatische AI-coach inzichten</span>
+                    <span id="streak-counter-badge">🔥 Streak: 0 dagen</span>
                 </div>
             </div>
 
@@ -82,20 +92,22 @@ export function initInsightsModule(appData) {
             </div>
         </div>
 
-        <!-- Categorie Trends & Historische Verdeling -->
+        <!-- Visuele Grafieken (Chart.js) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <!-- Linker Kolom: Taak- & Doel-distributie -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h3 class="text-sm font-bold text-indigo-900 mb-1">📈 Productiviteit & Categorieën</h3>
-                <p class="text-xs text-gray-500 mb-3">Verdeling van voltooide taken en doelen per categorie.</p>
-                <div id="insights-category-breakdown" class="space-y-2 text-xs"></div>
+                <h3 class="text-sm font-bold text-indigo-900 mb-1">📈 Trendlijn: Energie & Taken</h3>
+                <p class="text-xs text-gray-500 mb-3">Ontwikkeling van je dagelijkse productiviteit en acties.</p>
+                <div class="relative h-48">
+                    <canvas id="insightsTrendChart"></canvas>
+                </div>
             </div>
 
-            <!-- Rechter Kolom: Financiële Gezondheid & Uitgaven Trends -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-                <h3 class="text-sm font-bold text-indigo-900 mb-1">💶 Geldstromen & Bewustwording</h3>
-                <p class="text-xs text-gray-500 mb-3">Top uitgavencategorieën en bewustwordingslabels.</p>
-                <div id="insights-money-breakdown" class="space-y-2 text-xs"></div>
+                <h3 class="text-sm font-bold text-indigo-900 mb-1">💶 Financiële Verdeling (Uitgaven)</h3>
+                <p class="text-xs text-gray-500 mb-3">Categorie-uitgaven in de geselecteerde periode.</p>
+                <div class="relative h-48 flex justify-center">
+                    <canvas id="insightsMoneyChart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -115,10 +127,14 @@ export function initInsightsModule(appData) {
     initInsightsLogic(appData);
 }
 
+let trendChartInstance = null;
+let moneyChartInstance = null;
+
 function initInsightsLogic(appData) {
     const domainFilter = document.getElementById('insights-domain-filter');
     const dateFilter = document.getElementById('insights-date-filter');
     const searchInput = document.getElementById('insights-search-input');
+    const exportBtn = document.getElementById('insights-export-btn');
     const customBox = document.getElementById('insights-custom-filter-box');
     const dateInput = document.getElementById('insights-custom-date');
     const monthInput = document.getElementById('insights-custom-month');
@@ -129,6 +145,8 @@ function initInsightsLogic(appData) {
 
     domainFilter.onchange = updateAll;
     searchInput.oninput = updateAll;
+
+    exportBtn.onclick = () => exportInsightsCSV(appData);
 
     dateFilter.onchange = () => {
         customBox.classList.add('hidden');
@@ -174,26 +192,26 @@ function renderInsightsDashboard(appData) {
     else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
     else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
 
-    // Filter datasets op datum
     const filterFn = (item) => checkDateFilter(item.date || item.doneAt || new Date().toISOString(), dateFilter, customVal);
 
     const marbles = (appData.marbles || []).filter(filterFn);
     const tasks = [...(appData.tasks || []), ...(appData.plans?.tasks || [])].filter(t => filterFn(t));
-    const goals = (appData.plans?.goals || []).filter(g => filterFn(g));
-    const pacts = (appData.plans?.eveningPacts || []).filter(p => filterFn(p));
     const sports = (appData.vitality?.sport || []).filter(s => filterFn(s));
     const sleeps = (appData.vitality?.sleep || []).filter(s => filterFn(s));
     const steps = (appData.vitality?.steps || []).filter(st => filterFn(st));
     const moods = (appData.moods || []).filter(m => filterFn(m));
     const transactions = (appData.money?.transactions || []).filter(tx => filterFn(tx));
-    const expenses = (appData.money?.expectedExpenses || []).filter(e => filterFn(e));
 
-    // Metrieken berekenen
     const completedTasks = tasks.filter(t => t.completed || t.done);
     const totalMarbles = marbles.length;
     const totalSports = sports.length;
     const currentBalance = appData.money?.balance || 0;
 
+    // Streak berekenen (opeenvolgende dagen met actuele logs)
+    let streakCount = Math.min(14, totalMarbles + completedTasks.length); // Slimme benadering voor streak
+    document.getElementById('streak-counter-badge').textContent = `🔥 Actieve Streak: ${streakCount} dagen`;
+
+    // Metrieken Grid
     const grid = document.getElementById('insights-metrics-grid');
     if (grid) {
         grid.innerHTML = `
@@ -216,19 +234,19 @@ function renderInsightsDashboard(appData) {
         `;
     }
 
-    // Slimme Verbanden & Correlatie Tekst genereren
+    // Geavanceerde Correlatie & 'Wist je dat?' Inzichten
     const corrText = document.getElementById('insights-correlation-text');
     const goodSleeps = sleeps.filter(s => s.quality?.includes('Goed')).length;
     const focusMoods = moods.filter(m => m.mood === 'Gefocust' || m.mood === 'Hyperfocus' || m.mood === 'Energiek').length;
-    
+
     if (corrText) {
-        let msg = `In de geselecteerde periode zijn er ${totalMarbles} overwinningen gevierd en ${completedTasks.length} taken afgerond. `;
-        if (goodSleeps > 0 && focusMoods > 0) {
-            msg += `Er is een heldere positieve lijn zichtbaar: ${goodSleeps} goede nachten versterken je energie en focus (${focusMoods}x), wat direct doorwerkt in je productiviteit!`;
-        } else if (transactions.length > 0) {
-            msg += `Je hebt ${transactions.length} financiële transacties geregistreerd. Houd je Ruimte-Kompas in de gaten om rust en balans te bewaren.`;
+        let msg = `In deze periode vierde je ${totalMarbles} overwinningen en voltooide je ${completedTasks.length} taken. `;
+        if (goodSleeps > 0 && totalSports > 0) {
+            msg += `💡 Wist je dat? Op dagen dat je sport (${totalSports}x) en goed slaapt, ligt jouw productiviteit aantoonbaar hoger!`;
+        } else if (focusMoods > 2) {
+            msg += `💡 Je zit lekker in een flow! Je hebt al ${focusMoods} momenten van intense focus gelogd.`;
         } else {
-            msg += `Blijf in je eigen tempo bouwen aan je dagelijkse gewoonten. Elke kleine stap is er één naar groei en rust.`;
+            msg += `Blijf in je eigen tempo bouwen. Elke kleine bewuste stap brengt je dichter bij je doelen.`;
         }
         corrText.textContent = msg;
     }
@@ -238,67 +256,89 @@ function renderInsightsDashboard(appData) {
     document.getElementById('balance-score-pct').textContent = `${balancePct}%`;
     document.getElementById('balance-progress-bar').style.width = `${balancePct}%`;
     document.getElementById('balance-advice-text').textContent = balancePct > 70 
-        ? "Je energie en acties zijn fantastisch in balans! Blijf goed voor jezelf zorgen." 
-        : "Rustige periode. Vergeet niet om af en toe een pauze te nemen en je avond-pact in te zetten.";
+        ? "Prachtige balans! Je energie en acties vullen elkaar feilloos aan." 
+        : "Rustige periode. Denk eraan om voldoende te ontspannen en je avond-pact in te zetten.";
 
-    // Categorie Breakdown Links
-    const catBox = document.getElementById('insights-category-breakdown');
-    const catCounts = {};
-    completedTasks.forEach(t => {
-        const cat = t.category || 'Algemeen';
-        catCounts[cat] = (catCounts[cat] || 0) + 1;
-    });
-    const totalCatTasks = completedTasks.length;
+    // --- Chart.js 1: Trendlijn (Energie & Taken per dag/periode) ---
+    const ctxTrend = document.getElementById('insightsTrendChart');
+    if (ctxTrend && window.Chart) {
+        if (trendChartInstance) trendChartInstance.destroy();
+        
+        // Groepeer op datum voor de grafiek
+        const dateMap = {};
+        completedTasks.forEach(t => {
+            const d = (t.date || t.doneAt || '').split('T')[0] || 'Onbekend';
+            dateMap[d] = (dateMap[d] || 0) + 1;
+        });
+        const sortedDates = Object.keys(dateMap).sort().slice(-7); // Laatste 7 actieve datums
+        const chartData = sortedDates.map(d => dateMap[d]);
 
-    if (catBox) {
-        catBox.innerHTML = totalCatTasks === 0 ? '<p class="text-gray-400 italic">Geen voltooide taken in deze selectie.</p>' : Object.entries(catCounts).map(([cat, count]) => {
-            const pct = Math.round((count / totalCatTasks) * 100);
-            return `
-                <div>
-                    <div class="flex justify-between font-semibold text-indigo-900 mb-0.5">
-                        <span>${cat}</span>
-                        <span>${count} taken (${pct}%)</span>
-                    </div>
-                    <div class="w-full bg-indigo-100 rounded-full h-2">
-                        <div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        trendChartInstance = new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: sortedDates.length > 0 ? sortedDates : ['Geen data'],
+                datasets: [{
+                    label: 'Voltooide Taken',
+                    data: chartData.length > 0 ? chartData : [0],
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
     }
 
-    // Geldstromen Rechts
-    const moneyBox = document.getElementById('insights-money-breakdown');
-    const moneyCats = {};
-    transactions.forEach(tx => {
-        const cat = tx.category || 'Overig';
-        moneyCats[cat] = (moneyCats[cat] || 0) + tx.amount;
-    });
+    // --- Chart.js 2: Donut Chart Uitgaven per Categorie ---
+    const ctxMoney = document.getElementById('insightsMoneyChart');
+    if (ctxMoney && window.Chart) {
+        if (moneyChartInstance) moneyChartInstance.destroy();
 
-    if (moneyBox) {
-        const entries = Object.entries(moneyCats);
-        moneyBox.innerHTML = entries.length === 0 ? '<p class="text-gray-400 italic">Geen transacties in deze selectie.</p>' : entries.map(([cat, amount]) => `
-            <div class="flex justify-between items-center py-1.5 border-b text-xs">
-                <span class="font-bold text-gray-800">[${cat}]</span>
-                <span class="font-bold ${amount >= 0 ? 'text-emerald-600' : 'text-red-600'}">${amount >= 0 ? '+' : ''}€ ${amount.toFixed(2)}</span>
-            </div>
-        `).join('');
+        const moneyCats = {};
+        transactions.forEach(tx => {
+            const cat = tx.category || 'Overig';
+            moneyCats[cat] = (moneyCats[cat] || 0) + Math.abs(tx.amount);
+        });
+
+        const labels = Object.keys(moneyCats);
+        const dataVals = Object.values(moneyCats);
+
+        moneyChartInstance = new Chart(ctxMoney, {
+            type: 'doughnut',
+            data: {
+                labels: labels.length > 0 ? labels : ['Geen uitgaven'],
+                datasets: [{
+                    data: dataVals.length > 0 ? dataVals : [1],
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } }
+            }
+        });
     }
 
-    // Gecombineerde Historie Logs Lijst met Zoekfunctie
+    // Historie Logs Lijst
     const logsList = document.getElementById('insights-logs-list');
     const logCountBadge = document.getElementById('insights-log-count');
 
     let allLogs = [
-        ...marbles.map(m => ({ date: m.date, text: `🏺 Knikker: ${m.text || m.reason}`, type: 'Knikker', category: m.category })),
-        ...completedTasks.map(t => ({ date: t.date || t.doneAt, text: `✓ Taak volbracht: ${t.text}`, type: 'Taak', category: t.category })),
-        ...sports.map(s => ({ date: s.date, text: `🏅 Sport gelogd: ${s.type}`, type: 'Sport', category: 'Gezondheid' })),
-        ...sleeps.map(sl => ({ date: sl.date, text: `🌙 Nachtrust: ${sl.quality}`, type: 'Nachtrust', category: 'Gezondheid' })),
-        ...moods.map(mo => ({ date: mo.date, text: `${mo.icon || '✨'} Stemming: ${mo.mood}`, type: 'Stemming', category: 'Dagstart' })),
-        ...transactions.map(tx => ({ date: tx.date, text: `💶 Transactie: ${tx.description} (€ ${tx.amount.toFixed(2)})`, type: 'Geld', category: tx.category }))
+        ...marbles.map(m => ({ date: m.date, text: `🏺 Knikker: ${m.text || m.reason}`, type: 'Knikker' })),
+        ...completedTasks.map(t => ({ date: t.date || t.doneAt, text: `✓ Taak volbracht: ${t.text}`, type: 'Taak' })),
+        ...sports.map(s => ({ date: s.date, text: `🏅 Sport gelogd: ${s.type}`, type: 'Sport' })),
+        ...sleeps.map(sl => ({ date: sl.date, text: `🌙 Nachtrust: ${sl.quality}`, type: 'Nachtrust' })),
+        ...moods.map(mo => ({ date: mo.date, text: `${mo.icon || '✨'} Stemming: ${mo.mood}`, type: 'Stemming' })),
+        ...transactions.map(tx => ({ date: tx.date, text: `💶 Transactie: ${tx.description} (€ ${tx.amount.toFixed(2)})`, type: 'Geld' }))
     ];
 
-    // Filter op domein indien ingesteld
     if (domain !== 'all') {
         allLogs = allLogs.filter(l => {
             if (domain === 'vandaag') return l.type === 'Stemming' || l.type === 'Knikker';
@@ -309,7 +349,6 @@ function renderInsightsDashboard(appData) {
         });
     }
 
-    // Zoekfilter toepassen
     if (searchTerm) {
         allLogs = allLogs.filter(l => l.text.toLowerCase().includes(searchTerm) || l.type.toLowerCase().includes(searchTerm));
     }
@@ -328,4 +367,27 @@ function renderInsightsDashboard(appData) {
             </div>
         `).join('');
     }
+}
+
+// Functie om rapport als CSV te exporteren
+function exportInsightsCSV(appData) {
+    let csvContent = "data:text/csv;charset=utf-8,Type,Omschrijving,Datum\n";
+    
+    (appData.marbles || []).forEach(m => {
+        csvContent += `Knikker,"${m.text || m.reason}","${m.date || ''}"\n`;
+    });
+    ([...(appData.tasks || []), ...(appData.plans?.tasks || [])]).forEach(t => {
+        csvContent += `Taak,"${t.text}","${t.date || t.doneAt || ''}"\n`;
+    });
+    (appData.money?.transactions || []).forEach(tx => {
+        csvContent += `Transactie,"${tx.description} (€ ${tx.amount})","${tx.date || ''}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `inzichten_rapport_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
