@@ -22,7 +22,7 @@ export function initPlannenModule(appData) {
     if (!appData.knowledgeVault) appData.knowledgeVault = [];
 
     container.innerHTML = `
-        <!-- 1. Het Avond-Pact (Met vertrouwde blauwe stijl en lichte gele glow) -->
+        <!-- 1. Het Avond-Pact -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(253, 230, 138, 0.9);">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950 flex items-center gap-1.5"><span>🌙</span> Het Avond-Pact</h2>
@@ -76,7 +76,7 @@ export function initPlannenModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">🧭 Het Zachte KomPAS</h2>
-                <button id="open-compass-beheer-btn" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">Beheer & Archief</button>
+                <button id="open-compass-beheer-btn" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">Beheer</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Langetermijn voornemens met een ingebouwd veiligheidsnet.</p>
             
@@ -85,6 +85,9 @@ export function initPlannenModule(appData) {
                     <input type="text" id="goal-title-field" placeholder="🎯 Wat wil je opbouwen?" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-indigo-300 focus:outline-none">
                     
                     <div id="compass-extra-fields" class="hidden space-y-3 pt-1">
+                        <select id="goal-category-select" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs">
+                            ${appData.plans.categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
                         <input type="text" id="goal-pitfall-field" placeholder="🌑 Bekende valkuil?" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs">
                         <input type="text" id="goal-shield-field" placeholder="🛡️ Zacht Schild op zware dagen?" class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs">
                         
@@ -126,7 +129,7 @@ function initPlannenModals(appData) {
         <div id="plan-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Planbord, Categorieën & Archief</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Planbord, Categorieën & Taken</h3>
                     <button id="close-plan-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 
@@ -159,7 +162,6 @@ function initPlannenModals(appData) {
                 </div>
                 <p class="text-gray-500">Doorzoek al je eerdere avond-pacts, filter op datum, bewerk ze of zet ze terug.</p>
 
-                <!-- Zoekbalk & Datumfilters -->
                 <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <input type="text" id="pact-search-input" placeholder="🔍 Zoek in avond-pacts..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                     <div class="grid grid-cols-2 gap-2">
@@ -254,6 +256,10 @@ function initPlannenModals(appData) {
                         <input type="text" id="edit-goal-title" class="w-full px-3 py-2 border rounded-xl">
                     </div>
                     <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Categorie</label>
+                        <select id="edit-goal-cat" class="w-full px-3 py-2 border rounded-xl bg-white"></select>
+                    </div>
+                    <div>
                         <label class="block font-semibold text-gray-600 mb-1">Bekende valkuil</label>
                         <input type="text" id="edit-goal-pitfall" class="w-full px-3 py-2 border rounded-xl">
                     </div>
@@ -334,6 +340,7 @@ function initPlannenModals(appData) {
     document.getElementById('save-edit-goal-btn').onclick = () => {
         const id = Number(document.getElementById('edit-goal-id').value);
         const title = document.getElementById('edit-goal-title').value.trim();
+        const category = document.getElementById('edit-goal-cat').value;
         const pitfall = document.getElementById('edit-goal-pitfall').value.trim();
         const shield = document.getElementById('edit-goal-shield').value.trim();
         const frequency = document.getElementById('edit-goal-frequency').value;
@@ -342,6 +349,7 @@ function initPlannenModals(appData) {
         const goal = (appData.plans?.goals || []).find(g => g.id === id);
         if (goal && title) {
             goal.title = title;
+            goal.category = category;
             goal.pitfall = pitfall;
             goal.shield = shield;
             goal.frequency = frequency;
@@ -349,6 +357,7 @@ function initPlannenModals(appData) {
             saveAppData(appData);
             editGoalModal.classList.add('hidden');
             renderPlanboardViews(appData);
+            renderCompassBeheerContent(appData);
             showToast("Doel bijgewerkt! 🧭");
         }
     };
@@ -420,6 +429,7 @@ function initPlannenLogic(appData) {
     if (addGoalBtn) {
         addGoalBtn.onclick = () => {
             const title = goalTitleInput.value.trim();
+            const category = document.getElementById('goal-category-select')?.value || 'Privé';
             const pitfall = document.getElementById('goal-pitfall-field').value.trim();
             const shield = document.getElementById('goal-shield-field').value.trim();
             const frequency = document.getElementById('goal-frequency-select').value;
@@ -429,6 +439,7 @@ function initPlannenLogic(appData) {
                 appData.plans.goals.push({ 
                     id: Date.now(), 
                     title, 
+                    category,
                     pitfall: pitfall || 'Geen', 
                     shield: shield || 'Geen', 
                     frequency, 
@@ -584,7 +595,10 @@ function renderCompassGoals(appData) {
     listEl.innerHTML = goals.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen doelen ingesteld.</p>' : goals.map(g => `
         <div class="p-3.5 bg-white border border-gray-100 rounded-xl shadow-sm text-xs space-y-1.5 cursor-pointer hover:border-indigo-200 transition" onclick="window.editCompassGoal(${g.id})">
             <div class="flex justify-between items-start">
-                <span class="font-bold text-indigo-950 text-sm">🎯 ${g.title}</span>
+                <div>
+                    <span class="font-bold text-indigo-900 mr-1">[${g.category || 'Privé'}]</span>
+                    <span class="font-bold text-indigo-950 text-sm">🎯 ${g.title}</span>
+                </div>
                 <button onclick="event.stopPropagation(); window.deleteGoal(${g.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
             </div>
             <p class="text-gray-600">🌑 Valkuil: ${g.pitfall || 'Geen'}</p>
@@ -619,6 +633,12 @@ function renderCompassGoals(appData) {
     window.editCompassGoal = (id) => {
         const g = appData.plans.goals.find(x => x.id === id);
         if (g) {
+            const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
+            const catSelect = document.getElementById('edit-goal-cat');
+            if (catSelect) {
+                catSelect.innerHTML = cats.map(c => `<option value="${c}" ${g.category === c ? 'selected' : ''}>${c}</option>`).join('');
+            }
+
             document.getElementById('edit-goal-id').value = g.id;
             document.getElementById('edit-goal-title').value = g.title;
             document.getElementById('edit-goal-pitfall').value = g.pitfall || '';
@@ -954,7 +974,6 @@ function renderPactBeheerContent(appData) {
                     </span>
                 </div>
 
-                <!-- Bewerkingsbox (standaard verborgen) -->
                 <div id="pact-edit-box-${p.id}" class="hidden space-y-2 pt-2 border-t border-gray-100">
                     <input type="text" id="pact-edit-input-${p.id}" value="${p.text}" class="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                     <div class="flex gap-2 justify-end">
@@ -963,7 +982,6 @@ function renderPactBeheerContent(appData) {
                     </div>
                 </div>
 
-                <!-- Knoppenbalk -->
                 <div id="pact-actions-${p.id}" class="flex gap-2 justify-end pt-2 border-t border-gray-50">
                     <button onclick="window.toggleEditEveningPact(${p.id}, true)" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition">Bewerken ✏️</button>
                     <button onclick="window.toggleRestoreEveningPact(${p.id})" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition">
@@ -1034,35 +1052,240 @@ function renderPactBeheerContent(appData) {
 function renderCompassBeheerContent(appData) {
     const listEl = document.getElementById('compass-archive-list');
     if (!listEl) return;
+
+    const cats = appData.plans.categories || ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
     const goals = appData.plans?.goals || [];
 
-    listEl.innerHTML = goals.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen kompas-doelen gevonden.</p>' : goals.map(g => `
-        <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
-            <div>
-                <span class="font-bold text-indigo-950">${g.title}</span>
-                <span class="text-[10px] text-indigo-600 block">Status: ${g.status || 'open'} • ${g.frequency || 'Dagelijks'}</span>
+    listEl.innerHTML = `
+        <div class="space-y-3 pt-1">
+            <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <input type="text" id="compass-beheer-search" placeholder="🔍 Zoek in alle doelen..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="compass-beheer-cat" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="Alle">Alle categorieën</option>
+                        ${cats.map(c => `<option value="${c}">${c}</option>`).join('')}
+                    </select>
+                    <select id="compass-beheer-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="all">Alle data</option>
+                        <option value="today">Vandaag</option>
+                        <option value="week">Deze week</option>
+                        <option value="specific-week">Specifieke week...</option>
+                        <option value="month">Deze maand</option>
+                        <option value="specific-month">Specifieke maand...</option>
+                        <option value="year">Dit jaar</option>
+                        <option value="specific-year">Specifiek jaar...</option>
+                        <option value="specific-day">Specifieke dag...</option>
+                    </select>
+                </div>
+                <div id="compass-beheer-custom-filter-box" class="hidden pt-1">
+                    <input type="date" id="compass-beheer-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="month" id="compass-beheer-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="number" id="compass-beheer-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="week" id="compass-beheer-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                </div>
             </div>
-            <div class="flex gap-2 items-center font-semibold text-xs">
-                <button onclick="window.toggleArchiveGoal(${g.id})" class="text-indigo-600 hover:underline">${g.archived ? 'Activeren' : 'Archiveren'}</button>
-                <button onclick="window.permDeleteGoal(${g.id})" class="text-red-600 hover:underline">Verwijderen</button>
-            </div>
-        </div>
-    `).join('');
 
-    window.toggleArchiveGoal = (id) => {
-        const g = appData.plans.goals.find(x => x.id === id);
-        if (g) { g.archived = !g.archived; }
-        saveAppData(appData);
-        renderCompassBeheerContent(appData);
-        renderPlanboardViews(appData);
-        showToast("Doel archiefstatus gewijzigd! ✨");
+            <div id="compass-beheer-filtered-list" class="space-y-2 max-h-56 overflow-y-auto"></div>
+        </div>
+    `;
+
+    setupCompassBeheerListeners(appData);
+    renderCompassBeheerFilteredList(appData);
+}
+
+function setupCompassBeheerListeners(appData) {
+    const searchInput = document.getElementById('compass-beheer-search');
+    const catSelect = document.getElementById('compass-beheer-cat');
+    const dateSelect = document.getElementById('compass-beheer-date');
+
+    if (searchInput) searchInput.oninput = () => renderCompassBeheerFilteredList(appData);
+    if (catSelect) catSelect.onchange = () => renderCompassBeheerFilteredList(appData);
+    if (dateSelect) {
+        dateSelect.onchange = () => {
+            setupCompassBeheerDateFilter();
+            renderCompassBeheerFilteredList(appData);
+        };
+    }
+
+    ['compass-beheer-custom-date', 'compass-beheer-custom-month', 'compass-beheer-custom-year', 'compass-beheer-custom-week'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => renderCompassBeheerFilteredList(appData));
+            el.addEventListener('change', () => renderCompassBeheerFilteredList(appData));
+        }
+    });
+}
+
+function setupCompassBeheerDateFilter() {
+    const dateFilterSelect = document.getElementById('compass-beheer-date');
+    const customBox = document.getElementById('compass-beheer-custom-filter-box');
+    const dateInput = document.getElementById('compass-beheer-custom-date');
+    const monthInput = document.getElementById('compass-beheer-custom-month');
+    const yearInput = document.getElementById('compass-beheer-custom-year');
+    const weekInput = document.getElementById('compass-beheer-custom-week');
+
+    if (!dateFilterSelect) return;
+
+    if (customBox) customBox.classList.add('hidden');
+    if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
+    if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
+    if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
+    if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
+
+    const val = dateFilterSelect.value;
+    if (val.startsWith('specific-')) {
+        if (customBox) customBox.classList.remove('hidden');
+        if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+        if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+        if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+        if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
+    }
+}
+
+function renderCompassBeheerFilteredList(appData) {
+    const listEl = document.getElementById('compass-beheer-filtered-list');
+    if (!listEl) return;
+
+    const searchTerm = (document.getElementById('compass-beheer-search')?.value || '').toLowerCase();
+    const catFilter = document.getElementById('compass-beheer-cat')?.value || 'Alle';
+    const dateFilter = document.getElementById('compass-beheer-date')?.value || 'all';
+
+    const dateInput = document.getElementById('compass-beheer-custom-date');
+    const monthInput = document.getElementById('compass-beheer-custom-month');
+    const yearInput = document.getElementById('compass-beheer-custom-year');
+    const weekInput = document.getElementById('compass-beheer-custom-week');
+
+    let customVal = null;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
+
+    const goals = appData.plans?.goals || [];
+
+    const filtered = goals.filter(g => {
+        const matchSearch = g.title.toLowerCase().includes(searchTerm) || (g.pitfall || '').toLowerCase().includes(searchTerm);
+        const matchCat = catFilter === 'Alle' || (g.category || 'Privé') === catFilter;
+        const matchDate = checkDateFilter(g.date || new Date().toISOString(), dateFilter, customVal);
+        return matchSearch && matchCat && matchDate;
+    });
+
+    listEl.innerHTML = filtered.length === 0 ? 
+        '<p class="text-xs text-gray-400 italic text-center py-3">Geen doelen gevonden in dit beheer.</p>' : 
+        filtered.slice().reverse().map(g => `
+            <div class="flex flex-col gap-2 p-3.5 bg-white border border-indigo-100 rounded-2xl shadow-sm text-xs">
+                <div class="flex justify-between items-start">
+                    <div class="w-full pr-2">
+                        <span class="font-bold text-indigo-900 mr-1">[${g.category || 'Privé'}]</span>
+                        <span class="font-bold text-indigo-950 text-sm block mt-0.5">🎯 ${g.title}</span>
+                        <span class="text-[10px] text-gray-500 block mt-1">🌑 Valkuil: ${g.pitfall || 'Geen'} | 🛡️ Schild: ${g.shield || 'Geen'}</span>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">📅 ${new Date(g.date || Date.now()).toLocaleDateString('nl-NL')} • ${g.frequency || 'Dagelijks'}</span>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${g.archived ? 'bg-gray-100 text-gray-600' : 'bg-emerald-100 text-emerald-800'}">
+                        ${g.archived ? 'Gearchiveerd' : 'Actief'}
+                    </span>
+                </div>
+
+                <!-- Bewerkingsbox (standaard verborgen) -->
+                <div id="goal-edit-box-${g.id}" class="hidden space-y-2 pt-2 border-t border-gray-100">
+                    <input type="text" id="goal-edit-title-${g.id}" value="${g.title}" class="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs text-gray-900">
+                    <select id="goal-edit-cat-${g.id}" class="w-full px-3 py-1.5 bg-white border rounded-xl text-xs">
+                        ${(appData.plans.categories || []).map(c => `<option value="${c}" ${(g.category || 'Privé') === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    <input type="text" id="goal-edit-pitfall-${g.id}" value="${g.pitfall || ''}" placeholder="Valkuil..." class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                    <input type="text" id="goal-edit-shield-${g.id}" value="${g.shield || ''}" placeholder="Zacht Schild..." class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="goal-edit-freq-${g.id}" class="px-3 py-1.5 bg-white border rounded-xl text-xs">
+                            <option value="Dagelijks" ${g.frequency === 'Dagelijks' ? 'selected' : ''}>Dagelijks</option>
+                            <option value="Wekelijks" ${g.frequency === 'Wekelijks' ? 'selected' : ''}>Wekelijks</option>
+                            <option value="Maandelijks" ${g.frequency === 'Maandelijks' ? 'selected' : ''}>Maandelijks</option>
+                        </select>
+                        <select id="goal-edit-pri-${g.id}" class="px-3 py-1.5 bg-white border rounded-xl text-xs">
+                            <option value="Laag" ${g.priority === 'Laag' ? 'selected' : ''}>Laag</option>
+                            <option value="Normaal" ${g.priority === 'Normaal' || !g.priority ? 'selected' : ''}>Normaal</option>
+                            <option value="Hoog" ${g.priority === 'Hoog' ? 'selected' : ''}>Hoog</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2 justify-end pt-1">
+                        <button onclick="window.saveBeheerGoal(${g.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">Opslaan ✨</button>
+                        <button onclick="window.toggleBeheerEditGoal(${g.id}, false)" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50">Annuleren</button>
+                    </div>
+                </div>
+
+                <!-- Actieknoppen -->
+                <div id="goal-actions-${g.id}" class="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                    <button onclick="window.toggleBeheerEditGoal(${g.id}, true)" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition">Bewerken ✏️</button>
+                    <button onclick="window.toggleArchiveCompassGoal(${g.id})" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-medium hover:bg-indigo-100 transition">
+                        ${g.archived ? 'Activeren 🔄' : 'Archiveren 📦'}
+                    </button>
+                    <button onclick="window.permDeleteCompassGoal(${g.id})" class="px-2.5 py-1.5 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition">Verwijderen ✕</button>
+                </div>
+            </div>
+        `).join('');
+
+    window.toggleBeheerEditGoal = (id, show) => {
+        const editBox = document.getElementById(`goal-edit-box-${id}`);
+        const actions = document.getElementById(`goal-actions-${id}`);
+        if (editBox && actions) {
+            if (show) {
+                editBox.classList.remove('hidden');
+                actions.classList.add('hidden');
+            } else {
+                editBox.classList.add('hidden');
+                actions.classList.remove('hidden');
+            }
+        }
     };
 
-    window.permDeleteGoal = (id) => {
-        appData.plans.goals = appData.plans.goals.filter(x => x.id !== id);
+    window.saveBeheerGoal = (id) => {
+        const titleInput = document.getElementById(`goal-edit-title-${id}`);
+        const catSelect = document.getElementById(`goal-edit-cat-${id}`);
+        const pitfallInput = document.getElementById(`goal-edit-pitfall-${id}`);
+        const shieldInput = document.getElementById(`goal-edit-shield-${id}`);
+        const freqSelect = document.getElementById(`goal-edit-freq-${id}`);
+        const priSelect = document.getElementById(`goal-edit-pri-${id}`);
+        
+        const goal = appData.plans.goals.find(x => x.id === id);
+
+        if (goal && titleInput) {
+            const newTitle = titleInput.value.trim();
+            if (newTitle !== '') {
+                goal.title = newTitle;
+                goal.category = catSelect ? catSelect.value : goal.category;
+                goal.pitfall = pitfallInput ? pitfallInput.value.trim() : goal.pitfall;
+                goal.shield = shieldInput ? shieldInput.value.trim() : goal.shield;
+                goal.frequency = freqSelect ? freqSelect.value : goal.frequency;
+                goal.priority = priSelect ? priSelect.value : goal.priority;
+                
+                saveAppData(appData);
+                renderCompassBeheerContent(appData);
+                renderPlanboardViews(appData);
+                showToast("Kompas doel bijgewerkt! ✨");
+            } else {
+                showToast("Doeltitel mag niet leeg zijn.");
+            }
+        }
+    };
+
+    window.toggleArchiveCompassGoal = (id) => {
+        const goal = appData.plans.goals.find(x => x.id === id);
+        if (!goal) return;
+        goal.archived = !goal.archived;
         saveAppData(appData);
         renderCompassBeheerContent(appData);
         renderPlanboardViews(appData);
-        showToast("Doel definitief verwijderd.");
+        showToast(goal.archived ? "Doel gearchiveerd 📦" : "Doel geactiveerd ✨");
+    };
+
+    window.permDeleteCompassGoal = (id) => {
+        if (confirm("Weet je zeker dat je dit kompas doel wilt verwijderen?")) {
+            appData.plans.goals = appData.plans.goals.filter(x => x.id !== id);
+            saveAppData(appData);
+            renderCompassBeheerContent(appData);
+            renderPlanboardViews(appData);
+            showToast("Kompas doel verwijderd! 🗑️");
+        }
     };
 }
