@@ -181,10 +181,37 @@ function initPlannenModals(appData) {
         <div id="pact-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">🌙 Beheer Avond-Pact Historie</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">🌙 Beheer & Historie Avond-Pacts</h3>
                     <button id="close-pact-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
+                <p class="text-gray-500">Doorzoek al je eerdere avond-pacts, filter op datum, bewerk ze of zet ze terug.</p>
+
+                <!-- Zoekbalk & Datumfilters -->
+                <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <input type="text" id="pact-search-input" placeholder="🔍 Zoek in avond-pacts..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="pact-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                            <option value="all">Alle data</option>
+                            <option value="today">Vandaag</option>
+                            <option value="week">Deze week</option>
+                            <option value="specific-week">Specifieke week...</option>
+                            <option value="month">Deze maand</option>
+                            <option value="specific-month">Specifieke maand...</option>
+                            <option value="year">Dit jaar</option>
+                            <option value="specific-year">Specifiek jaar...</option>
+                            <option value="specific-day">Specifieke dag...</option>
+                        </select>
+                    </div>
+                    <div id="pact-custom-filter-box" class="hidden pt-1">
+                        <input type="date" id="pact-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                        <input type="month" id="pact-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                        <input type="number" id="pact-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                        <input type="week" id="pact-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    </div>
+                </div>
+
                 <div id="pact-archive-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                
                 <div class="pt-2">
                     <button id="close-pact-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
                 </div>
@@ -467,6 +494,16 @@ function initPlannenLogic(appData) {
     renderPlanboardViews(appData);
 }
 
+const pactSearchInput = document.getElementById('pact-search-input');
+    const pactDateFilter = document.getElementById('pact-filter-date');
+    if (pactSearchInput) pactSearchInput.oninput = () => renderPactBeheerContent(appData);
+    if (pactDateFilter) {
+        pactDateFilter.onchange = () => {
+            setupPactDateFilterListeners();
+            renderPactBeheerContent(appData);
+        };
+    }
+
 function renderKnowledgeHack(appData) {
     const idx = appData.knowledgeHacksIndex || 0;
     const hack = KNOWLEDGE_HACKS[idx];
@@ -696,27 +733,124 @@ function renderPlanBeheerContent(appData) {
     };
 }
 
+function setupPactDateFilterListeners() {
+    const dateFilterSelect = document.getElementById('pact-filter-date');
+    const customBox = document.getElementById('pact-custom-filter-box');
+    const dateInput = document.getElementById('pact-custom-date');
+    const monthInput = document.getElementById('pact-custom-month');
+    const yearInput = document.getElementById('pact-custom-year');
+    const weekInput = document.getElementById('pact-custom-week');
+
+    if (!dateFilterSelect) return;
+
+    if (customBox) customBox.classList.add('hidden');
+    if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
+    if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
+    if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
+    if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
+
+    const val = dateFilterSelect.value;
+    if (val.startsWith('specific-')) {
+        if (customBox) customBox.classList.remove('hidden');
+        if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+        if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+        if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+        if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
+    }
+}
+
+// Luister naar wijzigingen in de specifieke datuminvoervelden
+['pact-custom-date', 'pact-custom-month', 'pact-custom-year', 'pact-custom-week'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('input', () => {
+            if (window.currentPactAppDataRef) renderPactBeheerContent(window.currentPactAppDataRef);
+        });
+    }
+});
+
 function renderPactBeheerContent(appData) {
+    window.currentPactAppDataRef = appData;
     const listEl = document.getElementById('pact-archive-list');
     if (!listEl) return;
+
+    const searchTerm = (document.getElementById('pact-search-input')?.value || '').toLowerCase();
+    const dateFilter = document.getElementById('pact-filter-date')?.value || 'all';
+
+    const dateInput = document.getElementById('pact-custom-date');
+    const monthInput = document.getElementById('pact-custom-month');
+    const yearInput = document.getElementById('pact-custom-year');
+    const weekInput = document.getElementById('pact-custom-week');
+
+    let customVal = null;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
+
     const pacts = appData.plans?.eveningPacts || [];
 
-    listEl.innerHTML = pacts.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen avond-pacten in historie.</p>' : pacts.map(p => `
-        <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
-            <div>
-                <span class="text-gray-800 font-medium">${p.text}</span>
-                <span class="text-[10px] text-gray-400 block">📅 ${new Date(p.date || Date.now()).toLocaleDateString('nl-NL')}</span>
-            </div>
-            <button onclick="window.deletePact(${p.id})" class="text-red-600 hover:underline font-semibold">Verwijderen</button>
-        </div>
-    `).join('');
+    const filtered = pacts.filter(p => {
+        const matchSearch = p.text.toLowerCase().includes(searchTerm);
+        const matchDate = checkDateFilter(p.date || new Date().toISOString(), dateFilter, customVal);
+        return matchSearch && matchDate;
+    });
 
-    window.deletePact = (id) => {
-        appData.plans.eveningPacts = appData.plans.eveningPacts.filter(x => x.id !== id);
+    listEl.innerHTML = filtered.length === 0 ? 
+        '<p class="text-xs text-gray-400 italic text-center py-3">Geen avond-pacts gevonden met deze filters.</p>' : 
+        filtered.slice().reverse().map(p => `
+            <div class="flex flex-col gap-1.5 p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="font-medium text-gray-900 text-sm">${p.text}</span>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">📅 Ingegeven op: ${new Date(p.date || Date.now()).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${p.completed || p.done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                        ${p.completed || p.done ? 'Volbracht' : 'Actief'}
+                    </span>
+                </div>
+                <div class="flex gap-2 justify-end pt-1 border-t border-gray-50">
+                    <button onclick="window.editEveningPact(${p.id})" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200">Bewerken ✏️</button>
+                    <button onclick="window.toggleRestoreEveningPact(${p.id})" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100">
+                        ${p.completed || p.done ? 'Terugzetten 🔄' : 'Markeer Voltooid ✓'}
+                    </button>
+                    <button onclick="window.deletePact(${p.id})" class="px-2 py-1 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100">Verwijderen ✕</button>
+                </div>
+            </div>
+        `).join('');
+
+    window.editEveningPact = (id) => {
+        const pact = appData.plans.eveningPacts.find(x => x.id === id);
+        if (!pact) return;
+        const newText = prompt("Bewerk je avond-pact:", pact.text);
+        if (newText !== null && newText.trim() !== '') {
+            pact.text = newText.trim();
+            saveAppData(appData);
+            renderPactBeheerContent(appData);
+            renderPlanboardViews(appData);
+            showToast("Avond-pact bijgewerkt! ✨");
+        }
+    };
+
+    window.toggleRestoreEveningPact = (id) => {
+        const pact = appData.plans.eveningPacts.find(x => x.id === id);
+        if (!pact) return;
+        pact.completed = !pact.completed;
+        pact.done = !pact.done;
         saveAppData(appData);
         renderPactBeheerContent(appData);
         renderPlanboardViews(appData);
-        showToast("Avond-pact verwijderd.");
+        showToast("Status van avond-pact gewijzigd! 🔄");
+    };
+
+    window.deletePact = (id) => {
+        if (confirm("Weet je zeker dat je dit avond-pact wilt verwijderen?")) {
+            appData.plans.eveningPacts = appData.plans.eveningPacts.filter(x => x.id !== id);
+            saveAppData(appData);
+            renderPactBeheerContent(appData);
+            renderPlanboardViews(appData);
+            showToast("Avond-pact verwijderd! 🗑️");
+        }
     };
 }
 
