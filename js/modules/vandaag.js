@@ -609,19 +609,11 @@ function renderActieHub(appData) {
     const tasksListEl = document.getElementById('actie-hub-tasks-list');
     const goalsListEl = document.getElementById('actie-hub-goals-list');
 
-    const activePacts = (appData.plans?.eveningPacts || []).filter(p => !p.completed && !p.done);
+    const activePacts = appData.plans?.eveningPacts || [];
     if (activePacts.length > 0) {
-        const p = activePacts[activePacts.length - 1];
-        pactContainer.innerHTML = `
-            <div class="flex justify-between items-center bg-white p-2.5 border border-indigo-100 rounded-xl shadow-sm text-xs">
-                <span class="text-gray-900 font-medium">${p.text}</span>
-                <button onclick="window.quickCompletePact(${p.id})" class="px-3.5 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center gap-1">
-                    <span>✓</span> Afvinken
-                </button>
-            </div>
-        `;
+        pactContainer.innerHTML = activePacts[activePacts.length - 1].text;
     } else {
-        pactContainer.innerHTML = '<span class="text-gray-400 italic">Nog geen actief Avond-pact gezet. Maak er een aan op de Plannen-tab!</span>';
+        pactContainer.innerHTML = 'Nog geen Avond-pact gezet. Maak er een aan op de Plannen-tab!';
     }
 
     const allTasks = [...(appData.tasks || []), ...(appData.plans?.tasks || [])];
@@ -650,19 +642,6 @@ function renderActieHub(appData) {
             showToast("Taak afgevinkt! ✨");
         }
     };
-
-    window.quickCompletePact = (id) => {
-        const pact = (appData.plans?.eveningPacts || []).find(x => x.id === id);
-        if (pact) {
-            pact.completed = true;
-            pact.done = true;
-            voegTrotsKnikkerToe(appData, `Avond-pact volbracht: ${pact.text}`, 'Avond-Pact');
-            saveAppData(appData);
-            renderActieHub(appData);
-            showToast("Avond-pact volbracht en knikker toegevoegd! ✨");
-        }
-    };
-}
 
     const goals = appData.plans?.goals || [];
     goalsListEl.innerHTML = goals.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen doelen ingesteld.</p>' : goals.slice(0, 3).map(g => `
