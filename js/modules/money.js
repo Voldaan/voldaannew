@@ -5,6 +5,9 @@ const MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwac
 const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaankoop', 'Noodzakelijk/Vaste last', 'Investeer in mezelf'];
 const PERIODIC_OPTIONS = ['Eenmalig', 'Wekelijks', 'Maandelijks', 'Jaarlijks'];
 
+// Status voor privacy / demo-modus
+let isPrivacyMode = false;
+
 // Uitgebreide databank met Kennis & Hacks specifiek voor Geld & Financiën
 const MONEY_HACKS_DB = [
     {
@@ -42,7 +45,6 @@ const MONEY_HACKS_DB = [
 ];
 
 export function initMoneyModule(appData) {
-    // Ondersteunt zowel id="geld" als id="money" uit de index.html
     const container = document.getElementById('geld') || document.getElementById('money');
     if (!container) return;
 
@@ -55,6 +57,13 @@ export function initMoneyModule(appData) {
     }
 
     container.innerHTML = `
+        <!-- Subtiele Privacy / Demo Knop bovenaan -->
+        <div class="flex justify-end mb-2">
+            <button id="toggle-privacy-btn" class="text-[11px] px-2.5 py-1 bg-indigo-50 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-100 transition shadow-sm flex items-center gap-1">
+                <span>🔒</span> <span>Privé-modus</span>
+            </button>
+        </div>
+
         <!-- Bovenste Grid: Saldo (met dynamische pastel gloed) & compacte Paydayradar -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div id="balance-card" class="bg-white p-5 rounded-2xl shadow-sm border-2 flex flex-col justify-between transition-all duration-300">
@@ -68,7 +77,6 @@ export function initMoneyModule(appData) {
                 <p class="text-[11px] text-gray-400 mt-3">Transacties passen dit automatisch aan.</p>
             </div>
             
-            <!-- Aangepast: Zachtere kleur en compacter formaat voor Paydayradar -->
             <div class="bg-indigo-50/80 border border-indigo-100 p-4 rounded-2xl shadow-sm flex flex-col justify-between text-indigo-950">
                 <div>
                     <p class="text-[11px] text-indigo-500 uppercase font-bold mb-0.5">Paydayradar</p>
@@ -451,7 +459,21 @@ function setupModalHandlers(type, appData) {
 }
 
 function initMoneyLogic(appData) {
-    // Initialiseer Kennis & Hacks widget
+    // Privacy / Demo-modus knop koppelen
+    const privacyBtn = document.getElementById('toggle-privacy-btn');
+    if (privacyBtn) {
+        privacyBtn.onclick = () => {
+            isPrivacyMode = !isPrivacyMode;
+            privacyBtn.innerHTML = isPrivacyMode ? "🔓 <span>Echte data</span>" : "🔒 <span>Privé-modus</span>";
+            privacyBtn.className = isPrivacyMode 
+                ? "text-[11px] px-2.5 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-xl transition shadow-sm flex items-center gap-1"
+                : "text-[11px] px-2.5 py-1 bg-indigo-50 text-indigo-700 font-semibold rounded-xl transition shadow-sm flex items-center gap-1";
+            
+            renderMoneyViews(appData);
+            showToast(isPrivacyMode ? "Privé-modus ingeschakeld (Demo data) 🔒" : "Terug naar je eigen data 🔓");
+        };
+    }
+
     let currentMoneyHackIndex = Math.floor(Math.random() * MONEY_HACKS_DB.length);
     const renderCurrentMoneyHack = () => {
         const hack = MONEY_HACKS_DB[currentMoneyHackIndex];
@@ -474,6 +496,10 @@ function initMoneyLogic(appData) {
     }
 
     document.getElementById('edit-balance-btn').onclick = () => {
+        if (isPrivacyMode) {
+            showToast("Schakel eerst de privé-modus uit om je echte saldo aan te passen.");
+            return;
+        }
         const val = prompt("Voer je actuele banksaldo in:", appData.money.balance || 0);
         if (val !== null && !isNaN(parseFloat(val))) {
             appData.money.balance = parseFloat(val);
@@ -531,6 +557,10 @@ function initMoneyLogic(appData) {
     };
 
     document.getElementById('edit-study-debt-btn').onclick = () => {
+        if (isPrivacyMode) {
+            showToast("Schakel eerst de privé-modus uit.");
+            return;
+        }
         const total = prompt("Totale studieschuld (€):", appData.money.studyDebt?.total || 0);
         const paid = prompt("Reeds afgelost (€):", appData.money.studyDebt?.paid || 0);
         const monthly = prompt("Maandelijkse aflossing (€):", appData.money.studyDebt?.monthly || 50);
@@ -551,20 +581,19 @@ let showAllTxs = false;
 function renderMoneyViews(appData) {
     const balanceEl = document.getElementById('current-balance');
     const balanceCard = document.getElementById('balance-card');
-    const balance = appData.money?.balance || 0;
+    
+    // Als privacy-modus aan staat, tonen we veilige fictieve cijfers
+    const balance = isPrivacyMode ? 2450.00 : (appData.money?.balance || 0);
     
     balanceEl.textContent = `€ ${balance.toFixed(2)}`;
     balanceEl.className = balance < 0 ? "text-2xl font-bold text-red-600" : "text-2xl font-bold text-indigo-900";
 
-    // Dynamische pastelgroene gloed of pastelroder bij lager dan € -350
     if (balanceCard) {
         if (balance < -350) {
-            // Zachte pastelrode kleur & gloed
             balanceCard.style.borderColor = 'rgba(254, 202, 202, 0.9)';
             balanceCard.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.15)';
             balanceCard.style.backgroundColor = 'rgba(254, 242, 242, 0.4)';
         } else {
-            // Mooie zachte pastelgroene gloed voor veilige/gezonde zone
             balanceCard.style.borderColor = 'rgba(167, 243, 208, 0.9)';
             balanceCard.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.15)';
             balanceCard.style.backgroundColor = 'rgba(236, 253, 245, 0.4)';
@@ -583,28 +612,35 @@ function renderMoneyViews(appData) {
     else if (dateFilter === 'specific-year') customVal = document.getElementById('tx-custom-year').value;
     else if (dateFilter === 'specific-week') customVal = document.getElementById('tx-custom-week').value;
 
-    const txs = (appData.money?.transactions || []).filter(t => {
+    // Fictieve transacties als privacy-modus aan staat
+    const rawTxs = isPrivacyMode ? [
+        { id: 1, description: "Salaris Maand", amount: 2850.00, category: "loon", label: "Investeer in mezelf", date: new Date().toISOString() },
+        { id: 2, description: "Supermarkt Boodschappen", amount: -65.50, category: "boodschappen", label: "Noodzakelijk/Vaste last", date: new Date().toISOString() },
+        { id: 3, description: "Leuk Dagje Uit", amount: -45.00, category: "uitje", label: "Investeer in mezelf", date: new Date().toISOString() }
+    ] : (appData.money?.transactions || []);
+
+    const txs = rawTxs.filter(t => {
         const matchSearch = t.description.toLowerCase().includes(searchTerm) || t.category.toLowerCase().includes(searchTerm);
         const matchCat = catFilter === 'Alle' || t.category === catFilter;
-        const matchDate = checkDateFilter(t.date, dateFilter, customVal);
+        const matchDate = isPrivacyMode || checkDateFilter(t.date, dateFilter, customVal);
         return matchSearch && matchCat && matchDate;
     });
 
     const displayTxs = showAllTxs ? txs.slice().reverse() : txs.slice(-5).reverse();
     txList.innerHTML = displayTxs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen transacties gevonden.</p>' : displayTxs.map(t => `
-        <li onclick="window.openEditTxModal(${t.id})" class="flex justify-between items-center p-3 rounded-xl text-xs border cursor-pointer hover:bg-gray-50/80 transition ${t.amount >= 0 ? 'bg-green-50/40 border-green-100 text-green-950' : 'bg-red-50/40 border-red-100 text-red-950'}">
+        <li ${isPrivacyMode ? '' : `onclick="window.openEditTxModal(${t.id})"`} class="flex justify-between items-center p-3 rounded-xl text-xs border ${isPrivacyMode ? '' : 'cursor-pointer hover:bg-gray-50/80'} transition ${t.amount >= 0 ? 'bg-green-50/40 border-green-100 text-green-950' : 'bg-red-50/40 border-red-100 text-red-950'}">
             <div>
                 <span class="font-bold">[${t.category}]</span> <span class="text-sm font-medium">${t.description}</span>
                 <span class="text-[10px] text-gray-500 block mt-0.5">${t.label || ''} • ${new Date(t.date).toLocaleDateString('nl-NL')}</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="font-bold text-sm">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
-                <button onclick="event.stopPropagation(); window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+                ${isPrivacyMode ? '' : `<button onclick="event.stopPropagation(); window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>`}
             </div>
         </li>
     `).join('');
 
-    if (txs.length > 5) {
+    if (txs.length > 5 && !isPrivacyMode) {
         toggleContainer.innerHTML = `<button onclick="window.toggleShowAllTxs()" class="text-xs text-indigo-600 font-semibold underline mt-1">${showAllTxs ? 'Minder weergeven (max 5)' : `Alles weergeven (${txs.length} transacties)`}</button>`;
     } else {
         toggleContainer.innerHTML = '';
@@ -616,6 +652,7 @@ function renderMoneyViews(appData) {
     };
 
     window.openEditTxModal = (id) => {
+        if (isPrivacyMode) return;
         const t = appData.money.transactions.find(x => x.id === id);
         if (t) {
             document.getElementById('modal-tx-id').value = t.id;
@@ -633,6 +670,7 @@ function renderMoneyViews(appData) {
     };
 
     window.deleteTransaction = (id) => {
+        if (isPrivacyMode) return;
         const tx = appData.money.transactions.find(x => x.id === id);
         if (tx) {
             appData.money.balance -= tx.amount;
@@ -644,25 +682,32 @@ function renderMoneyViews(appData) {
     };
 
     const expList = document.getElementById('expected-expense-list');
-    const expenses = appData.money?.expectedExpenses || [];
+    const expenses = isPrivacyMode ? [
+        { id: 101, description: "Zorgverzekering", amount: 135.00, method: "Automatische Incasso", category: "verwachte uitgave", date: "2026-11-01", completed: false },
+        { id: 102, description: "Huur / Hypotheek", amount: 850.00, method: "Automatische Incasso", category: "verwachte uitgave", date: "2026-11-01", completed: true }
+    ] : (appData.money?.expectedExpenses || []);
+    
     let totalExpectedAmount = 0;
     expenses.forEach(e => { if (!e.completed) totalExpectedAmount += e.amount; });
     document.getElementById('expected-total-label').textContent = `Totaal nog te verwachten: € ${totalExpectedAmount.toFixed(2)}`;
     
     expList.innerHTML = expenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen verwachte uitgaven ingesteld.</p>' : expenses.map(e => `
         <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs ${e.completed ? 'opacity-50 line-through' : ''}">
-            <div onclick="window.openEditExpectedModal(${e.id})" class="cursor-pointer flex-1">
+            <div ${isPrivacyMode ? '' : `onclick="window.openEditExpectedModal(${e.id})" `}class="${isPrivacyMode ? '' : 'cursor-pointer'} flex-1">
                 <span class="font-bold text-indigo-950 text-xs">[${e.category}]</span> <span class="font-medium text-gray-900 text-sm">${e.description}</span> - <span class="font-bold text-sm">€ ${e.amount.toFixed(2)}</span>
                 <span class="text-[11px] text-gray-500 block mt-0.5">Betaalwijze: ${e.method} • Datum: ${e.date}</span>
             </div>
             <div class="flex gap-2 items-center">
-                <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
-                <button onclick="window.deleteExpected(${e.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+                ${isPrivacyMode ? '' : `
+                    <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
+                    <button onclick="window.deleteExpected(${e.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+                `}
             </div>
         </div>
     `).join('');
 
     window.openEditExpectedModal = (id) => {
+        if (isPrivacyMode) return;
         const e = appData.money.expectedExpenses.find(x => x.id === id);
         if (e) {
             document.getElementById('modal-exp-id').value = e.id;
@@ -677,6 +722,7 @@ function renderMoneyViews(appData) {
     };
 
     window.toggleExpectedExpense = (id) => {
+        if (isPrivacyMode) return;
         const exp = appData.money.expectedExpenses.find(x => x.id === id);
         if (exp) {
             exp.completed = !exp.completed;
@@ -691,13 +737,17 @@ function renderMoneyViews(appData) {
     };
 
     window.deleteExpected = (id) => {
+        if (isPrivacyMode) return;
         appData.money.expectedExpenses = appData.money.expectedExpenses.filter(x => x.id !== id);
         saveAppData(appData);
         renderMoneyViews(appData);
     };
 
     const projList = document.getElementById('financial-projects-list');
-    const projects = appData.money?.financialProjects || [];
+    const projects = isPrivacyMode ? [
+        { id: 201, title: "Financiële Buffer Opbouwen", target: 3000.00, freed: 2100.00 }
+    ] : (appData.money?.financialProjects || []);
+
     let totalFreedGlobal = 0;
     let totalTargetGlobal = 0;
     
@@ -708,11 +758,13 @@ function renderMoneyViews(appData) {
         return `
             <div class="p-3.5 bg-gray-50 border rounded-xl space-y-2 text-xs">
                 <div class="flex justify-between items-center">
-                    <span onclick="window.openEditProjectModal(${p.id})" class="font-bold text-indigo-950 text-sm cursor-pointer hover:underline">🎯 ${p.title} (Doel: € ${p.target.toFixed(2)})</span>
-                    <div class="flex gap-2 items-center">
-                        <button onclick="window.openEditProjectModal(${p.id})" class="text-indigo-600 font-semibold">Bewerken</button>
-                        <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
-                    </div>
+                    <span ${isPrivacyMode ? '' : `onclick="window.openEditProjectModal(${p.id})"`} class="font-bold text-indigo-950 text-sm ${isPrivacyMode ? '' : 'cursor-pointer hover:underline'}">🎯 ${p.title} (Doel: € ${p.target.toFixed(2)})</span>
+                    ${isPrivacyMode ? '' : `
+                        <div class="flex gap-2 items-center">
+                            <button onclick="window.openEditProjectModal(${p.id})" class="text-indigo-600 font-semibold">Bewerken</button>
+                            <button onclick="window.deleteFinancialProject(${p.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+                        </div>
+                    `}
                 </div>
                 <div class="flex justify-between text-gray-600">
                     <span>Vrijgemaakt: € ${p.freed.toFixed(2)}</span>
@@ -721,10 +773,12 @@ function renderMoneyViews(appData) {
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <div class="bg-indigo-600 h-2 rounded-full" style="width: ${pct}%"></div>
                 </div>
-                <div class="flex gap-2 pt-1">
-                    <input type="number" step="0.01" id="repay-input-${p.id}" placeholder="Bedrag aflossen..." class="px-2 py-1.5 border rounded-lg text-xs w-32 bg-white">
-                    <button onclick="window.repayProject(${p.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-semibold">Aflossen 💶</button>
-                </div>
+                ${isPrivacyMode ? '' : `
+                    <div class="flex gap-2 pt-1">
+                        <input type="number" step="0.01" id="repay-input-${p.id}" placeholder="Bedrag aflossen..." class="px-2 py-1.5 border rounded-lg text-xs w-32 bg-white">
+                        <button onclick="window.repayProject(${p.id})" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-semibold">Aflossen 💶</button>
+                    </div>
+                `}
             </div>
         `;
     }).join('');
@@ -735,6 +789,7 @@ function renderMoneyViews(appData) {
     document.getElementById('space-progress-bar').style.width = `${globalPct}%`;
 
     window.openEditProjectModal = (id) => {
+        if (isPrivacyMode) return;
         const p = appData.money.financialProjects.find(x => x.id === id);
         if (p) {
             document.getElementById('modal-proj-id').value = p.id;
@@ -747,6 +802,7 @@ function renderMoneyViews(appData) {
     };
 
     window.repayProject = (id) => {
+        if (isPrivacyMode) return;
         const input = document.getElementById(`repay-input-${id}`);
         const val = parseFloat(input.value);
         const proj = appData.money.financialProjects.find(x => x.id === id);
@@ -759,13 +815,14 @@ function renderMoneyViews(appData) {
     };
 
     window.deleteFinancialProject = (id) => {
+        if (isPrivacyMode) return;
         appData.money.financialProjects = appData.money.financialProjects.filter(x => x.id !== id);
         saveAppData(appData);
         renderMoneyViews(appData);
     };
 
     const studySummary = document.getElementById('study-debt-summary');
-    const study = appData.money?.studyDebt || { total: 41939, paid: 477.35, monthly: 477.35 };
+    const study = isPrivacyMode ? { total: 15000, paid: 5000, monthly: 150 } : (appData.money?.studyDebt || { total: 41939, paid: 477.35, monthly: 477.35 });
     const rest = Math.max(0, study.total - study.paid);
     const monthsLeft = study.monthly > 0 ? Math.ceil(rest / study.monthly) : 0;
     const yearsLeft = (monthsLeft / 12).toFixed(1);
@@ -778,15 +835,19 @@ function renderMoneyViews(appData) {
     `;
 
     const impulseList = document.getElementById('impulse-list');
-    const impulses = appData.money?.impulseWants || [];
+    const impulses = isPrivacyMode ? [
+        { id: 301, item: "Nieuwe Boekencollectie", price: 39.99 }
+    ] : (appData.money?.impulseWants || []);
+
     impulseList.innerHTML = impulses.length === 0 ? '<p class="italic text-gray-400">Geen aankopen in de wachtkamer.</p>' : impulses.map(i => `
         <div class="flex justify-between items-center py-1.5 border-b">
             <span>⏳ ${i.item} (€ ${i.price.toFixed(2)})</span>
-            <button onclick="window.deleteImpulse(${i.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
+            ${isPrivacyMode ? '' : `<button onclick="window.deleteImpulse(${i.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>`}
         </div>
     `).join('');
 
     window.deleteImpulse = (id) => {
+        if (isPrivacyMode) return;
         appData.money.impulseWants = appData.money.impulseWants.filter(x => x.id !== id);
         saveAppData(appData);
         renderMoneyViews(appData);
