@@ -3,6 +3,42 @@ import { saveAppData, checkDateFilter, voegTrotsKnikkerToe, showToast } from './
 
 const DEFAULT_SPORTS = ['Wandelen', 'Fietsen', 'Sport / Workout', 'Voetbal', 'Zaalvoetbal', 'Hardlopen', 'Rekken / Yoga'];
 
+// Uitgebreide databank met Kennis & Hacks specifiek voor Vitaliteit
+const VITALITY_HACKS_DB = [
+    {
+        title: "🌙 De 10-3-2-1-0 Slaapregel",
+        text: "Geen cafeïne 10u voor slaap, geen eten 3u voor slaap, geen werk 2u voor slaap, geen schermen 1u voor slaap, en 0 snoozes 's ochtends!"
+    },
+    {
+        title: "💧 De Ochtend-Hydratie Start",
+        text: "Drink direct na het opstaan een groot glas lauwwarm water voordat je koffie drinkt. Je lichaam is na de nacht immers flink uitgedroogd."
+    },
+    {
+        title: "🚶‍♀️ Micro-wandelingen na de maaltijd",
+        text: "Een korte wandeling van slechts 10 minuten na het eten helpt je bloedsuikerspiegel stabiel te houden en stimuleert de spijsvertering."
+    },
+    {
+        title: "🧘 De 4-7-8 Ademhalingshack",
+        text: "Ervaar je onrust of stress? Adem 4 seconden in, houd 7 seconden vast en adem langzaam uit in 8 seconden. Dit kalmeert je zenuwstelsel direct."
+    },
+    {
+        title: "👀 De 20-20-20 Oogregel",
+        text: "Kijk tijdens langdurig schermwerk elke 20 minuten gedurende 20 seconden naar een object dat op minstens 20 voet (6 meter) afstand staat om oogvermoeidheid te voorkomen."
+    },
+    {
+        title: "🥑 Eet met volle aandacht (Mindful)",
+        text: "Leg je telefoon weg tijdens het eten. Door te proeven en rustig te kauwen, merkt jebrein sneller op dat je verzadigd bent."
+    },
+    {
+        title: "☀️ Daglicht binnen 1 uur",
+        text: "Probeer binnen een uur nadat je wakker bent even naar buiten te gaan in het daglicht. Dit zet je biologische klok op scherp en verbetert je nachtrust."
+    },
+    {
+        title: "🧠 De 15-minuten Snaai-Pauze",
+        text: "Trek in suiker of een ondoordachte snack? Zet de timer op 15 minuten (gebruik de wachtkamer hieronder!) en drink een glas thee. Vaak ebt de acute trek vanzelf weg."
+    }
+];
+
 export function initVitalityModule(appData) {
     const container = document.getElementById('vitality');
     if (!container) return;
@@ -48,6 +84,20 @@ export function initVitalityModule(appData) {
             
             <!-- Historie & Trends Container voor Stappen -->
             <div id="steps-history-box" class="hidden space-y-3 pt-3 border-t border-gray-100 text-xs"></div>
+        </div>
+
+        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET (NIEUW) -->
+        <div class="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50/60 p-4 rounded-2xl shadow-sm border border-emerald-200/60 mb-4">
+            <div class="flex justify-between items-start mb-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-sm">🧠</span>
+                    <h3 id="vitality-hack-title" class="text-xs font-bold text-indigo-900 uppercase tracking-wide"></h3>
+                </div>
+                <button id="refresh-vitality-hack-btn" title="Toon andere vitaliteits-tip" class="text-[11px] bg-white/80 hover:bg-white text-indigo-700 border border-emerald-200 px-2.5 py-1 rounded-xl shadow-sm transition font-medium flex items-center gap-1">
+                    <span>🔄</span> <span>Ververs Tip</span>
+                </button>
+            </div>
+            <p id="vitality-hack-text" class="text-xs text-gray-600 leading-relaxed"></p>
         </div>
 
         <!-- 3. Fitheid & Sport Log -->
@@ -133,6 +183,28 @@ export function initVitalityModule(appData) {
 }
 
 function initVitalityLogic(appData) {
+    // Initialiseer Kennis & Hacks widget
+    let currentHackIndex = Math.floor(Math.random() * VITALITY_HACKS_DB.length);
+    const renderCurrentHack = () => {
+        const hack = VITALITY_HACKS_DB[currentHackIndex];
+        const titleEl = document.getElementById('vitality-hack-title');
+        const textEl = document.getElementById('vitality-hack-text');
+        if (titleEl && textEl) {
+            titleEl.textContent = hack.title;
+            textEl.textContent = hack.text;
+        }
+    };
+    renderCurrentHack();
+
+    const refreshHackBtn = document.getElementById('refresh-vitality-hack-btn');
+    if (refreshHackBtn) {
+        refreshHackBtn.onclick = () => {
+            currentHackIndex = (currentHackIndex + 1) % VITALITY_HACKS_DB.length;
+            renderCurrentHack();
+            showToast("Nieuwe vitaliteits-tip geladen! 💡");
+        };
+    }
+
     document.querySelectorAll('.sleep-btn').forEach(btn => {
         btn.onclick = () => {
             const quality = btn.getAttribute('data-sleep');
@@ -344,7 +416,6 @@ function renderVitalityViews(appData) {
         `;
     }
 
-    // Als historieboxen open zijn, ververs deze direct
     if (document.getElementById('sleep-history-box') && !document.getElementById('sleep-history-box').classList.contains('hidden')) renderSleepHistory(appData);
     if (document.getElementById('steps-history-box') && !document.getElementById('steps-history-box').classList.contains('hidden')) renderStepsHistory(appData);
     if (document.getElementById('sport-history-box') && !document.getElementById('sport-history-box').classList.contains('hidden')) renderSportHistory(appData);
@@ -632,7 +703,6 @@ function updateNutritionContent(appData) {
     if (!contentBox) return;
 
     const dailyLogs = appData.vitality?.dailyLogs || {};
-    // Converteer dailyLogs object naar array voor filteren
     const logsArray = Object.entries(dailyLogs).map(([dateStr, log]) => ({
         date: new Date(dateStr).toISOString(),
         ...log
