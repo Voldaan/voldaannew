@@ -14,8 +14,8 @@ export function initInsightsModule(appData) {
     }
 
     container.innerHTML = `
-        <!-- Hoofdblok: Intro, Subtiele Export & Geavanceerde Datum- & Domeinfilters -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
+        <!-- Hoofdblok: Intro, Subtiele Export & Geavanceerde Datum- & Domeinfilters met stijlvolle blauwe glow -->
+        <div class="bg-white p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(99,102,241,0.15)] border border-indigo-200/80 mb-4 transition-all">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
                     <div class="flex items-center gap-2">
@@ -83,7 +83,7 @@ export function initInsightsModule(appData) {
             </div>
 
             <!-- Nieuw: Gekoppelde Kennis & Hacks op basis van je data -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 flex flex-col justify-between">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <p class="text-[11px] text-indigo-600 font-bold uppercase">🧠 Aanbevolen Kennis & Hacks</p>
@@ -101,7 +101,7 @@ export function initInsightsModule(appData) {
 
         <!-- Visuele Grafieken met heldere legenda en databron-labels -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 flex flex-col justify-between">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start mb-1">
                         <h3 class="text-sm font-bold text-indigo-900">📈 Trendlijn: Productiviteit & Taken</h3>
@@ -118,7 +118,7 @@ export function initInsightsModule(appData) {
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 flex flex-col justify-between">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start mb-1">
                         <h3 class="text-sm font-bold text-indigo-900">💶 Financiële Verdeling (Uitgaven)</h3>
@@ -137,7 +137,7 @@ export function initInsightsModule(appData) {
         </div>
 
         <!-- Gedetailleerde Historie Logs Tabel met heldere metadata -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
                 <div>
                     <h3 class="text-sm font-bold text-indigo-900">📜 Volledige Activiteiten Historie (Audit Trail)</h3>
@@ -293,7 +293,6 @@ function renderInsightsDashboard(appData) {
     const hacksBox = document.getElementById('insights-linked-hacks');
     if (hacksBox) {
         if (knowledgeItems.length > 0) {
-            // Filter of pak een paar relevante hacks (bijv. op basis van tags of willekeurig uit de lijst)
             const sampleHacks = knowledgeItems.slice(0, 2);
             hacksBox.innerHTML = sampleHacks.map(h => `
                 <div class="p-2 bg-indigo-50/60 border border-indigo-100 rounded-xl flex justify-between items-center">
