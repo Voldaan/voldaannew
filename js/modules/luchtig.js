@@ -26,7 +26,7 @@ export function initLuchtigModule(appData) {
     if (!container) return;
 
     if (!appData.luchtig) {
-        appData.luchtig = { customPlaylists: [...DEFAULT_PLAYLISTS], userLink: '' };
+        appData.luchtig = { customPlaylists: [...DEFAULT_PLAYLISTS], userLink: '', sudokuGame: null };
     }
     if (!appData.luchtig.customPlaylists) {
         appData.luchtig.customPlaylists = [...DEFAULT_PLAYLISTS];
@@ -49,14 +49,14 @@ export function initLuchtigModule(appData) {
             <form id="account-link-form" class="space-y-2 pt-2 border-t border-gray-100">
                 <label class="block text-[11px] font-semibold text-gray-600">Persoonlijke Luister-omgeving / Link</label>
                 <div class="flex gap-2">
-                    <input type="url" id="user-spotify-link" placeholder="Plak hier je favoriete Spotify/Podcast link..." class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs">
+                    <input type="url" id="user-spotify-link" placeholder="Plak hier je favoriete Spotify/Podcast link of naam..." class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs">
                     <button type="submit" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition">Koppel 🔗</button>
                 </div>
                 <div id="saved-account-link-box" class="text-xs text-gray-600 pt-1"></div>
             </form>
         </div>
 
-        <!-- 2. Evert Kwok / Droge Humor (Vervangt de moppen) -->
+        <!-- 2. Evert Kwok / Droge Humor -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">😄 Droge Humor & Glimlach</h2>
             <p class="text-xs text-gray-500 mb-3">Even relativeren in de stijl van Evert Kwok.</p>
@@ -67,15 +67,15 @@ export function initLuchtigModule(appData) {
             <button id="next-humor-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Nieuwe droge humor ✨</button>
         </div>
 
-        <!-- 3. Oneindige Sudoku Puzzel -->
+        <!-- 3. Oneindige Sudoku Puzzel met opgeslagen voortgang -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🧩 Oneindige Sudoku</h2>
                 <button id="new-sudoku-btn" class="text-xs text-indigo-600 hover:underline font-semibold">Nieuwe Puzzel 🔄</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Zet je gedachten op pauze met een ontspannende sudoku.</p>
+            <p class="text-xs text-gray-500 mb-3">Zet je gedachten op pauze. Je voortgang wordt automatisch bewaard!</p>
             
-            <div id="sudoku-board" class="grid grid-cols-9 gap-0.5 bg-indigo-900 p-1.5 rounded-xl max-w-[280px] mx-auto mb-3 shadow-inner">
+            <div id="sudoku-board" class="grid grid-cols-9 gap-0 bg-indigo-950 p-2 rounded-xl max-w-[310px] mx-auto mb-3 shadow-inner">
                 <!-- Sudoku cellen komen hier -->
             </div>
             <div class="flex gap-2">
@@ -148,7 +148,6 @@ function initLuchtigModals(appData) {
 let deleteModeActive = false;
 
 function initLuchtigLogic(appData) {
-    // 1. Humor logica
     let humorIndex = Math.floor(Math.random() * HUMOR_DB.length);
     const humorCard = document.getElementById('humor-card');
     
@@ -161,7 +160,6 @@ function initLuchtigLogic(appData) {
     };
     displayHumor();
 
-    // 2. Playlists & Link logica
     renderPlaylists(appData);
 
     document.getElementById('toggle-delete-mode').onclick = () => {
@@ -186,15 +184,18 @@ function initLuchtigLogic(appData) {
     };
 
     function renderUserLinkBox() {
-        if (appData.luchtig.userLink) {
-            linkBox.innerHTML = `Gekoppeld: <a href="${appData.luchtig.userLink}" target="_blank" class="text-emerald-700 font-bold underline">Open jouw luister-omgeving 🎧</a>`;
+        const userLink = appData.luchtig.userLink;
+        if (userLink) {
+            const matchedPlaylist = (appData.luchtig.customPlaylists || DEFAULT_PLAYLISTS).find(p => p.link === userLink);
+            const displayName = matchedPlaylist ? matchedPlaylist.title : userLink;
+
+            linkBox.innerHTML = `Gekoppeld: <a href="${userLink.startsWith('http') ? userLink : '#'}" target="_blank" class="text-emerald-700 font-bold underline">Open: ${displayName} 🎧</a>`;
         } else {
             linkBox.innerHTML = `<span class="italic text-gray-400">Geen persoonlijke link gekoppeld.</span>`;
         }
     }
 
-    // 3. Oneindige Sudoku Logica
-    initSudokuGame();
+    initSudokuGame(appData);
 }
 
 function renderPlaylists(appData) {
@@ -222,15 +223,16 @@ function renderPlaylists(appData) {
     };
 }
 
-// Sudoku Generator & Spel Logica
-let currentSudokuPuzzle = [];
-let currentSudokuSolution = [];
-
-function initSudokuGame() {
-    generateNewSudoku();
+// Sudoku Generator & Spel Logica met persistente opslag
+function initSudokuGame(appData) {
+    if (!appData.luchtig.sudokuGame || !appData.luchtig.sudokuGame.puzzle) {
+        generateNewSudoku(appData);
+    } else {
+        renderSudokuBoard(appData);
+    }
 
     document.getElementById('new-sudoku-btn').onclick = () => {
-        generateNewSudoku();
+        generateNewSudoku(appData);
         document.getElementById('sudoku-message').textContent = "";
         showToast("Nieuwe Sudoku geladen! 🧩");
     };
@@ -239,13 +241,14 @@ function initSudokuGame() {
         const inputs = document.querySelectorAll('.sudoku-cell');
         let correct = true;
         let filledCount = 0;
+        const solution = appData.luchtig.sudokuGame.solution;
 
         inputs.forEach((input, index) => {
             const row = Math.floor(index / 9);
             const col = index % 9;
             const val = parseInt(input.value) || 0;
             if (val > 0) filledCount++;
-            if (val !== currentSudokuSolution[row][col]) {
+            if (val !== solution[row][col]) {
                 correct = false;
             }
         });
@@ -265,8 +268,7 @@ function initSudokuGame() {
     };
 }
 
-function generateNewSudoku() {
-    // Eenvoudige, valide basisoplossing generator voor een oneindige stroom puzzels
+function generateNewSudoku(appData) {
     const base = [
         [5,3,4, 6,7,8, 9,1,2],
         [6,7,2, 1,9,5, 3,4,8],
@@ -279,54 +281,72 @@ function generateNewSudoku() {
         [3,4,5, 2,8,6, 1,7,9]
     ];
 
-    // Herschik rijen/kolommen licht om elke keer unieke variatie te krijgen
-    currentSudokuSolution = JSON.parse(JSON.stringify(base));
-    currentSudokuPuzzle = JSON.parse(JSON.stringify(base));
+    let solution = JSON.parse(JSON.stringify(base));
+    let puzzle = JSON.parse(JSON.stringify(base));
 
-    // Verberg willekeurig getallen om een speelbare puzzel te maken (ca. 40 open plekken)
     let removed = 0;
     while (removed < 42) {
         let r = Math.floor(Math.random() * 9);
         let c = Math.floor(Math.random() * 9);
-        if (currentSudokuPuzzle[r][c] !== 0) {
-            currentSudokuPuzzle[r][c] = 0;
+        if (puzzle[r][c] !== 0) {
+            puzzle[r][c] = 0;
             removed++;
         }
     }
 
-    renderSudokuBoard();
+    // Maak lege userValues matrix aan
+    let userValues = Array(9).fill(0).map(() => Array(9).fill(0));
+
+    appData.luchtig.sudokuGame = {
+        puzzle: puzzle,
+        solution: solution,
+        userValues: userValues
+    };
+    saveAppData(appData);
+
+    renderSudokuBoard(appData);
 }
 
-function renderSudokuBoard() {
+function renderSudokuBoard(appData) {
     const boardEl = document.getElementById('sudoku-board');
     if (!boardEl) return;
 
+    const gameData = appData.luchtig.sudokuGame;
     boardEl.innerHTML = '';
+
     for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
-            const val = currentSudokuPuzzle[r][c];
-            const isInitial = val !== 0;
+            const initialVal = gameData.puzzle[r][c];
+            const userVal = gameData.userValues[r][c];
+            const isInitial = initialVal !== 0;
 
             const input = document.createElement('input');
             input.type = 'number';
             input.min = '1';
             input.max = '9';
-            input.className = `sudoku-cell w-7 h-7 text-center text-xs font-bold rounded border focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+            
+            // Basis styling met dunnere binnenranden en expliciet dikkere 3x3 blokranden
+            let borderClasses = 'border border-indigo-300';
+            if (c === 2 || c === 5) borderClasses += ' border-r-2 border-r-indigo-950';
+            if (r === 2 || r === 5) borderClasses += ' border-b-2 border-b-indigo-950';
+
+            input.className = `sudoku-cell w-8 h-8 text-center text-xs font-bold rounded-none focus:outline-none focus:ring-1 focus:ring-indigo-500 ${borderClasses} ${
                 isInitial ? 'bg-indigo-100 text-indigo-950 font-extrabold' : 'bg-white text-indigo-600'
             }`;
-            
-            // Subtiele dikkere randen om 3x3 blokken te markeren
-            if (c === 2 || c === 5) input.style.borderRightWidth = '2px';
-            if (r === 2 || r === 5) input.style.borderBottomWidth = '2px';
 
             if (isInitial) {
-                input.value = val;
+                input.value = initialVal;
                 input.readOnly = true;
             } else {
-                input.value = '';
+                input.value = userVal !== 0 ? userVal : '';
                 input.oninput = (e) => {
-                    const v = e.target.value;
-                    if (v.length > 1) e.target.value = v.slice(-1);
+                    let v = e.target.value;
+                    if (v.length > 1) v = v.slice(-1);
+                    e.target.value = v;
+                    
+                    // Sla direct op in appData zodat het bij verversen bewaard blijft
+                    gameData.userValues[r][c] = v !== '' ? parseInt(v) : 0;
+                    saveAppData(appData);
                 };
             }
             boardEl.appendChild(input);
