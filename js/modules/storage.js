@@ -3,8 +3,19 @@ const STORAGE_KEY = 'voldaan_app_data_v2';
 
 export function loadAppData() {
     const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            // Als er al geldige appData in het nieuwe formaat staat, direct gebruiken!
+            if (parsed && (parsed.money || parsed.ideasModule || parsed.plans)) {
+                return parsed;
+            }
+        } catch (e) {
+            console.error("Fout bij parsen hoofddata:", e);
+        }
+    }
     
-    // Controleer ook op losse oude backup-sleutels voor naadloze migratie
+    // Controleer op losse oude backup-sleutels voor naadloze migratie (alleen bij eerste keer)
     const legacyIdeas = localStorage.getItem('voldaan_ideas');
     const legacyTasks = localStorage.getItem('voldaan_tasks');
     const legacyMarbles = localStorage.getItem('voldaan_marbles');
@@ -97,7 +108,7 @@ function migrateDataStructure(data) {
         settings: data.settings || { darkMode: false },
         moods: (data.moods && data.moods.length > 0) ? data.moods : formattedMoods,
         marbles: (data.marbles && data.marbles.length > 0) ? data.marbles : formattedMarbles,
-        tasks: formattedTasks.filter(t => !t.archived && !t.completed),
+        tasks: data.tasks || formattedTasks.filter(t => !t.archived && !t.completed),
         eveningPacts: data.eveningPacts || [],
         goals: data.goals || [],
         vitality: data.vitality || { sleep: [], steps: [], sport: [], sportTypes: ['Wandelen', 'Fietsen', 'Sport / Workout', 'Voetbal', 'Zaalvoetbal', 'Hardlopen', 'Rekken / Yoga'], nutrition: [], snackWaits: [] },
@@ -131,7 +142,7 @@ function migrateDataStructure(data) {
             impulseWants: [],
             savingsPots: []
         },
-        ideasModule: {
+        ideasModule: data.ideasModule || {
             ideas: formattedIdeas.filter(i => !i.archived),
             archivedIdeas: formattedIdeas.filter(i => i.archived),
             projects: data.voldaan_projects ? (typeof data.voldaan_projects === 'string' ? JSON.parse(data.voldaan_projects) : data.voldaan_projects) : [],
@@ -140,7 +151,7 @@ function migrateDataStructure(data) {
         },
         knowledge: data.knowledge || { savedTips: [] },
         luchtig: data.luchtig || { customPlaylists: [], userLink: '' },
-        plans: {
+        plans: data.plans || {
             eveningPacts: data.eveningPacts || [],
             tasks: formattedTasks,
             goals: data.goals || [],
@@ -155,7 +166,6 @@ export function getInitialAppData() {
     return migrateDataStructure({});
 }
 
-// Uitgebreide datumfilter logica voor alle tabbladen (Vandaag, Trots-Kluis, Planbord, Geld, etc.)
 export function checkDateFilter(dateString, filterType, customValue = null) {
     if (!dateString) return true;
     const itemDate = new Date(dateString);
@@ -163,17 +173,14 @@ export function checkDateFilter(dateString, filterType, customValue = null) {
 
     if (filterType === 'all') return true;
     
-    // Simpelweg vandaag
     if (filterType === 'today') {
         return itemDate.toDateString() === now.toDateString();
     }
     
-    // Specifieke dag
     if (filterType === 'specific-day' && customValue) {
         return itemDate.toDateString() === new Date(customValue).toDateString();
     }
     
-    // Specifieke week of deze week
     if (filterType === 'week') {
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
@@ -190,7 +197,6 @@ export function checkDateFilter(dateString, filterType, customValue = null) {
         return itemDate >= targetWeekStart && itemDate < targetWeekEnd;
     }
     
-    // Specifieke maand of deze maand
     if (filterType === 'month') {
         return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
     }
@@ -199,7 +205,6 @@ export function checkDateFilter(dateString, filterType, customValue = null) {
         return itemDate.getFullYear() === parseInt(year) && (itemDate.getMonth() + 1) === parseInt(month);
     }
     
-    // Specifieke jaar of dit jaar
     if (filterType === 'year') {
         return itemDate.getFullYear() === now.getFullYear();
     }
@@ -211,7 +216,6 @@ export function checkDateFilter(dateString, filterType, customValue = null) {
     return true;
 }
 
-// Niet-overlappende Toast meldingen manager
 export function showToast(msg) {
     let container = document.getElementById('toast-container');
     if (!container) {
