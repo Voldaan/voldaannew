@@ -1,7 +1,6 @@
 // js/modules/luchtig.js
 import { saveAppData, showToast } from './storage.js';
 
-// Droge humor / Evert Kwok-achtige taalgrapjes (oneindig te verversen)
 const HUMOR_DB = [
     "“Ik geef niet op,” zei de boer, en hij gaf zijn koe een hand.",
     "Wat doet een vis op het droge? Die heeft het even helemaal gehad met de zee.",
@@ -33,27 +32,29 @@ export function initLuchtigModule(appData) {
     }
 
     container.innerHTML = `
-        <!-- 1. Muziek & Podcasts (Bovenaan met Spotify-groene glow) -->
-        <div class="bg-white p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(34,197,94,0.2)] border border-emerald-200/80 mb-4 transition-all">
-            <div class="flex justify-between items-center mb-1">
-                <h2 class="text-base font-bold text-indigo-900">🎧 Muziek & Podcast</h2>
-                <div class="flex gap-2">
-                    <button id="open-playlist-modal" class="text-xs text-emerald-700 hover:underline font-semibold">+ Toevoegen</button>
-                    <button id="toggle-delete-mode" class="text-xs text-red-500 hover:underline">- Verwijderen</button>
+        <!-- 1. Prominente "volDaan Draait" Luisteromgeving -->
+        <div class="bg-gradient-to-br from-emerald-50/90 to-teal-50/50 p-5 rounded-2xl shadow-sm border border-emerald-200/80 mb-4">
+            <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🎧</span>
+                    <h2 class="text-base font-bold text-emerald-950">volDaan Draait</h2>
                 </div>
+                <button id="open-playlist-modal" class="text-xs text-emerald-700 hover:underline font-semibold">+ Toevoegen</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Jouw favoriete afspeellijsten om bij op te laden of te ontprikkelen.</p>
+            <p class="text-xs text-gray-600 mb-3">Jouw persoonlijke luisteromgeving en laatst toegevoegde favorieten.</p>
             
-            <div id="playlists-container" class="space-y-2.5 mb-3"></div>
+            <!-- Uitgelichte Laatste / Gekoppelde Luisteromgeving -->
+            <div id="featured-player-box" class="p-3.5 bg-white border border-emerald-200 rounded-xl mb-3 shadow-xs space-y-2">
+                <!-- Wordt dynamisch gevuld met de laatst toegevoegde of gekoppelde stream -->
+            </div>
 
-            <form id="account-link-form" class="space-y-2 pt-2 border-t border-gray-100">
-                <label class="block text-[11px] font-semibold text-gray-600">Persoonlijke Luister-omgeving / Link</label>
-                <div class="flex gap-2">
-                    <input type="url" id="user-spotify-link" placeholder="Plak hier je favoriete Spotify/Podcast link of naam..." class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                    <button type="submit" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition">Koppel 🔗</button>
-                </div>
-                <div id="saved-account-link-box" class="text-xs text-gray-600 pt-1"></div>
-            </form>
+            <!-- Overige Playlists -->
+            <div id="playlists-container" class="space-y-2 mb-3"></div>
+
+            <div class="flex justify-between items-center text-[11px] text-gray-500 pt-2 border-t border-emerald-100">
+                <span>💡 Tip: Verbind je Sonos via de officiële Spotify-app</span>
+                <button id="toggle-delete-mode" class="text-red-500 hover:underline font-medium">- Beheer / Wis</button>
+            </div>
         </div>
 
         <!-- 2. Evert Kwok / Droge Humor -->
@@ -61,13 +62,11 @@ export function initLuchtigModule(appData) {
             <h2 class="text-base font-bold text-indigo-900 mb-1">😄 Droge Humor & Glimlach</h2>
             <p class="text-xs text-gray-500 mb-3">Even relativeren in de stijl van Evert Kwok.</p>
             
-            <div id="humor-card" class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl mb-3 text-xs text-emerald-950 font-medium leading-relaxed italic text-center">
-                <!-- Wordt dynamisch gevuld -->
-            </div>
+            <div id="humor-card" class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl mb-3 text-xs text-emerald-950 font-medium leading-relaxed italic text-center"></div>
             <button id="next-humor-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Nieuwe droge humor ✨</button>
         </div>
 
-        <!-- 3. Oneindige Sudoku Puzzel met opgeslagen voortgang -->
+        <!-- 3. Oneindige Sudoku Puzzel met gecorrigeerde 3x3 rasterlijnen -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🧩 Oneindige Sudoku</h2>
@@ -75,9 +74,8 @@ export function initLuchtigModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Zet je gedachten op pauze. Je voortgang wordt automatisch bewaard!</p>
             
-            <div id="sudoku-board" class="grid grid-cols-9 gap-0 bg-indigo-950 p-2 rounded-xl max-w-[310px] mx-auto mb-3 shadow-inner">
-                <!-- Sudoku cellen komen hier -->
-            </div>
+            <div id="sudoku-board" class="grid grid-cols-9 gap-0 bg-indigo-950 p-2 rounded-xl max-w-[310px] mx-auto mb-3 shadow-inner"></div>
+            
             <div class="flex gap-2">
                 <button id="check-sudoku-btn" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Controleer Puzzel ✨</button>
             </div>
@@ -96,25 +94,25 @@ function initLuchtigModals(appData) {
         <div id="playlist-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">🎧 Playlist of Podcast Toevoegen</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">🎧 volDaan Draait - Toevoegen</h3>
                     <button id="close-playlist-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 <form id="playlist-form" class="space-y-3">
                     <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Naam</label>
-                        <input type="text" id="modal-pl-title" placeholder="Bijv. Ochtend Focus" class="w-full px-3 py-2 border rounded-xl" required>
+                        <label class="block font-semibold text-gray-600 mb-1">Titel</label>
+                        <input type="text" id="modal-pl-title" placeholder="Bijv. Ochtend Focus of volDaan Mix" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Omschrijving</label>
                         <input type="text" id="modal-pl-desc" placeholder="Bijv. Rustige achtergrondmuziek" class="w-full px-3 py-2 border rounded-xl">
                     </div>
                     <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Luisterlink (Spotify/Podcast)</label>
+                        <label class="block font-semibold text-gray-600 mb-1">Spotify / Luisterlink</label>
                         <input type="url" id="modal-pl-link" placeholder="https://open.spotify.com/..." class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-playlist-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
-                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen ✨</button>
+                        <button type="submit" class="flex-1 py-2 bg-emerald-600 text-white rounded-xl font-semibold">Toevoegen & Direct Actief ✨</button>
                     </div>
                 </form>
             </div>
@@ -135,12 +133,14 @@ function initLuchtigModals(appData) {
 
         if (title && link) {
             if (!appData.luchtig.customPlaylists) appData.luchtig.customPlaylists = [...DEFAULT_PLAYLISTS];
-            appData.luchtig.customPlaylists.push({ id: Date.now(), title, desc: desc || 'Favoriete afspeellijst', link });
+            // Voeg toe als nieuwste item
+            appData.luchtig.customPlaylists.push({ id: Date.now(), title, desc: desc || 'Persoonlijke afspeellijst', link });
+            appData.luchtig.userLink = link; // Stel direct in als actieve luisteromgeving
             saveAppData(appData);
             modal.classList.add('hidden');
             e.target.reset();
             renderPlaylists(appData);
-            showToast("Playlist toegevoegd! 🎧");
+            showToast("Toegevoegd aan volDaan Draait! 🎧");
         }
     };
 }
@@ -165,52 +165,47 @@ function initLuchtigLogic(appData) {
     document.getElementById('toggle-delete-mode').onclick = () => {
         deleteModeActive = !deleteModeActive;
         const btn = document.getElementById('toggle-delete-mode');
-        btn.textContent = deleteModeActive ? "Klaar met wissen" : "- Verwijderen";
-        btn.className = deleteModeActive ? "text-xs text-red-700 font-bold underline" : "text-xs text-red-500 hover:underline";
+        btn.textContent = deleteModeActive ? "Klaar met wissen" : "- Beheer / Wis";
         renderPlaylists(appData);
     };
-
-    const linkInput = document.getElementById('user-spotify-link');
-    const linkBox = document.getElementById('saved-account-link-box');
-    linkInput.value = appData.luchtig.userLink || '';
-    renderUserLinkBox();
-
-    document.getElementById('account-link-form').onsubmit = (e) => {
-        e.preventDefault();
-        appData.luchtig.userLink = linkInput.value.trim();
-        saveAppData(appData);
-        renderUserLinkBox();
-        showToast("Luisterlink opgeslagen! 🔗");
-    };
-
-    function renderUserLinkBox() {
-        const userLink = appData.luchtig.userLink;
-        if (userLink) {
-            const matchedPlaylist = (appData.luchtig.customPlaylists || DEFAULT_PLAYLISTS).find(p => p.link === userLink);
-            const displayName = matchedPlaylist ? matchedPlaylist.title : userLink;
-
-            linkBox.innerHTML = `Gekoppeld: <a href="${userLink.startsWith('http') ? userLink : '#'}" target="_blank" class="text-emerald-700 font-bold underline">Open: ${displayName} 🎧</a>`;
-        } else {
-            linkBox.innerHTML = `<span class="italic text-gray-400">Geen persoonlijke link gekoppeld.</span>`;
-        }
-    }
 
     initSudokuGame(appData);
 }
 
 function renderPlaylists(appData) {
     const container = document.getElementById('playlists-container');
+    const featuredBox = document.getElementById('featured-player-box');
     const playlists = appData.luchtig?.customPlaylists || DEFAULT_PLAYLISTS;
 
-    container.innerHTML = playlists.map((p) => `
-        <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl flex justify-between items-center text-xs">
+    // De laatst toegevoegde playlist is de actieve "volDaan Draait" stream
+    const latestPlaylist = playlists[playlists.length - 1] || playlists[0];
+    const otherPlaylists = playlists.slice(0, playlists.length - 1);
+
+    // Render de uitgelichte speler bovenaan
+    featuredBox.innerHTML = `
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Laatst toegevoegd / Actief</span>
+                <p class="font-bold text-indigo-950 text-sm mt-1">🎵 ${latestPlaylist.title}</p>
+                <p class="text-[11px] text-gray-500">${latestPlaylist.desc}</p>
+            </div>
+            <a href="${latestPlaylist.link}" target="_blank" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
+                <span>Start luisteren</span>
+                <span>▶</span>
+            </a>
+        </div>
+    `;
+
+    // Render de overige playlists
+    container.innerHTML = otherPlaylists.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen extra afspeellijsten.</p>' : otherPlaylists.map((p) => `
+        <div class="p-2.5 bg-gray-50 border border-gray-100 rounded-xl flex justify-between items-center text-xs">
             <div>
                 <span class="font-bold text-indigo-950">🎵 ${p.title}</span>
-                <p class="text-gray-500 mt-0.5">${p.desc}</p>
+                <p class="text-gray-500 text-[10px]">${p.desc}</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="${p.link}" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">Luister</a>
-                ${deleteModeActive ? `<button onclick="window.deleteCustomPlaylist(${p.id})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold hover:bg-red-200">Verwijder</button>` : ''}
+                <a href="${p.link}" target="_blank" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">Luister</a>
+                ${deleteModeActive ? `<button onclick="window.deleteCustomPlaylist(${p.id})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold hover:bg-red-200">Wis</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -223,7 +218,7 @@ function renderPlaylists(appData) {
     };
 }
 
-// Sudoku Generator & Spel Logica met persistente opslag
+// Sudoku Generator & Spel Logica met gecorrigeerde 3x3 rasterlijnen
 function initSudokuGame(appData) {
     if (!appData.luchtig.sudokuGame || !appData.luchtig.sudokuGame.puzzle) {
         generateNewSudoku(appData);
@@ -294,7 +289,6 @@ function generateNewSudoku(appData) {
         }
     }
 
-    // Maak lege userValues matrix aan
     let userValues = Array(9).fill(0).map(() => Array(9).fill(0));
 
     appData.luchtig.sudokuGame = {
@@ -325,13 +319,13 @@ function renderSudokuBoard(appData) {
             input.min = '1';
             input.max = '9';
             
-            // Basis styling met dunnere binnenranden en expliciet dikkere 3x3 blokranden
-            let borderClasses = 'border border-indigo-300';
+            // Exacte 3x3 blokranden voor zowel horizontaal als verticaal
+            let borderClasses = 'border border-indigo-200';
             if (c === 2 || c === 5) borderClasses += ' border-r-2 border-r-indigo-950';
             if (r === 2 || r === 5) borderClasses += ' border-b-2 border-b-indigo-950';
 
-            input.className = `sudoku-cell w-8 h-8 text-center text-xs font-bold rounded-none focus:outline-none focus:ring-1 focus:ring-indigo-500 ${borderClasses} ${
-                isInitial ? 'bg-indigo-100 text-indigo-950 font-extrabold' : 'bg-white text-indigo-600'
+            input.className = `sudoku-cell w-8 h-8 text-center text-xs font-bold rounded-none focus:outline-none focus:ring-1 focus:ring-emerald-500 ${borderClasses} ${
+                isInitial ? 'bg-indigo-100 text-indigo-950 font-extrabold' : 'bg-white text-emerald-800'
             }`;
 
             if (isInitial) {
@@ -344,7 +338,6 @@ function renderSudokuBoard(appData) {
                     if (v.length > 1) v = v.slice(-1);
                     e.target.value = v;
                     
-                    // Sla direct op in appData zodat het bij verversen bewaard blijft
                     gameData.userValues[r][c] = v !== '' ? parseInt(v) : 0;
                     saveAppData(appData);
                 };
