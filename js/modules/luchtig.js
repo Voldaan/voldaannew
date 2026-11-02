@@ -1,23 +1,18 @@
 // js/modules/luchtig.js
 import { saveAppData, showToast } from './storage.js';
 
-const HUMOR_DB = [
-    "“Ik geef niet op,” zei de boer, en hij gaf zijn koe een hand.",
-    "Wat doet een vis op het droge? Die heeft het even helemaal gehad met de zee.",
-    "Ik wilde een grap vertellen over geheugenverlies, maar ik ben vergeten waar het over ging.",
-    "“Dokter, ik voel me zo hol als een bamboestok!” — “Geen zorgen, dat zit tussen de oren.”",
-    "Waarom dragen overmatige optimisten altijd een ladder in de kroeg? Omdat ze de lat hoog leggen.",
-    "De bakker werd ontslagen omdat hij er te eenzijdig brood op nahield.",
-    "“Hé buurman, je hond blaft tegen de schutting!” — “Ja, hij wil doorbreken in de muziekwereld.”",
-    "Twee tomaten lopen over straat. Zegt de ene tomaat tegen de andere: “Kijk uit, daar komt een auw-to… splats!”",
-    "“Schat, vind je dat ik een olifantengeheugen heb?” — “Weet ik veel, wie ben jij eigenlijk?”",
-    "Er zaten twee vliegen op een pak boter. Zegt de ene: “Zullen we naar Frankrijk vliegen?” Waarop de andere antwoordt: “Nee joh, veel te veel gesmeer.”"
-];
-
 const DEFAULT_PLAYLISTS = [
     { id: 1, title: "Lofi Beats & Focus", desc: "Rustige beats om zachtjes door te werken of te ontprikkelen.", link: "https://open.spotify.com" },
     { id: 2, title: "Podcast: Rust in je Hoofd", desc: "Inspirerende verhalen en handige handvatten voor meer structuur.", link: "https://open.spotify.com" },
     { id: 3, title: "Vrolijke Vibe & Klassiekers", desc: "Goede energie zonder dat het te hard binnenkomt.", link: "https://open.spotify.com" }
+];
+
+// RSS Feed bronnen (gekoppeld via gratis CORS-proxy)
+const NEWS_SOURCES = [
+    { name: "3voor12", url: "https://3voor12.vpro.nl/meedraaien/rss.xml" },
+    { name: "OOR", url: "https://oor.nl/feed/" },
+    { name: "Blues Magazine", url: "https://www.bluesmagazine.nl/feed/" },
+    { name: "Pitchfork", url: "https://pitchfork.com/feed/feed-news/rss" }
 ];
 
 export function initLuchtigModule(appData) {
@@ -25,13 +20,14 @@ export function initLuchtigModule(appData) {
     if (!container) return;
 
     if (!appData.luchtig) {
-        appData.luchtig = { customPlaylists: [...DEFAULT_PLAYLISTS], userLink: '', discogsUser: '', sudokuGame: null };
+        appData.luchtig = { customPlaylists: [...DEFAULT_PLAYLISTS], userLink: '', discogsUser: '', sudokuGame: null, activeNewsSource: '3voor12' };
     }
     if (!appData.luchtig.customPlaylists) {
         appData.luchtig.customPlaylists = [...DEFAULT_PLAYLISTS];
     }
 
     const hasDiscogsUser = Boolean(appData.luchtig.discogsUser);
+    const currentSource = appData.luchtig.activeNewsSource || '3voor12';
 
     container.innerHTML = `
         <!-- 1. volDaan Draait Luisteromgeving -->
@@ -52,7 +48,30 @@ export function initLuchtigModule(appData) {
             <div id="playlists-container" class="space-y-2"></div>
         </div>
 
-        <!-- 2. Discogs Platencollectie -->
+        <!-- 2. Live Muziek- en Festivalnieuws Hub (Vervanger voor moppen) -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
+            <div class="flex justify-between items-center mb-1.5">
+                <h2 class="text-base font-bold text-indigo-900">🎸 Muziek- & Festivalnieuws</h2>
+                <button id="refresh-news-btn" class="text-xs text-indigo-600 hover:underline font-semibold">Ververs 🔄</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Het laatste nieuws, tournee-aankondigingen en recensies van jouw favoriete sites.</p>
+            
+            <!-- Bron selectie knoppen -->
+            <div class="flex flex-wrap gap-1.5 mb-3" id="news-sources-tabs">
+                ${NEWS_SOURCES.map(src => `
+                    <button data-source="${src.name}" class="news-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                        currentSource === src.name ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                    }">${src.name}</button>
+                `).join('')}
+            </div>
+
+            <!-- Artikelen Container -->
+            <div id="music-news-container" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+                <p class="text-xs text-gray-400 italic text-center py-4">Nieuws ophalen van ${currentSource}...</p>
+            </div>
+        </div>
+
+        <!-- 3. Discogs Platencollectie -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <div class="flex justify-between items-center mb-1.5">
                 <h2 class="text-base font-bold text-indigo-900">🞊 Mijn Discogs Collectie</h2>
@@ -70,15 +89,6 @@ export function initLuchtigModule(appData) {
             </div>
 
             <div id="discogs-catalog-container" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
-        </div>
-
-        <!-- 3. Evert Kwok / Droge Humor -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
-            <h2 class="text-base font-bold text-indigo-900 mb-1">😄 Droge Humor & Glimlach</h2>
-            <p class="text-xs text-gray-500 mb-3">Even relativeren in de stijl van Evert Kwok.</p>
-            
-            <div id="humor-card" class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl mb-3 text-xs text-emerald-950 font-medium leading-relaxed italic text-center"></div>
-            <button id="next-humor-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Nieuwe droge humor ✨</button>
         </div>
 
         <!-- 4. Oneindige Sudoku Puzzel met geforceerde 3x3 rasterlijnen -->
@@ -216,21 +226,32 @@ function renderBeheerModalList(appData) {
 let fullDiscogsCatalog = [];
 
 function initLuchtigLogic(appData) {
-    let humorIndex = Math.floor(Math.random() * HUMOR_DB.length);
-    const humorCard = document.getElementById('humor-card');
-    
-    function displayHumor() {
-        humorCard.textContent = HUMOR_DB[humorIndex];
-    }
-    document.getElementById('next-humor-btn').onclick = () => {
-        humorIndex = (humorIndex + 1) % HUMOR_DB.length;
-        displayHumor();
-    };
-    displayHumor();
-
     renderPlaylists(appData);
 
-    // Knop om Discogs instellingen in te klappen / uit te klappen
+    // Muziek Nieuws laden
+    loadMusicNews(appData.luchtig.activeNewsSource || '3voor12');
+
+    document.querySelectorAll('.news-tab-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const sourceName = e.target.getAttribute('data-source');
+            appData.luchtig.activeNewsSource = sourceName;
+            saveAppData(appData);
+
+            document.querySelectorAll('.news-tab-btn').forEach(b => {
+                b.className = "news-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100";
+            });
+            e.target.className = "news-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-indigo-600 text-white border-indigo-600 shadow-xs";
+
+            loadMusicNews(sourceName);
+        };
+    });
+
+    document.getElementById('refresh-news-btn').onclick = () => {
+        loadMusicNews(appData.luchtig.activeNewsSource || '3voor12');
+        showToast("Nieuws ververst! 🎸");
+    };
+
+    // Discogs functionaliteit
     const toggleBtn = document.getElementById('toggle-discogs-edit');
     const inputBox = document.getElementById('discogs-input-box');
     
@@ -254,7 +275,6 @@ function initLuchtigLogic(appData) {
         }
     };
 
-    // Zoekfunctie binnen eigen collectie
     const searchInput = document.getElementById('discogs-search-input');
     if (searchInput) {
         searchInput.oninput = (e) => {
@@ -276,7 +296,40 @@ function initLuchtigLogic(appData) {
     initSudokuGame(appData);
 }
 
-// Haal ALLE platen op door pagina's te doorlopen
+// Live Muziek Nieuws ophalen via RSS proxy
+async function loadMusicNews(sourceName) {
+    const container = document.getElementById('music-news-container');
+    container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Laatste nieuws ophalen van ${sourceName}...</p>`;
+
+    const sourceObj = NEWS_SOURCES.find(s => s.name === sourceName) || NEWS_SOURCES[0];
+    
+    try {
+        const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(sourceObj.url)}`;
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+
+        if (data.status === 'ok' && data.items && data.items.length > 0) {
+            container.innerHTML = data.items.slice(0, 8).map(item => {
+                const pubDate = new Date(item.pubDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+                return `
+                    <a href="${item.link}" target="_blank" class="block p-3 bg-gray-50 hover:bg-indigo-50/50 border border-gray-200 rounded-xl transition text-xs space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-gray-400">
+                            <span class="font-bold text-indigo-700">${sourceName}</span>
+                            <span>📅 ${pubDate}</span>
+                        </div>
+                        <p class="font-bold text-indigo-950 leading-snug">${item.title}</p>
+                    </a>
+                `;
+            }).join('');
+        } else {
+            container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Geen nieuwsartikelen gevonden.</p>`;
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Kon nieuws niet laden. Controleer je internetverbinding.</p>`;
+    }
+}
+
 async function fetchAllDiscogsReleases(username) {
     const container = document.getElementById('discogs-catalog-container');
     container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Hele collectie ophalen van Discogs...</p>`;
@@ -286,7 +339,6 @@ async function fetchAllDiscogsReleases(username) {
         let allReleases = [];
         let totalPages = 1;
 
-        // Haal maximaal 5 pagina's op (tot 500 platen) om snelheid te waarborgen
         while (page <= totalPages && page <= 5) {
             const response = await fetch(`https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100&page=${page}`);
             if (!response.ok) throw new Error("Kon collectie niet ophalen");
@@ -367,7 +419,7 @@ function renderPlaylists(appData) {
     `).join('');
 }
 
-// Sudoku Generator met extra krachtige geforceerde inline CSS voor de 3x3 verticale lijnen
+// Sudoku met geforceerde 3x3 rasterlijnen
 function initSudokuGame(appData) {
     if (!appData.luchtig.sudokuGame || !appData.luchtig.sudokuGame.puzzle) {
         generateNewSudoku(appData);
@@ -468,7 +520,6 @@ function renderSudokuBoard(appData) {
             input.min = '1';
             input.max = '9';
             
-            // GEFORCEERDE INLINE STIJLEN VOOR DE 3X3 BLOKLIJNEN
             let borderStyle = 'border: 1px solid #c7d2fe;';
             if (c === 2 || c === 5) borderStyle += ' border-right: 3px solid #030712 !important;';
             if (r === 2 || r === 5) borderStyle += ' border-bottom: 3px solid #030712 !important;';
