@@ -25,39 +25,50 @@ export function initLuchtigModule(appData) {
     if (!container) return;
 
     if (!appData.luchtig) {
-        appData.luchtig = { customPlaylists: [...DEFAULT_PLAYLISTS], userLink: '', sudokuGame: null };
+        appData.luchtig = { customPlaylists: [...DEFAULT_PLAYLISTS], userLink: '', discogsUser: '', sudokuGame: null };
     }
     if (!appData.luchtig.customPlaylists) {
         appData.luchtig.customPlaylists = [...DEFAULT_PLAYLISTS];
     }
 
     container.innerHTML = `
-        <!-- 1. Prominente "volDaan Draait" Luisteromgeving -->
+        <!-- 1. volDaan Draait Luisteromgeving -->
         <div class="bg-gradient-to-br from-emerald-50/90 to-teal-50/50 p-5 rounded-2xl shadow-sm border border-emerald-200/80 mb-4">
             <div class="flex justify-between items-center mb-1.5">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🎧</span>
                     <h2 class="text-base font-bold text-emerald-950">volDaan Draait</h2>
                 </div>
-                <button id="open-playlist-modal" class="text-xs text-emerald-700 hover:underline font-semibold">+ Toevoegen</button>
+                <div class="flex gap-2">
+                    <button id="open-playlist-modal" class="text-xs text-emerald-700 hover:underline font-semibold">+ Toevoegen</button>
+                    <button id="open-playlists-beheer" class="text-xs text-indigo-700 hover:underline font-semibold">Beheer ⚙️</button>
+                </div>
             </div>
-            <p class="text-xs text-gray-600 mb-3">Jouw persoonlijke luisteromgeving en laatst toegevoegde favorieten.</p>
+            <p class="text-xs text-gray-600 mb-3">Jouw favoriete luisteromgeving.</p>
             
-            <!-- Uitgelichte Laatste / Gekoppelde Luisteromgeving -->
-            <div id="featured-player-box" class="p-3.5 bg-white border border-emerald-200 rounded-xl mb-3 shadow-xs space-y-2">
-                <!-- Wordt dynamisch gevuld met de laatst toegevoegde of gekoppelde stream -->
-            </div>
+            <!-- Uitgelichte Actieve Speler -->
+            <div id="featured-player-box" class="p-3.5 bg-white border border-emerald-200 rounded-xl mb-3 shadow-xs space-y-2"></div>
 
             <!-- Overige Playlists -->
-            <div id="playlists-container" class="space-y-2 mb-3"></div>
-
-            <div class="flex justify-between items-center text-[11px] text-gray-500 pt-2 border-t border-emerald-100">
-                <span>💡 Tip: Verbind je Sonos via de officiële Spotify-app</span>
-                <button id="toggle-delete-mode" class="text-red-500 hover:underline font-medium">- Beheer / Wis</button>
-            </div>
+            <div id="playlists-container" class="space-y-2"></div>
         </div>
 
-        <!-- 2. Evert Kwok / Droge Humor -->
+        <!-- 2. Discogs Platencollectie -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
+            <div class="flex justify-between items-center mb-1.5">
+                <h2 class="text-base font-bold text-indigo-900">🞊 Mijn Discogs Collectie</h2>
+                <button id="save-discogs-user" class="text-xs text-indigo-600 hover:underline font-semibold">Instellen 🔄</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Bekijk je persoonlijke vinyl catalogus rechtstreeks in de app.</p>
+            
+            <div id="discogs-input-box" class="mb-3">
+                <input type="text" id="discogs-username-input" placeholder="Vul je Discogs gebruikersnaam in..." value="${appData.luchtig.discogsUser || ''}" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs mb-2">
+                <button id="fetch-discogs-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Laad Discogs Catalogus ✨</button>
+            </div>
+            <div id="discogs-catalog-container" class="space-y-2 max-h-56 overflow-y-auto"></div>
+        </div>
+
+        <!-- 3. Evert Kwok / Droge Humor -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <h2 class="text-base font-bold text-indigo-900 mb-1">😄 Droge Humor & Glimlach</h2>
             <p class="text-xs text-gray-500 mb-3">Even relativeren in de stijl van Evert Kwok.</p>
@@ -66,7 +77,7 @@ export function initLuchtigModule(appData) {
             <button id="next-humor-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Nieuwe droge humor ✨</button>
         </div>
 
-        <!-- 3. Oneindige Sudoku Puzzel met gecorrigeerde 3x3 rasterlijnen -->
+        <!-- 4. Oneindige Sudoku Puzzel met geforceerde 3x3 bloklijnen -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🧩 Oneindige Sudoku</h2>
@@ -74,7 +85,7 @@ export function initLuchtigModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Zet je gedachten op pauze. Je voortgang wordt automatisch bewaard!</p>
             
-            <div id="sudoku-board" class="grid grid-cols-9 gap-0 bg-indigo-950 p-2 rounded-xl max-w-[310px] mx-auto mb-3 shadow-inner"></div>
+            <div id="sudoku-board" class="grid grid-cols-9 gap-0 bg-indigo-950 p-2 rounded-xl max-w-[315px] mx-auto mb-3 shadow-inner"></div>
             
             <div class="flex gap-2">
                 <button id="check-sudoku-btn" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Controleer Puzzel ✨</button>
@@ -90,7 +101,8 @@ export function initLuchtigModule(appData) {
 function initLuchtigModals(appData) {
     if (document.getElementById('playlist-modal')) return;
 
-    const modalHTML = `
+    const modalsHTML = `
+        <!-- Playlist Toevoegen Modal -->
         <div id="playlist-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
@@ -112,14 +124,26 @@ function initLuchtigModals(appData) {
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-playlist-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
-                        <button type="submit" class="flex-1 py-2 bg-emerald-600 text-white rounded-xl font-semibold">Toevoegen & Direct Actief ✨</button>
+                        <button type="submit" class="flex-1 py-2 bg-emerald-600 text-white rounded-xl font-semibold">Toevoegen ✨</button>
                     </div>
                 </form>
             </div>
         </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+        <!-- Playlist Beheer & Volgorde Modal -->
+        <div id="playlists-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer & Volgorde Playlists</h3>
+                    <button id="close-playlists-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <div id="beheer-playlists-list" class="space-y-2"></div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalsHTML);
+
+    // Playlist toevoegen modal
     const modal = document.getElementById('playlist-modal');
     document.getElementById('open-playlist-modal').onclick = () => modal.classList.remove('hidden');
     document.getElementById('close-playlist-modal').onclick = () => modal.classList.add('hidden');
@@ -133,9 +157,7 @@ function initLuchtigModals(appData) {
 
         if (title && link) {
             if (!appData.luchtig.customPlaylists) appData.luchtig.customPlaylists = [...DEFAULT_PLAYLISTS];
-            // Voeg toe als nieuwste item
             appData.luchtig.customPlaylists.push({ id: Date.now(), title, desc: desc || 'Persoonlijke afspeellijst', link });
-            appData.luchtig.userLink = link; // Stel direct in als actieve luisteromgeving
             saveAppData(appData);
             modal.classList.add('hidden');
             e.target.reset();
@@ -143,9 +165,53 @@ function initLuchtigModals(appData) {
             showToast("Toegevoegd aan volDaan Draait! 🎧");
         }
     };
+
+    // Beheer modal
+    const beheerModal = document.getElementById('playlists-beheer-modal');
+    document.getElementById('open-playlists-beheer').onclick = () => {
+        beheerModal.classList.remove('hidden');
+        renderBeheerModalList(appData);
+    };
+    document.getElementById('close-playlists-beheer').onclick = () => beheerModal.classList.add('hidden');
 }
 
-let deleteModeActive = false;
+function renderBeheerModalList(appData) {
+    const container = document.getElementById('beheer-playlists-list');
+    const playlists = appData.luchtig?.customPlaylists || DEFAULT_PLAYLISTS;
+
+    container.innerHTML = playlists.map((p, index) => `
+        <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center">
+            <div>
+                <span class="font-bold text-indigo-950">🎵 ${p.title}</span>
+                <p class="text-[10px] text-gray-500">${p.desc}</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button onclick="window.movePlaylist(${index}, -1)" class="px-2 py-1 bg-white border rounded font-bold text-gray-700 hover:bg-gray-100" ${index === 0 ? 'disabled opacity-40' : ''}>▲</button>
+                <button onclick="window.movePlaylist(${index}, 1)" class="px-2 py-1 bg-white border rounded font-bold text-gray-700 hover:bg-gray-100" ${index === playlists.length - 1 ? 'disabled opacity-40' : ''}>▼</button>
+                <button onclick="window.deletePlaylist(${p.id})" class="px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded font-bold">Wis</button>
+            </div>
+        </div>
+    `).join('');
+
+    window.movePlaylist = (index, direction) => {
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= playlists.length) return;
+        const temp = playlists[index];
+        playlists[index] = playlists[targetIndex];
+        playlists[targetIndex] = temp;
+        saveAppData(appData);
+        renderBeheerModalList(appData);
+        renderPlaylists(appData);
+    };
+
+    window.deletePlaylist = (id) => {
+        appData.luchtig.customPlaylists = appData.luchtig.customPlaylists.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderBeheerModalList(appData);
+        renderPlaylists(appData);
+        showToast("Playlist verwijderd.");
+    };
+}
 
 function initLuchtigLogic(appData) {
     let humorIndex = Math.floor(Math.random() * HUMOR_DB.length);
@@ -162,14 +228,63 @@ function initLuchtigLogic(appData) {
 
     renderPlaylists(appData);
 
-    document.getElementById('toggle-delete-mode').onclick = () => {
-        deleteModeActive = !deleteModeActive;
-        const btn = document.getElementById('toggle-delete-mode');
-        btn.textContent = deleteModeActive ? "Klaar met wissen" : "- Beheer / Wis";
-        renderPlaylists(appData);
+    // Discogs functionaliteit
+    document.getElementById('fetch-discogs-btn').onclick = () => {
+        const username = document.getElementById('discogs-username-input').value.trim();
+        if (username) {
+            appData.luchtig.discogsUser = username;
+            saveAppData(appData);
+            fetchDiscogsCollection(username);
+            showToast("Discogs catalogus wordt geladen... 🞊");
+        } else {
+            showToast("Vul een gebruikersnaam in.");
+        }
     };
 
+    if (appData.luchtig.discogsUser) {
+        fetchDiscogsCollection(appData.luchtig.discogsUser);
+    }
+
     initSudokuGame(appData);
+}
+
+async function fetchDiscogsCollection(username) {
+    const container = document.getElementById('discogs-catalog-container');
+    container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Platencollectie ophalen van Discogs...</p>`;
+
+    try {
+        // Discogs publieke API voor collectie
+        const response = await fetch(`https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=10`);
+        if (!response.ok) throw new Error("Kon collectie niet ophalen");
+        const data = await response.json();
+
+        if (!data.releases || data.releases.length === 0) {
+            container.innerHTML = `<p class="text-xs text-gray-400 italic text-center">Geen platen gevonden voor gebruiker '${username}'.</p>`;
+            return;
+        }
+
+        container.innerHTML = data.releases.map(item => {
+            const basic = item.basic_information;
+            const title = basic.title || 'Onbekend album';
+            const artist = basic.artists ? basic.artists.map(a => a.name).join(', ') : 'Onbekende artiest';
+            const year = basic.year ? `(${basic.year})` : '';
+            const cover = basic.cover_image || '';
+
+            return `
+                <div class="flex items-center gap-3 p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
+                    <img src="${cover}" alt="cover" class="w-10 h-10 object-cover rounded-lg border shadow-xs">
+                    <div class="flex-1 overflow-hidden">
+                        <p class="font-bold text-indigo-950 truncate">${artist} - ${title}</p>
+                        <p class="text-[10px] text-gray-500">Release jaar: ${year}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="text-xs text-red-500 text-center py-2">Kon collectie niet laden. Controleer de Discogs gebruikersnaam.</p>`;
+    }
 }
 
 function renderPlaylists(appData) {
@@ -177,48 +292,33 @@ function renderPlaylists(appData) {
     const featuredBox = document.getElementById('featured-player-box');
     const playlists = appData.luchtig?.customPlaylists || DEFAULT_PLAYLISTS;
 
-    // De laatst toegevoegde playlist is de actieve "volDaan Draait" stream
-    const latestPlaylist = playlists[playlists.length - 1] || playlists[0];
-    const otherPlaylists = playlists.slice(0, playlists.length - 1);
+    const activePlaylist = playlists[0] || DEFAULT_PLAYLISTS[0];
+    const otherPlaylists = playlists.slice(1);
 
-    // Render de uitgelichte speler bovenaan
+    // Uitgelichte speler bovenaan met subtiele Luister-knop
     featuredBox.innerHTML = `
         <div class="flex justify-between items-center">
             <div>
-                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Laatst toegevoegd / Actief</span>
-                <p class="font-bold text-indigo-950 text-sm mt-1">🎵 ${latestPlaylist.title}</p>
-                <p class="text-[11px] text-gray-500">${latestPlaylist.desc}</p>
+                <p class="font-bold text-indigo-950 text-sm">🎵 ${activePlaylist.title}</p>
+                <p class="text-[11px] text-gray-500">${activePlaylist.desc}</p>
             </div>
-            <a href="${latestPlaylist.link}" target="_blank" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
-                <span>Start luisteren</span>
-                <span>▶</span>
-            </a>
+            <a href="${activePlaylist.link}" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 transition shadow-xs">Luister</a>
         </div>
     `;
 
-    // Render de overige playlists
-    container.innerHTML = otherPlaylists.length === 0 ? '<p class="text-[11px] text-gray-400 italic">Geen extra afspeellijsten.</p>' : otherPlaylists.map((p) => `
+    // Overige playlists met dezelfde subtiele Luister-knop
+    container.innerHTML = otherPlaylists.length === 0 ? '' : otherPlaylists.map((p) => `
         <div class="p-2.5 bg-gray-50 border border-gray-100 rounded-xl flex justify-between items-center text-xs">
             <div>
                 <span class="font-bold text-indigo-950">🎵 ${p.title}</span>
                 <p class="text-gray-500 text-[10px]">${p.desc}</p>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="${p.link}" target="_blank" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">Luister</a>
-                ${deleteModeActive ? `<button onclick="window.deleteCustomPlaylist(${p.id})" class="px-2 py-1 bg-red-100 text-red-600 rounded-lg font-bold hover:bg-red-200">Wis</button>` : ''}
-            </div>
+            <a href="${p.link}" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">Luister</a>
         </div>
     `).join('');
-
-    window.deleteCustomPlaylist = (id) => {
-        appData.luchtig.customPlaylists = appData.luchtig.customPlaylists.filter(x => x.id !== id);
-        saveAppData(appData);
-        renderPlaylists(appData);
-        showToast("Playlist verwijderd.");
-    };
 }
 
-// Sudoku Generator & Spel Logica met gecorrigeerde 3x3 rasterlijnen
+// Sudoku Generator met extra dikke 3x3 bloklijnen (zowel horizontaal als verticaal)
 function initSudokuGame(appData) {
     if (!appData.luchtig.sudokuGame || !appData.luchtig.sudokuGame.puzzle) {
         generateNewSudoku(appData);
@@ -319,7 +419,7 @@ function renderSudokuBoard(appData) {
             input.min = '1';
             input.max = '9';
             
-            // Exacte 3x3 blokranden voor zowel horizontaal als verticaal
+            // Keiharde 3x3 rasterlijnen zowel verticaal als horizontaal
             let borderClasses = 'border border-indigo-200';
             if (c === 2 || c === 5) borderClasses += ' border-r-2 border-r-indigo-950';
             if (r === 2 || r === 5) borderClasses += ' border-b-2 border-b-indigo-950';
