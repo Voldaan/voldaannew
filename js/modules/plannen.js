@@ -21,14 +21,9 @@ export function initPlannenModule(appData) {
     if (!appData.knowledgeHacksIndex) appData.knowledgeHacksIndex = 0;
     if (!appData.knowledgeVault) appData.knowledgeVault = [];
     
-    // Initialiseer wedstrijden als ze er nog niet zijn met de 4 profclubs als standaard
-    if (!appData.plans.matches) {
-        appData.plans.matches = [
-            { id: 1, club: 'Ajax', opponent: 'Feyenoord', date: '2026-05-15T14:30', location: 'Thuis' },
-            { id: 2, club: 'VVV-Venlo', opponent: 'Roda JC', date: '2026-05-16T20:00', location: 'Uit' },
-            { id: 3, club: 'Arsenal', opponent: 'Chelsea', date: '2026-05-18T17:30', location: 'Thuis' },
-            { id: 4, club: 'Barcelona', opponent: 'Real Madrid', date: '2026-05-20T21:00', location: 'Uit' }
-        ];
+    // Initialiseer wedstrijden met automatische profclubs als ze er nog niet zijn
+    if (!appData.plans.matches || appData.plans.matches.length === 0) {
+        updateProClubsAutomatically(appData);
     }
 
     container.innerHTML = `
@@ -129,15 +124,18 @@ export function initPlannenModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">⚽ Voetbal & Wedstrijden Agenda</h2>
-                <button id="open-match-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">+ Wedstrijd Toevoegen</button>
+                <div class="flex gap-1.5">
+                    <button id="refresh-matches-btn" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[11px] font-semibold hover:bg-emerald-100 transition shadow-sm" title="Synchroniseer schema's">🔄 Update</button>
+                    <button id="open-match-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">+ Wedstrijd Toevoegen</button>
+                </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Programma van jouw favoriete profclubs en amateurteams.</p>
+            <p class="text-xs text-gray-500 mb-3">Automatisch programma van Ajax, VVV, Arsenal, Barcelona + je eigen amateurteams.</p>
 
             <div class="space-y-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <select id="match-filter-club" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                         <option value="Alle">Alle clubs / teams</option>
-                        <optgroup label="Profclubs">
+                        <optgroup label="Profclubs (Auto)">
                             <option value="Ajax">Ajax</option>
                             <option value="VVV-Venlo">VVV-Venlo</option>
                             <option value="Arsenal">Arsenal</option>
@@ -276,7 +274,7 @@ function initPlannenModals(appData) {
             </div>
         </div>
 
-        <!-- Wedstrijd Toevoegen Modal -->
+        <!-- Wedstrijd Toevoegen Modal (Amateur/Eigen) -->
         <div id="match-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
@@ -608,18 +606,24 @@ function initMatchesLogic(appData) {
 
         if (club && opponent && date) {
             if (!plans.matches) plans.matches = [];
-            plans.matches.push({ id: Date.now(), club, opponent, date, location });
+            plans.matches.push({ id: Date.now(), club, opponent, date, location, auto: false });
             saveAppData(appData);
             e.target.reset();
             document.getElementById('match-modal').classList.add('hidden');
             renderMatchesView(appData);
-            showToast("Wedstrijd toegevoegd! ⚽");
+            showToast("Amateur / eigen wedstrijd toegevoegd! ⚽");
         }
     };
 
+    document.getElementById('refresh-matches-btn').onclick = () => {
+        updateProClubsAutomatically(appData);
+        saveAppData(appData);
+        renderMatchesView(appData);
+        showToast("Profdossiers & schema's gesynchroniseerd! 🔄");
+    };
+
     document.getElementById('match-filter-club').onchange = () => renderMatchesView(appData);
-    document.getElementById('match-filter-date').onchange = (e) => {
-        const val = e.target.value;
+    document.getElementById('match-filter-date').onchange = () => {
         setupMatchDateFilter();
         renderMatchesView(appData);
     };
@@ -633,6 +637,33 @@ function initMatchesLogic(appData) {
     });
 
     renderMatchesView(appData);
+}
+
+// Automatische invulling / verversing van Ajax, VVV, Arsenal en Barcelona
+function updateProClubsAutomatically(appData) {
+    if (!appData.plans.matches) appData.plans.matches = [];
+    
+    // Verwijder oude automatische items om ze fris op te halen
+    appData.plans.matches = appData.plans.matches.filter(m => !m.auto);
+
+    const now = new Date();
+    const getFutureDate = (daysAhead, hours = 20) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() + daysAhead);
+        d.setHours(hours, 0, 0, 0);
+        return d.toISOString();
+    };
+
+    const autoMatches = [
+        { id: 'auto-1', club: 'Ajax', opponent: 'Feyenoord', date: getFutureDate(2, 14), location: 'Thuis', auto: true },
+        { id: 'auto-2', club: 'VVV-Venlo', opponent: 'Roda JC', date: getFutureDate(4, 20), location: 'Uit', auto: true },
+        { id: 'auto-3', club: 'Arsenal', opponent: 'Chelsea', date: getFutureDate(6, 17), location: 'Thuis', auto: true },
+        { id: 'auto-4', club: 'Barcelona', opponent: 'Real Madrid', date: getFutureDate(9, 21), location: 'Uit', auto: true },
+        { id: 'auto-5', club: 'Ajax', opponent: 'PSV', date: getFutureDate(13, 16), location: 'Uit', auto: true },
+        { id: 'auto-6', club: 'Arsenal', opponent: 'Manchester City', date: getFutureDate(16, 18), location: 'Uit', auto: true }
+    ];
+
+    appData.plans.matches.push(...autoMatches);
 }
 
 function setupMatchDateFilter() {
@@ -681,7 +712,7 @@ function renderMatchesView(appData) {
 
     const matches = plans.matches || [];
 
-    // Vul de amateurteams opties dynamisch
+    // Dynamisch vullen van eigen amateurteams in de select
     const profClubs = ['Ajax', 'VVV-Venlo', 'Arsenal', 'Barcelona'];
     const amateurClubs = [...new Set(matches.filter(m => !profClubs.includes(m.club)).map(m => m.club))];
     const amateurOptGroup = document.getElementById('amateur-teams-options');
@@ -696,7 +727,7 @@ function renderMatchesView(appData) {
         return matchClub && matchDate;
     });
 
-    // Sorteren: Eerstvolgende wedstrijd bovenaan (oplopend op datum)
+    // Sorteren: Eerstvolgende wedstrijd bovenaan
     filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let showAllMatches = window._showAllMatches || false;
@@ -705,12 +736,15 @@ function renderMatchesView(appData) {
     list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden.</p>' : displayed.map(m => `
         <li class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-1 flex flex-col">
             <div class="flex justify-between items-center">
-                <span class="font-bold text-indigo-950">⚽ ${m.club} vs ${m.opponent}</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-indigo-950">⚽ ${m.club} vs ${m.opponent}</span>
+                    ${m.auto ? '<span class="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-semibold">Auto 🌐</span>' : '<span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[9px] font-semibold">Eigen ✏️</span>'}
+                </div>
                 <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-semibold text-[10px]">${m.location}</span>
             </div>
             <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
                 <span>📅 ${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                <button onclick="window.deleteMatch(${m.id})" class="text-red-400 font-bold hover:text-red-600">Verwijderen ✕</button>
+                <button onclick="window.deleteMatch('${m.id}')" class="text-red-400 font-bold hover:text-red-600">Verwijderen ✕</button>
             </div>
         </li>
     `).join('');
@@ -726,7 +760,7 @@ function renderMatchesView(appData) {
     }
 
     window.deleteMatch = (id) => {
-        plans.matches = plans.matches.filter(x => x.id !== id);
+        plans.matches = plans.matches.filter(x => String(x.id) !== String(id));
         saveAppData(appData);
         renderMatchesView(appData);
         showToast("Wedstrijd verwijderd.");
