@@ -31,7 +31,8 @@ export function initLuchtigModule(appData) {
             userLink: '', 
             discogsUser: '', 
             sudokuGame: null, 
-            activeNewsSource: 'Alles' 
+            activeNewsSource: 'Alles',
+            discogsTab: 'collection' // 'collection' of 'wantlist'
         };
     }
     if (!appData.luchtig.newsSources) {
@@ -44,6 +45,7 @@ export function initLuchtigModule(appData) {
     const hasDiscogsUser = Boolean(appData.luchtig.discogsUser);
     const currentSource = appData.luchtig.activeNewsSource || 'Alles';
     const sources = appData.luchtig.newsSources;
+    const currentDiscogsTab = appData.luchtig.discogsTab || 'collection';
 
     container.innerHTML = `
         <!-- 1. volDaan Draait Luisteromgeving -->
@@ -64,7 +66,7 @@ export function initLuchtigModule(appData) {
             <div id="playlists-container" class="space-y-2"></div>
         </div>
 
-        <!-- 2. Live Muziek- en Festivalnieuws Hub met Beheer-knop -->
+        <!-- 2. Live Muziek- en Festivalnieuws Hub -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <div class="flex justify-between items-center mb-1.5">
                 <h2 class="text-base font-bold text-indigo-900">🎸 Muziek- & Festivalnieuws</h2>
@@ -75,7 +77,6 @@ export function initLuchtigModule(appData) {
             </div>
             <p class="text-xs text-gray-500 mb-3">Het laatste nieuws, tournee-aankondigingen en recensies.</p>
             
-            <!-- Bron selectie knoppen -->
             <div class="flex flex-wrap gap-1.5 mb-3" id="news-sources-tabs">
                 ${sources.map(src => `
                     <button data-source="${src.name}" class="news-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
@@ -84,30 +85,34 @@ export function initLuchtigModule(appData) {
                 `).join('')}
             </div>
 
-            <!-- Artikelen Container -->
             <div id="music-news-container" class="space-y-2 max-h-80 overflow-y-auto pr-1">
                 <p class="text-xs text-gray-400 italic text-center py-4">Nieuws ophalen...</p>
             </div>
         </div>
 
-        <!-- 3. volDaan Draait Vinyl (Discogs) -->
+        <!-- 3. volDaan Draait Vinyl (Discogs met Collectie & Wantlist tabbladen) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <div class="flex justify-between items-center mb-1.5">
                 <h2 class="text-base font-bold text-indigo-900">🞊 volDaan Draait Vinyl</h2>
                 <button id="toggle-discogs-edit" class="text-xs text-indigo-600 hover:underline font-semibold">${hasDiscogsUser ? 'Wijzigen ⚙️' : 'Instellen 🔄'}</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Doorzoek je volledige vinyl catalogus.</p>
+            <p class="text-xs text-gray-500 mb-3">Beheer en doorzoek je vinyl collectie en verlanglijst.</p>
             
             <div id="discogs-input-box" class="${hasDiscogsUser ? 'hidden' : ''} mb-3 space-y-2">
                 <input type="text" id="discogs-username-input" placeholder="Vul je Discogs gebruikersnaam in..." value="${appData.luchtig.discogsUser || ''}" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
-                <button id="fetch-discogs-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Laad Gehele Catalogus ✨</button>
+                <button id="fetch-discogs-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Gegevens Ophalen ✨</button>
             </div>
 
-            <div id="discogs-controls" class="${hasDiscogsUser ? '' : 'hidden'} mb-2.5">
-                <input type="text" id="discogs-search-input" placeholder="Zoek op artiest of album in je collectie..." class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
-            </div>
+            <div id="discogs-content-section" class="${hasDiscogsUser ? '' : 'hidden'} space-y-2.5">
+                <!-- Tabbladen switcher -->
+                <div class="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl">
+                    <button id="discogs-tab-coll" class="py-1.5 rounded-lg text-xs font-bold transition ${currentDiscogsTab === 'collection' ? 'bg-white text-indigo-950 shadow-xs' : 'text-gray-500 hover:text-gray-900'}">Collectie</button>
+                    <button id="discogs-tab-want" class="py-1.5 rounded-lg text-xs font-bold transition ${currentDiscogsTab === 'wantlist' ? 'bg-white text-indigo-950 shadow-xs' : 'text-gray-500 hover:text-gray-900'}">Wantlist</button>
+                </div>
 
-            <div id="discogs-catalog-container" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+                <input type="text" id="discogs-search-input" placeholder="Zoek op artiest of album..." class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
+                <div id="discogs-catalog-container" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+            </div>
         </div>
 
         <!-- 4. Oneindige Sudoku Puzzel met geforceerde 3x3 rasterlijnen -->
@@ -172,26 +177,25 @@ function initLuchtigModals(appData) {
             </div>
         </div>
 
-        <!-- Nieuwsbronnen Beheer Modal -->
+        <!-- Netjes ingeperkte Nieuwsbronnen Beheer Modal -->
         <div id="news-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl space-y-3 text-xs max-h-[80vh] overflow-y-auto border border-gray-200">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer & Volgorde Nieuwsbronnen</h3>
                     <button id="close-news-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
-                <form id="add-news-source-form" class="space-y-2 pb-3 border-b">
+                <form id="add-news-source-form" class="space-y-2 pb-3 border-b bg-gray-50 p-3 rounded-xl">
                     <p class="font-bold text-indigo-900">Nieuwe bron toevoegen</p>
-                    <input type="text" id="new-news-name" placeholder="Naam (bijv. mijn site)" class="w-full px-3 py-1.5 border rounded-xl" required>
-                    <input type="url" id="new-news-url" placeholder="RSS Feed URL (.xml of .rss)" class="w-full px-3 py-1.5 border rounded-xl" required>
-                    <button type="submit" class="w-full py-1.5 bg-indigo-600 text-white rounded-xl font-semibold">Bron Toevoegen ✨</button>
+                    <input type="text" id="new-news-name" placeholder="Naam (bijv. mijn site)" class="w-full px-3 py-1.5 bg-white border rounded-lg" required>
+                    <input type="url" id="new-news-url" placeholder="RSS Feed URL (.xml of .rss)" class="w-full px-3 py-1.5 bg-white border rounded-lg" required>
+                    <button type="submit" class="w-full py-1.5 bg-indigo-600 text-white rounded-lg font-semibold">Bron Toevoegen ✨</button>
                 </form>
-                <div id="beheer-news-list" class="space-y-2"></div>
+                <div id="beheer-news-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             </div>
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalsHTML);
 
-    // Playlist modals
     const modal = document.getElementById('playlist-modal');
     document.getElementById('open-playlist-modal').onclick = () => modal.classList.remove('hidden');
     document.getElementById('close-playlist-modal').onclick = () => modal.classList.add('hidden');
@@ -221,7 +225,6 @@ function initLuchtigModals(appData) {
     };
     document.getElementById('close-playlists-beheer').onclick = () => beheerModal.classList.add('hidden');
 
-    // Nieuws beheer modal
     const newsBeheerModal = document.getElementById('news-beheer-modal');
     document.getElementById('open-news-beheer').onclick = () => {
         newsBeheerModal.classList.remove('hidden');
@@ -250,15 +253,15 @@ function renderBeheerModalList(appData) {
     const playlists = appData.luchtig?.customPlaylists || DEFAULT_PLAYLISTS;
 
     container.innerHTML = playlists.map((p, index) => `
-        <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center">
+        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center">
             <div>
                 <span class="font-bold text-indigo-950">🎵 ${p.title}</span>
                 <p class="text-[10px] text-gray-500">${p.desc}</p>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1">
                 <button onclick="window.movePlaylist(${index}, -1)" class="px-2 py-1 bg-white border rounded font-bold text-gray-700 hover:bg-gray-100" ${index === 0 ? 'disabled opacity-40' : ''}>▲</button>
                 <button onclick="window.movePlaylist(${index}, 1)" class="px-2 py-1 bg-white border rounded font-bold text-gray-700 hover:bg-gray-100" ${index === playlists.length - 1 ? 'disabled opacity-40' : ''}>▼</button>
-                <button onclick="window.deletePlaylist(${p.id})" class="px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded font-bold">Wis</button>
+                <button onclick="window.deletePlaylist(${p.id})" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded font-bold">Wis</button>
             </div>
         </div>
     `).join('');
@@ -288,15 +291,15 @@ function renderNewsBeheerList(appData) {
     const sources = appData.luchtig?.newsSources || DEFAULT_NEWS_SOURCES;
 
     container.innerHTML = sources.map((s, index) => `
-        <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center">
-            <div>
-                <span class="font-bold text-indigo-950">📰 ${s.name}</span>
-                <p class="text-[10px] text-gray-400 truncate max-w-[200px]">${s.url}</p>
+        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center">
+            <div class="overflow-hidden pr-2">
+                <span class="font-bold text-indigo-950 truncate block">📰 ${s.name}</span>
+                <p class="text-[10px] text-gray-400 truncate">${s.url}</p>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1 shrink-0">
                 <button onclick="window.moveNewsSource(${index}, -1)" class="px-2 py-1 bg-white border rounded font-bold text-gray-700 hover:bg-gray-100" ${index === 0 ? 'disabled opacity-40' : ''}>▲</button>
                 <button onclick="window.moveNewsSource(${index}, 1)" class="px-2 py-1 bg-white border rounded font-bold text-gray-700 hover:bg-gray-100" ${index === sources.length - 1 ? 'disabled opacity-40' : ''}>▼</button>
-                ${s.name !== 'Alles' ? `<button onclick="window.deleteNewsSource(${index})" class="px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded font-bold">Wis</button>` : ''}
+                ${s.name !== 'Alles' ? `<button onclick="window.deleteNewsSource(${index})" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded font-bold">Wis</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -322,6 +325,7 @@ function renderNewsBeheerList(appData) {
 }
 
 let fullDiscogsCatalog = [];
+let fullDiscogsWantlist = [];
 
 function initLuchtigLogic(appData) {
     renderPlaylists(appData);
@@ -348,6 +352,18 @@ function initLuchtigLogic(appData) {
         showToast("Nieuws ververst! 🎸");
     };
 
+    // Discogs tabbladen (Collectie vs Wantlist)
+    document.getElementById('discogs-tab-coll').onclick = () => {
+        appData.luchtig.discogsTab = 'collection';
+        saveAppData(appData);
+        updateDiscogsTabsUI(appData);
+    };
+    document.getElementById('discogs-tab-want').onclick = () => {
+        appData.luchtig.discogsTab = 'wantlist';
+        saveAppData(appData);
+        updateDiscogsTabsUI(appData);
+    };
+
     const toggleBtn = document.getElementById('toggle-discogs-edit');
     const inputBox = document.getElementById('discogs-input-box');
     
@@ -363,9 +379,9 @@ function initLuchtigLogic(appData) {
             saveAppData(appData);
             inputBox.classList.add('hidden');
             toggleBtn.textContent = 'Wijzigen ⚙️';
-            document.getElementById('discogs-controls').classList.remove('hidden');
-            fetchAllDiscogsReleases(username);
-            showToast("Gehele catalogus wordt geladen... 🞊");
+            document.getElementById('discogs-content-section').classList.remove('hidden');
+            fetchDiscogsData(username);
+            showToast("Discogs gegevens worden geladen... 🞊");
         } else {
             showToast("Vul een gebruikersnaam in.");
         }
@@ -375,10 +391,13 @@ function initLuchtigLogic(appData) {
     if (searchInput) {
         searchInput.oninput = (e) => {
             const term = e.target.value.toLowerCase();
-            const filtered = fullDiscogsCatalog.filter(item => {
-                const basic = item.basic_information;
-                const title = (basic.title || '').toLowerCase();
-                const artist = (basic.artists ? basic.artists.map(a => a.name).join(' ') : '').toLowerCase();
+            const activeTab = appData.luchtig.discogsTab || 'collection';
+            const dataset = activeTab === 'collection' ? fullDiscogsCatalog : fullDiscogsWantlist;
+            
+            const filtered = dataset.filter(item => {
+                const basic = item.basic_information || item.release;
+                const title = (basic?.title || '').toLowerCase();
+                const artist = (basic?.artists ? basic.artists.map(a => a.name).join(' ') : '').toLowerCase();
                 return title.includes(term) || artist.includes(term);
             });
             renderDiscogsList(filtered);
@@ -386,13 +405,99 @@ function initLuchtigLogic(appData) {
     }
 
     if (appData.luchtig.discogsUser) {
-        fetchAllDiscogsReleases(appData.luchtig.discogsUser);
+        fetchDiscogsData(appData.luchtig.discogsUser);
     }
 
     initSudokuGame(appData);
 }
 
-// Slimme functie om nieuws te laden (ondersteunt ook de "Alles" optie)
+function updateDiscogsTabsUI(appData) {
+    const activeTab = appData.luchtig.discogsTab || 'collection';
+    const btnColl = document.getElementById('discogs-tab-coll');
+    const btnWant = document.getElementById('discogs-tab-want');
+
+    if (activeTab === 'collection') {
+        btnColl.className = "py-1.5 rounded-lg text-xs font-bold transition bg-white text-indigo-950 shadow-xs";
+        btnWant.className = "py-1.5 rounded-lg text-xs font-bold transition text-gray-500 hover:text-gray-900";
+        renderDiscogsList(fullDiscogsCatalog);
+    } else {
+        btnWant.className = "py-1.5 rounded-lg text-xs font-bold transition bg-white text-indigo-950 shadow-xs";
+        btnColl.className = "py-1.5 rounded-lg text-xs font-bold transition text-gray-500 hover:text-gray-900";
+        renderDiscogsList(fullDiscogsWantlist);
+    }
+}
+
+async function fetchDiscogsData(username) {
+    const container = document.getElementById('discogs-catalog-container');
+    container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Collectie en wantlist ophalen van Discogs...</p>`;
+
+    try {
+        // 1. Haal Collectie op
+        let page = 1;
+        let allReleases = [];
+        let totalPages = 1;
+        while (page <= totalPages && page <= 5) {
+            const res = await fetch(`https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100&page=${page}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.pagination) totalPages = data.pagination.pages;
+                if (data.releases) allReleases = allReleases.concat(data.releases);
+            }
+            page++;
+        }
+        fullDiscogsCatalog = allReleases;
+
+        // 2. Haal Wantlist op
+        let wantPage = 1;
+        let allWants = [];
+        let totalWantPages = 1;
+        while (wantPage <= totalWantPages && wantPage <= 5) {
+            const resWant = await fetch(`https://api.discogs.com/users/${username}/wants?per_page=100&page=${wantPage}`);
+            if (resWant.ok) {
+                const dataWant = await resWant.json();
+                if (dataWant.pagination) totalWantPages = dataWant.pagination.pages;
+                if (dataWant.wants) allWants = allWants.concat(dataWant.wants);
+            }
+            wantPage++;
+        }
+        fullDiscogsWantlist = allWants;
+
+        document.getElementById('discogs-content-section').classList.remove('hidden');
+        updateDiscogsTabsUI(appData);
+        showToast(`Geladen: ${fullDiscogsCatalog.length} platen, ${fullDiscogsWantlist.length} wantlist items! 🞊`);
+
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="text-xs text-red-500 text-center py-2">Kon Discogs gegevens niet laden. Controleer de gebruikersnaam.</p>`;
+    }
+}
+
+function renderDiscogsList(items) {
+    const container = document.getElementById('discogs-catalog-container');
+    if (!items || items.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Geen items gevonden.</p>`;
+        return;
+    }
+
+    container.innerHTML = `<p class="text-[10px] text-gray-400 mb-1">Totaal weergegeven: ${items.length}</p>` + items.map(item => {
+        const basic = item.basic_information || item.release;
+        const title = basic?.title || 'Onbekend album';
+        const artist = basic?.artists ? basic.artists.map(a => a.name).join(', ') : 'Onbekende artiest';
+        const year = basic?.year ? `(${basic.year})` : '';
+        const cover = basic?.cover_image || '';
+
+        return `
+            <div class="flex items-center gap-3 p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
+                <img src="${cover}" alt="cover" class="w-10 h-10 object-cover rounded-lg border shadow-xs">
+                <div class="flex-1 overflow-hidden">
+                    <p class="font-bold text-indigo-950 truncate">${artist} - ${title}</p>
+                    <p class="text-[10px] text-gray-500">Release jaar: ${year}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 async function loadMusicNews(appData, sourceName) {
     const container = document.getElementById('music-news-container');
     container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-4">Laatste nieuws ophalen...</p>`;
@@ -402,7 +507,6 @@ async function loadMusicNews(appData, sourceName) {
     try {
         if (sourceName === 'Alles') {
             let allItems = [];
-            // Haal de eerste 3 artikelen op van elke actieve bron
             for (const src of sources.filter(s => s.url !== 'ALL')) {
                 try {
                     const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.url)}`;
@@ -417,7 +521,6 @@ async function loadMusicNews(appData, sourceName) {
                 }
             }
 
-            // Sorteer op datum nieuwste eerst
             allItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
             if (allItems.length > 0) {
@@ -467,66 +570,6 @@ async function loadMusicNews(appData, sourceName) {
     }
 }
 
-async function fetchAllDiscogsReleases(username) {
-    const container = document.getElementById('discogs-catalog-container');
-    container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Hele collectie ophalen van Discogs...</p>`;
-
-    try {
-        let page = 1;
-        let allReleases = [];
-        let totalPages = 1;
-
-        while (page <= totalPages && page <= 5) {
-            const response = await fetch(`https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100&page=${page}`);
-            if (!response.ok) throw new Error("Kon collectie niet ophalen");
-            const data = await response.json();
-            
-            if (data.pagination) {
-                totalPages = data.pagination.pages;
-            }
-            if (data.releases) {
-                allReleases = allReleases.concat(data.releases);
-            }
-            page++;
-        }
-
-        fullDiscogsCatalog = allReleases;
-        document.getElementById('discogs-controls').classList.remove('hidden');
-        renderDiscogsList(fullDiscogsCatalog);
-        showToast(`${fullDiscogsCatalog.length} platen geladen! 🞊`);
-
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = `<p class="text-xs text-red-500 text-center py-2">Kon collectie niet laden. Controleer de Discogs gebruikersnaam.</p>`;
-    }
-}
-
-function renderDiscogsList(releases) {
-    const container = document.getElementById('discogs-catalog-container');
-    if (!releases || releases.length === 0) {
-        container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Geen platen gevonden.</p>`;
-        return;
-    }
-
-    container.innerHTML = `<p class="text-[10px] text-gray-400 mb-1">Totaal weergegeven: ${releases.length} releases</p>` + releases.map(item => {
-        const basic = item.basic_information;
-        const title = basic.title || 'Onbekend album';
-        const artist = basic.artists ? basic.artists.map(a => a.name).join(', ') : 'Onbekende artiest';
-        const year = basic.year ? `(${basic.year})` : '';
-        const cover = basic.cover_image || '';
-
-        return `
-            <div class="flex items-center gap-3 p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
-                <img src="${cover}" alt="cover" class="w-10 h-10 object-cover rounded-lg border shadow-xs">
-                <div class="flex-1 overflow-hidden">
-                    <p class="font-bold text-indigo-950 truncate">${artist} - ${title}</p>
-                    <p class="text-[10px] text-gray-500">Release jaar: ${year}</p>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
 function renderPlaylists(appData) {
     const container = document.getElementById('playlists-container');
     const featuredBox = document.getElementById('featured-player-box');
@@ -556,7 +599,7 @@ function renderPlaylists(appData) {
     `).join('');
 }
 
-// Sudoku met geforceerde 3x3 rasterlijnen
+// Sudoku
 function initSudokuGame(appData) {
     if (!appData.luchtig.sudokuGame || !appData.luchtig.sudokuGame.puzzle) {
         generateNewSudoku(appData);
