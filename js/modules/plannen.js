@@ -20,11 +20,7 @@ export function initPlannenModule(appData) {
     if (!appData.plans.categories) appData.plans.categories = ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
     if (!appData.knowledgeHacksIndex) appData.knowledgeHacksIndex = 0;
     if (!appData.knowledgeVault) appData.knowledgeVault = [];
-    
-    // Initialiseer wedstrijden met automatische profclubs als ze er nog niet zijn
-    if (!appData.plans.matches || appData.plans.matches.length === 0) {
-        updateProClubsAutomatically(appData);
-    }
+    if (!appData.plans.matches) appData.plans.matches = [];
 
     container.innerHTML = `
         <!-- 1. Het Avond-Pact -->
@@ -68,7 +64,7 @@ export function initPlannenModule(appData) {
             </div>
         </div>
 
-        <!-- Micro-Inspiratie Kader: Kennis Hack / Tip -->
+        <!-- Micro-Inspiratie Kader -->
         <div class="bg-gradient-to-r from-amber-50/80 to-amber-100/50 p-4 rounded-2xl shadow-sm border border-amber-200/70 mb-4 text-xs space-y-2">
             <div class="flex justify-between items-center">
                 <span id="hack-title" class="font-bold text-amber-950 text-sm flex items-center gap-1.5">🧠 De 2-Minuten Regel</span>
@@ -124,24 +120,14 @@ export function initPlannenModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">⚽ Voetbal & Wedstrijden Agenda</h2>
-                <div class="flex gap-1.5">
-                    <button id="refresh-matches-btn" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-[11px] font-semibold hover:bg-emerald-100 transition shadow-sm" title="Synchroniseer schema's">🔄 Update</button>
-                    <button id="open-match-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">+ Wedstrijd Toevoegen</button>
-                </div>
+                <button id="open-match-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">+ Wedstrijd Toevoegen</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Automatisch programma van Ajax, VVV, Arsenal, Barcelona + je eigen amateurteams.</p>
+            <p class="text-xs text-gray-500 mb-3">Beheer al je wedstrijden (Ajax, VVV, Arsenal, Barcelona en amateurteams) overzichtelijk in eigen hand.</p>
 
             <div class="space-y-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <select id="match-filter-club" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                         <option value="Alle">Alle clubs / teams</option>
-                        <optgroup label="Profclubs (Auto)">
-                            <option value="Ajax">Ajax</option>
-                            <option value="VVV-Venlo">VVV-Venlo</option>
-                            <option value="Arsenal">Arsenal</option>
-                            <option value="Barcelona">Barcelona</option>
-                        </optgroup>
-                        <optgroup label="Jouw Amateurteams" id="amateur-teams-options"></optgroup>
                     </select>
                     <select id="match-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                         <option value="all">Alle datums</option>
@@ -274,7 +260,7 @@ function initPlannenModals(appData) {
             </div>
         </div>
 
-        <!-- Wedstrijd Toevoegen Modal (Amateur/Eigen) -->
+        <!-- Wedstrijd Toevoegen Modal -->
         <div id="match-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
@@ -283,8 +269,8 @@ function initPlannenModals(appData) {
                 </div>
                 <form id="match-form" class="space-y-3">
                     <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Jouw Team / Club</label>
-                        <input type="text" id="match-club" placeholder="Bijv. Amateurs Team 1 of Vv Sliedrecht" class="w-full px-3 py-2 border rounded-xl" required>
+                        <label class="block font-semibold text-gray-600 mb-1">Club / Team</label>
+                        <input type="text" id="match-club" placeholder="Bijv. Ajax, VVV-Venlo, Arsenal, Barcelona of Amateurteam" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Tegenstander</label>
@@ -606,20 +592,13 @@ function initMatchesLogic(appData) {
 
         if (club && opponent && date) {
             if (!plans.matches) plans.matches = [];
-            plans.matches.push({ id: Date.now(), club, opponent, date, location, auto: false });
+            plans.matches.push({ id: Date.now(), club, opponent, date, location });
             saveAppData(appData);
             e.target.reset();
             document.getElementById('match-modal').classList.add('hidden');
             renderMatchesView(appData);
-            showToast("Amateur / eigen wedstrijd toegevoegd! ⚽");
+            showToast("Wedstrijd succesvol toegevoegd! ⚽");
         }
-    };
-
-    document.getElementById('refresh-matches-btn').onclick = () => {
-        updateProClubsAutomatically(appData);
-        saveAppData(appData);
-        renderMatchesView(appData);
-        showToast("Profdossiers & schema's gesynchroniseerd! 🔄");
     };
 
     document.getElementById('match-filter-club').onchange = () => renderMatchesView(appData);
@@ -639,56 +618,20 @@ function initMatchesLogic(appData) {
     renderMatchesView(appData);
 }
 
-// Automatische invulling / verversing van Ajax, VVV, Arsenal en Barcelona
-function updateProClubsAutomatically(appData) {
-    if (!appData.plans.matches) appData.plans.matches = [];
-    
-    // Verwijder oude automatische items om ze fris op te halen
-    appData.plans.matches = appData.plans.matches.filter(m => !m.auto);
-
-    const now = new Date();
-    const getFutureDate = (daysAhead, hours = 20) => {
-        const d = new Date(now);
-        d.setDate(d.getDate() + daysAhead);
-        d.setHours(hours, 0, 0, 0);
-        return d.toISOString();
-    };
-
-    const autoMatches = [
-        { id: 'auto-1', club: 'Ajax', opponent: 'Feyenoord', date: getFutureDate(2, 14), location: 'Thuis', auto: true },
-        { id: 'auto-2', club: 'VVV-Venlo', opponent: 'Roda JC', date: getFutureDate(4, 20), location: 'Uit', auto: true },
-        { id: 'auto-3', club: 'Arsenal', opponent: 'Chelsea', date: getFutureDate(6, 17), location: 'Thuis', auto: true },
-        { id: 'auto-4', club: 'Barcelona', opponent: 'Real Madrid', date: getFutureDate(9, 21), location: 'Uit', auto: true },
-        { id: 'auto-5', club: 'Ajax', opponent: 'PSV', date: getFutureDate(13, 16), location: 'Uit', auto: true },
-        { id: 'auto-6', club: 'Arsenal', opponent: 'Manchester City', date: getFutureDate(16, 18), location: 'Uit', auto: true }
-    ];
-
-    appData.plans.matches.push(...autoMatches);
-}
-
 function setupMatchDateFilter() {
-    const dateFilterSelect = document.getElementById('match-filter-date');
+    const val = document.getElementById('match-filter-date')?.value;
     const customBox = document.getElementById('match-custom-filter-box');
-    const dateInput = document.getElementById('match-custom-date');
-    const monthInput = document.getElementById('match-custom-month');
-    const yearInput = document.getElementById('match-custom-year');
-    const weekInput = document.getElementById('match-custom-week');
-
-    if (!dateFilterSelect) return;
-
+    ['match-custom-date', 'match-custom-month', 'match-custom-year', 'match-custom-week'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
+    });
     if (customBox) customBox.classList.add('hidden');
-    if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
-    if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
-    if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
-    if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
 
-    const val = dateFilterSelect.value;
-    if (val.startsWith('specific-')) {
-        if (customBox) customBox.classList.remove('hidden');
-        if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
-        if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
-        if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
-        if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
+    if (val && val.startsWith('specific-')) {
+        customBox?.classList.remove('hidden');
+        if (val === 'specific-day') document.getElementById('match-custom-date')?.classList.remove('hidden');
+        if (val === 'specific-month') document.getElementById('match-custom-month')?.classList.remove('hidden');
+        if (val === 'specific-year') document.getElementById('match-custom-year')?.classList.remove('hidden');
+        if (val === 'specific-week') document.getElementById('match-custom-week')?.classList.remove('hidden');
     }
 }
 
@@ -696,50 +639,39 @@ function renderMatchesView(appData) {
     const plans = appData.plans;
     const list = document.getElementById('match-list');
     const moreContainer = document.getElementById('match-more-container');
-    const clubFilter = document.getElementById('match-filter-club').value;
+    const clubFilterSelect = document.getElementById('match-filter-club');
+    const clubFilter = clubFilterSelect ? clubFilterSelect.value : 'Alle';
     const dateFilter = document.getElementById('match-filter-date').value;
 
-    const dateInput = document.getElementById('match-custom-date');
-    const monthInput = document.getElementById('match-custom-month');
-    const yearInput = document.getElementById('match-custom-year');
-    const weekInput = document.getElementById('match-custom-week');
-
     let customVal = null;
-    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
-    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
-    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
-    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
+    if (dateFilter === 'specific-day') customVal = document.getElementById('match-custom-date')?.value;
+    else if (dateFilter === 'specific-month') customVal = document.getElementById('match-custom-month')?.value;
+    else if (dateFilter === 'specific-year') customVal = document.getElementById('match-custom-year')?.value;
+    else if (dateFilter === 'specific-week') customVal = document.getElementById('match-custom-week')?.value;
 
     const matches = plans.matches || [];
 
-    // Dynamisch vullen van eigen amateurteams in de select
-    const profClubs = ['Ajax', 'VVV-Venlo', 'Arsenal', 'Barcelona'];
-    const amateurClubs = [...new Set(matches.filter(m => !profClubs.includes(m.club)).map(m => m.club))];
-    const amateurOptGroup = document.getElementById('amateur-teams-options');
-    if (amateurOptGroup) {
-        amateurOptGroup.innerHTML = amateurClubs.map(c => `<option value="${c}" ${clubFilter === c ? 'selected' : ''}>${c}</option>`).join('');
+    const uniqueClubs = [...new Set(matches.map(m => m.club))];
+    if (clubFilterSelect) {
+        clubFilterSelect.innerHTML = `<option value="Alle">Alle clubs / teams</option>` + 
+            uniqueClubs.map(c => `<option value="${c}" ${clubFilter === c ? 'selected' : ''}>${c}</option>`).join('');
     }
 
-    // Filteren
     const filtered = matches.filter(m => {
         const matchClub = clubFilter === 'Alle' || m.club === clubFilter;
         const matchDate = checkDateFilter(m.date, dateFilter, customVal);
         return matchClub && matchDate;
     });
 
-    // Sorteren: Eerstvolgende wedstrijd bovenaan
     filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let showAllMatches = window._showAllMatches || false;
     const displayed = showAllMatches ? filtered : filtered.slice(0, 5);
 
-    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden.</p>' : displayed.map(m => `
+    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => `
         <li class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-1 flex flex-col">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-1.5">
-                    <span class="font-bold text-indigo-950">⚽ ${m.club} vs ${m.opponent}</span>
-                    ${m.auto ? '<span class="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-semibold">Auto 🌐</span>' : '<span class="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[9px] font-semibold">Eigen ✏️</span>'}
-                </div>
+                <span class="font-bold text-indigo-950">⚽ ${m.club} vs ${m.opponent}</span>
                 <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-semibold text-[10px]">${m.location}</span>
             </div>
             <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
