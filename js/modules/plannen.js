@@ -20,6 +20,16 @@ export function initPlannenModule(appData) {
     if (!appData.plans.categories) appData.plans.categories = ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
     if (!appData.knowledgeHacksIndex) appData.knowledgeHacksIndex = 0;
     if (!appData.knowledgeVault) appData.knowledgeVault = [];
+    
+    // Initialiseer wedstrijden als ze er nog niet zijn met de 4 profclubs als standaard
+    if (!appData.plans.matches) {
+        appData.plans.matches = [
+            { id: 1, club: 'Ajax', opponent: 'Feyenoord', date: '2026-05-15T14:30', location: 'Thuis' },
+            { id: 2, club: 'VVV-Venlo', opponent: 'Roda JC', date: '2026-05-16T20:00', location: 'Uit' },
+            { id: 3, club: 'Arsenal', opponent: 'Chelsea', date: '2026-05-18T17:30', location: 'Thuis' },
+            { id: 4, club: 'Barcelona', opponent: 'Real Madrid', date: '2026-05-20T21:00', location: 'Uit' }
+        ];
+    }
 
     container.innerHTML = `
         <!-- 1. Het Avond-Pact -->
@@ -114,10 +124,55 @@ export function initPlannenModule(appData) {
                 <div id="compass-goals-list" class="space-y-2 pt-1 text-xs"></div>
             </div>
         </div>
+
+        <!-- 4. Voetbal & Wedstrijden Agenda -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-base font-bold text-indigo-950">⚽ Voetbal & Wedstrijden Agenda</h2>
+                <button id="open-match-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">+ Wedstrijd Toevoegen</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Programma van jouw favoriete profclubs en amateurteams.</p>
+
+            <div class="space-y-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="match-filter-club" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="Alle">Alle clubs / teams</option>
+                        <optgroup label="Profclubs">
+                            <option value="Ajax">Ajax</option>
+                            <option value="VVV-Venlo">VVV-Venlo</option>
+                            <option value="Arsenal">Arsenal</option>
+                            <option value="Barcelona">Barcelona</option>
+                        </optgroup>
+                        <optgroup label="Jouw Amateurteams" id="amateur-teams-options"></optgroup>
+                    </select>
+                    <select id="match-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="all">Alle datums</option>
+                        <option value="today">Vandaag</option>
+                        <option value="week">Deze week</option>
+                        <option value="specific-week">Specifieke week...</option>
+                        <option value="month">Deze maand</option>
+                        <option value="specific-month">Specifieke maand...</option>
+                        <option value="year">Dit jaar</option>
+                        <option value="specific-year">Specifiek jaar...</option>
+                        <option value="specific-day">Specifieke dag...</option>
+                    </select>
+                </div>
+                <div id="match-custom-filter-box" class="hidden pt-1">
+                    <input type="date" id="match-custom-date" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="month" id="match-custom-month" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="number" id="match-custom-year" placeholder="Bijv. 2026" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                    <input type="week" id="match-custom-week" class="w-full px-3 py-2 bg-white border rounded-xl hidden text-xs">
+                </div>
+            </div>
+
+            <ul id="match-list" class="space-y-2 mb-2"></ul>
+            <div id="match-more-container" class="text-center"></div>
+        </div>
     `;
 
     initPlannenModals(appData);
     initPlannenLogic(appData);
+    initMatchesLogic(appData);
     renderKnowledgeHack(appData);
 }
 
@@ -221,6 +276,43 @@ function initPlannenModals(appData) {
             </div>
         </div>
 
+        <!-- Wedstrijd Toevoegen Modal -->
+        <div id="match-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">⚽ Wedstrijd Toevoegen</h3>
+                    <button id="close-match-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <form id="match-form" class="space-y-3">
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Jouw Team / Club</label>
+                        <input type="text" id="match-club" placeholder="Bijv. Amateurs Team 1 of Vv Sliedrecht" class="w-full px-3 py-2 border rounded-xl" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Tegenstander</label>
+                        <input type="text" id="match-opponent" placeholder="Naam tegenstander..." class="w-full px-3 py-2 border rounded-xl" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Datum & Tijd</label>
+                            <input type="datetime-local" id="match-date" class="w-full px-3 py-2 border rounded-xl bg-white" required>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Thuis / Uit</label>
+                            <select id="match-location" class="w-full px-3 py-2 border rounded-xl bg-white">
+                                <option value="Thuis">Thuis</option>
+                                <option value="Uit">Uit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" id="cancel-match-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
+                        <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Wedstrijd Opslaan ✨</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Taak Bewerken Modal -->
         <div id="edit-task-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
@@ -312,6 +404,7 @@ function initPlannenModals(appData) {
     const planModal = document.getElementById('plan-beheer-modal');
     const pactModal = document.getElementById('pact-beheer-modal');
     const compassModal = document.getElementById('compass-beheer-modal');
+    const matchModal = document.getElementById('match-modal');
     const editTaskModal = document.getElementById('edit-task-modal');
     const editGoalModal = document.getElementById('edit-goal-modal');
 
@@ -326,6 +419,10 @@ function initPlannenModals(appData) {
     document.getElementById('open-compass-beheer-btn').onclick = () => { compassModal.classList.remove('hidden'); renderCompassBeheerContent(appData); };
     document.getElementById('close-compass-beheer').onclick = () => compassModal.classList.add('hidden');
     document.getElementById('close-compass-bottom').onclick = () => compassModal.classList.add('hidden');
+
+    document.getElementById('open-match-modal').onclick = () => matchModal.classList.remove('hidden');
+    document.getElementById('close-match-modal').onclick = () => matchModal.classList.add('hidden');
+    document.getElementById('cancel-match-modal').onclick = () => matchModal.classList.add('hidden');
 
     document.getElementById('close-edit-task').onclick = () => editTaskModal.classList.add('hidden');
     document.getElementById('cancel-edit-task').onclick = () => editTaskModal.classList.add('hidden');
@@ -473,7 +570,6 @@ function initPlannenLogic(appData) {
         };
     }
 
-    // Event listener voor Avond-Pact datumfilter in de modal
     const pactSearchInput = document.getElementById('pact-search-input');
     const pactDateFilter = document.getElementById('pact-filter-date');
     if (pactSearchInput) pactSearchInput.oninput = () => renderPactBeheerContent(appData);
@@ -497,6 +593,144 @@ function initPlannenLogic(appData) {
     });
 
     renderPlanboardViews(appData);
+}
+
+// Logica voor Voetbal & Wedstrijden
+function initMatchesLogic(appData) {
+    const plans = appData.plans;
+
+    document.getElementById('match-form').onsubmit = (e) => {
+        e.preventDefault();
+        const club = document.getElementById('match-club').value.trim();
+        const opponent = document.getElementById('match-opponent').value.trim();
+        const date = document.getElementById('match-date').value;
+        const location = document.getElementById('match-location').value;
+
+        if (club && opponent && date) {
+            if (!plans.matches) plans.matches = [];
+            plans.matches.push({ id: Date.now(), club, opponent, date, location });
+            saveAppData(appData);
+            e.target.reset();
+            document.getElementById('match-modal').classList.add('hidden');
+            renderMatchesView(appData);
+            showToast("Wedstrijd toegevoegd! ⚽");
+        }
+    };
+
+    document.getElementById('match-filter-club').onchange = () => renderMatchesView(appData);
+    document.getElementById('match-filter-date').onchange = (e) => {
+        const val = e.target.value;
+        setupMatchDateFilter();
+        renderMatchesView(appData);
+    };
+
+    ['match-custom-date', 'match-custom-month', 'match-custom-year', 'match-custom-week'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => renderMatchesView(appData));
+            el.addEventListener('change', () => renderMatchesView(appData));
+        }
+    });
+
+    renderMatchesView(appData);
+}
+
+function setupMatchDateFilter() {
+    const dateFilterSelect = document.getElementById('match-filter-date');
+    const customBox = document.getElementById('match-custom-filter-box');
+    const dateInput = document.getElementById('match-custom-date');
+    const monthInput = document.getElementById('match-custom-month');
+    const yearInput = document.getElementById('match-custom-year');
+    const weekInput = document.getElementById('match-custom-week');
+
+    if (!dateFilterSelect) return;
+
+    if (customBox) customBox.classList.add('hidden');
+    if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
+    if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
+    if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
+    if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
+
+    const val = dateFilterSelect.value;
+    if (val.startsWith('specific-')) {
+        if (customBox) customBox.classList.remove('hidden');
+        if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
+        if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
+        if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
+        if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
+    }
+}
+
+function renderMatchesView(appData) {
+    const plans = appData.plans;
+    const list = document.getElementById('match-list');
+    const moreContainer = document.getElementById('match-more-container');
+    const clubFilter = document.getElementById('match-filter-club').value;
+    const dateFilter = document.getElementById('match-filter-date').value;
+
+    const dateInput = document.getElementById('match-custom-date');
+    const monthInput = document.getElementById('match-custom-month');
+    const yearInput = document.getElementById('match-custom-year');
+    const weekInput = document.getElementById('match-custom-week');
+
+    let customVal = null;
+    if (dateFilter === 'specific-day' && dateInput) customVal = dateInput.value;
+    else if (dateFilter === 'specific-month' && monthInput) customVal = monthInput.value;
+    else if (dateFilter === 'specific-year' && yearInput) customVal = yearInput.value;
+    else if (dateFilter === 'specific-week' && weekInput) customVal = weekInput.value;
+
+    const matches = plans.matches || [];
+
+    // Vul de amateurteams opties dynamisch
+    const profClubs = ['Ajax', 'VVV-Venlo', 'Arsenal', 'Barcelona'];
+    const amateurClubs = [...new Set(matches.filter(m => !profClubs.includes(m.club)).map(m => m.club))];
+    const amateurOptGroup = document.getElementById('amateur-teams-options');
+    if (amateurOptGroup) {
+        amateurOptGroup.innerHTML = amateurClubs.map(c => `<option value="${c}" ${clubFilter === c ? 'selected' : ''}>${c}</option>`).join('');
+    }
+
+    // Filteren
+    const filtered = matches.filter(m => {
+        const matchClub = clubFilter === 'Alle' || m.club === clubFilter;
+        const matchDate = checkDateFilter(m.date, dateFilter, customVal);
+        return matchClub && matchDate;
+    });
+
+    // Sorteren: Eerstvolgende wedstrijd bovenaan (oplopend op datum)
+    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let showAllMatches = window._showAllMatches || false;
+    const displayed = showAllMatches ? filtered : filtered.slice(0, 5);
+
+    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden.</p>' : displayed.map(m => `
+        <li class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-1 flex flex-col">
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-indigo-950">⚽ ${m.club} vs ${m.opponent}</span>
+                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-semibold text-[10px]">${m.location}</span>
+            </div>
+            <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
+                <span>📅 ${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                <button onclick="window.deleteMatch(${m.id})" class="text-red-400 font-bold hover:text-red-600">Verwijderen ✕</button>
+            </div>
+        </li>
+    `).join('');
+
+    if (filtered.length > 5) {
+        moreContainer.innerHTML = `<button id="toggle-more-matches" class="text-[11px] text-indigo-600 font-semibold hover:underline">${showAllMatches ? 'Minder weergeven' : `+ ${filtered.length - 5} meer weergeven...`}</button>`;
+        document.getElementById('toggle-more-matches').onclick = () => {
+            window._showAllMatches = !showAllMatches;
+            renderMatchesView(appData);
+        };
+    } else {
+        moreContainer.innerHTML = '';
+    }
+
+    window.deleteMatch = (id) => {
+        plans.matches = plans.matches.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderMatchesView(appData);
+        showToast("Wedstrijd verwijderd.");
+    };
 }
 
 function renderKnowledgeHack(appData) {
@@ -689,8 +923,8 @@ function renderPlanBeheerContent(appData) {
                 saveAppData(appData);
                 input.value = '';
                 renderPlanBeheerContent(appData);
-                renderCompassBeheerContent(appData); // Synchroniseer direct met kompas beheer
-                initPlannenModule(appData); // Herlaad om selects direct bij te werken
+                renderCompassBeheerContent(appData);
+                initPlannenModule(appData);
                 showToast("Categorie toegevoegd! ✨");
             }
         };
@@ -707,7 +941,6 @@ function renderPlanBeheerContent(appData) {
 
     beheerContainer.innerHTML = `
         <div class="space-y-3 pt-2">
-            <!-- Zoekbalk & Datumfilters -->
             <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <input type="text" id="plan-beheer-search" placeholder="🔍 Zoek in alle taken..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                 <div class="grid grid-cols-2 gap-2">
@@ -1090,8 +1323,8 @@ function renderCompassBeheerContent(appData) {
                 saveAppData(appData);
                 input.value = '';
                 renderCompassBeheerContent(appData);
-                renderPlanBeheerContent(appData); // Synchroniseer direct met planbord beheer
-                initPlannenModule(appData); // Herlaad de module om selects bij te werken
+                renderPlanBeheerContent(appData);
+                initPlannenModule(appData);
                 showToast("Categorie toegevoegd! ✨");
             }
         };
