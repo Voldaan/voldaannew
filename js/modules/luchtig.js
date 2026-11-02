@@ -31,6 +31,8 @@ export function initLuchtigModule(appData) {
         appData.luchtig.customPlaylists = [...DEFAULT_PLAYLISTS];
     }
 
+    const hasDiscogsUser = Boolean(appData.luchtig.discogsUser);
+
     container.innerHTML = `
         <!-- 1. volDaan Draait Luisteromgeving -->
         <div class="bg-gradient-to-br from-emerald-50/90 to-teal-50/50 p-5 rounded-2xl shadow-sm border border-emerald-200/80 mb-4">
@@ -46,10 +48,7 @@ export function initLuchtigModule(appData) {
             </div>
             <p class="text-xs text-gray-600 mb-3">Jouw favoriete luisteromgeving.</p>
             
-            <!-- Uitgelichte Actieve Speler -->
             <div id="featured-player-box" class="p-3.5 bg-white border border-emerald-200 rounded-xl mb-3 shadow-xs space-y-2"></div>
-
-            <!-- Overige Playlists -->
             <div id="playlists-container" class="space-y-2"></div>
         </div>
 
@@ -57,15 +56,20 @@ export function initLuchtigModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <div class="flex justify-between items-center mb-1.5">
                 <h2 class="text-base font-bold text-indigo-900">🞊 Mijn Discogs Collectie</h2>
-                <button id="save-discogs-user" class="text-xs text-indigo-600 hover:underline font-semibold">Instellen 🔄</button>
+                <button id="toggle-discogs-edit" class="text-xs text-indigo-600 hover:underline font-semibold">${hasDiscogsUser ? 'Wijzigen ⚙️' : 'Instellen 🔄'}</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Bekijk je persoonlijke vinyl catalogus rechtstreeks in de app.</p>
+            <p class="text-xs text-gray-500 mb-3">Doorzoek je volledige vinyl catalogus.</p>
             
-            <div id="discogs-input-box" class="mb-3">
-                <input type="text" id="discogs-username-input" placeholder="Vul je Discogs gebruikersnaam in..." value="${appData.luchtig.discogsUser || ''}" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs mb-2">
-                <button id="fetch-discogs-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Laad Discogs Catalogus ✨</button>
+            <div id="discogs-input-box" class="${hasDiscogsUser ? 'hidden' : ''} mb-3 space-y-2">
+                <input type="text" id="discogs-username-input" placeholder="Vul je Discogs gebruikersnaam in..." value="${appData.luchtig.discogsUser || ''}" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs">
+                <button id="fetch-discogs-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition">Laad Gehele Catalogus ✨</button>
             </div>
-            <div id="discogs-catalog-container" class="space-y-2 max-h-56 overflow-y-auto"></div>
+
+            <div id="discogs-controls" class="${hasDiscogsUser ? '' : 'hidden'} mb-2.5">
+                <input type="text" id="discogs-search-input" placeholder="Zoek op artiest of album in je collectie..." class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
+            </div>
+
+            <div id="discogs-catalog-container" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
         </div>
 
         <!-- 3. Evert Kwok / Droge Humor -->
@@ -77,7 +81,7 @@ export function initLuchtigModule(appData) {
             <button id="next-humor-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">Nieuwe droge humor ✨</button>
         </div>
 
-        <!-- 4. Oneindige Sudoku Puzzel met geforceerde 3x3 bloklijnen -->
+        <!-- 4. Oneindige Sudoku Puzzel met geforceerde 3x3 rasterlijnen -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-base font-bold text-indigo-900">🧩 Oneindige Sudoku</h2>
@@ -102,7 +106,6 @@ function initLuchtigModals(appData) {
     if (document.getElementById('playlist-modal')) return;
 
     const modalsHTML = `
-        <!-- Playlist Toevoegen Modal -->
         <div id="playlist-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
@@ -112,7 +115,7 @@ function initLuchtigModals(appData) {
                 <form id="playlist-form" class="space-y-3">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Titel</label>
-                        <input type="text" id="modal-pl-title" placeholder="Bijv. Ochtend Focus of volDaan Mix" class="w-full px-3 py-2 border rounded-xl" required>
+                        <input type="text" id="modal-pl-title" placeholder="Bijv. Ochtend Focus" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Omschrijving</label>
@@ -130,7 +133,6 @@ function initLuchtigModals(appData) {
             </div>
         </div>
 
-        <!-- Playlist Beheer & Volgorde Modal -->
         <div id="playlists-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs max-h-[85vh] overflow-y-auto">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -143,7 +145,6 @@ function initLuchtigModals(appData) {
     `;
     document.body.insertAdjacentHTML('beforeend', modalsHTML);
 
-    // Playlist toevoegen modal
     const modal = document.getElementById('playlist-modal');
     document.getElementById('open-playlist-modal').onclick = () => modal.classList.remove('hidden');
     document.getElementById('close-playlist-modal').onclick = () => modal.classList.add('hidden');
@@ -166,7 +167,6 @@ function initLuchtigModals(appData) {
         }
     };
 
-    // Beheer modal
     const beheerModal = document.getElementById('playlists-beheer-modal');
     document.getElementById('open-playlists-beheer').onclick = () => {
         beheerModal.classList.remove('hidden');
@@ -213,6 +213,8 @@ function renderBeheerModalList(appData) {
     };
 }
 
+let fullDiscogsCatalog = [];
+
 function initLuchtigLogic(appData) {
     let humorIndex = Math.floor(Math.random() * HUMOR_DB.length);
     const humorCard = document.getElementById('humor-card');
@@ -228,63 +230,112 @@ function initLuchtigLogic(appData) {
 
     renderPlaylists(appData);
 
-    // Discogs functionaliteit
+    // Knop om Discogs instellingen in te klappen / uit te klappen
+    const toggleBtn = document.getElementById('toggle-discogs-edit');
+    const inputBox = document.getElementById('discogs-input-box');
+    
+    toggleBtn.onclick = () => {
+        inputBox.classList.toggle('hidden');
+        toggleBtn.textContent = inputBox.classList.contains('hidden') ? 'Wijzigen ⚙️' : 'Sluiten ✕';
+    };
+
     document.getElementById('fetch-discogs-btn').onclick = () => {
         const username = document.getElementById('discogs-username-input').value.trim();
         if (username) {
             appData.luchtig.discogsUser = username;
             saveAppData(appData);
-            fetchDiscogsCollection(username);
-            showToast("Discogs catalogus wordt geladen... 🞊");
+            inputBox.classList.add('hidden');
+            toggleBtn.textContent = 'Wijzigen ⚙️';
+            document.getElementById('discogs-controls').classList.remove('hidden');
+            fetchAllDiscogsReleases(username);
+            showToast("Gehele Discogs catalogus wordt geladen... 🞊");
         } else {
             showToast("Vul een gebruikersnaam in.");
         }
     };
 
+    // Zoekfunctie binnen eigen collectie
+    const searchInput = document.getElementById('discogs-search-input');
+    if (searchInput) {
+        searchInput.oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = fullDiscogsCatalog.filter(item => {
+                const basic = item.basic_information;
+                const title = (basic.title || '').toLowerCase();
+                const artist = (basic.artists ? basic.artists.map(a => a.name).join(' ') : '').toLowerCase();
+                return title.includes(term) || artist.includes(term);
+            });
+            renderDiscogsList(filtered);
+        };
+    }
+
     if (appData.luchtig.discogsUser) {
-        fetchDiscogsCollection(appData.luchtig.discogsUser);
+        fetchAllDiscogsReleases(appData.luchtig.discogsUser);
     }
 
     initSudokuGame(appData);
 }
 
-async function fetchDiscogsCollection(username) {
+// Haal ALLE platen op door pagina's te doorlopen
+async function fetchAllDiscogsReleases(username) {
     const container = document.getElementById('discogs-catalog-container');
-    container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Platencollectie ophalen van Discogs...</p>`;
+    container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Hele collectie ophalen van Discogs...</p>`;
 
     try {
-        // Discogs publieke API voor collectie
-        const response = await fetch(`https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=10`);
-        if (!response.ok) throw new Error("Kon collectie niet ophalen");
-        const data = await response.json();
+        let page = 1;
+        let allReleases = [];
+        let totalPages = 1;
 
-        if (!data.releases || data.releases.length === 0) {
-            container.innerHTML = `<p class="text-xs text-gray-400 italic text-center">Geen platen gevonden voor gebruiker '${username}'.</p>`;
-            return;
+        // Haal maximaal 5 pagina's op (tot 500 platen) om snelheid te waarborgen
+        while (page <= totalPages && page <= 5) {
+            const response = await fetch(`https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100&page=${page}`);
+            if (!response.ok) throw new Error("Kon collectie niet ophalen");
+            const data = await response.json();
+            
+            if (data.pagination) {
+                totalPages = data.pagination.pages;
+            }
+            if (data.releases) {
+                allReleases = allReleases.concat(data.releases);
+            }
+            page++;
         }
 
-        container.innerHTML = data.releases.map(item => {
-            const basic = item.basic_information;
-            const title = basic.title || 'Onbekend album';
-            const artist = basic.artists ? basic.artists.map(a => a.name).join(', ') : 'Onbekende artiest';
-            const year = basic.year ? `(${basic.year})` : '';
-            const cover = basic.cover_image || '';
-
-            return `
-                <div class="flex items-center gap-3 p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
-                    <img src="${cover}" alt="cover" class="w-10 h-10 object-cover rounded-lg border shadow-xs">
-                    <div class="flex-1 overflow-hidden">
-                        <p class="font-bold text-indigo-950 truncate">${artist} - ${title}</p>
-                        <p class="text-[10px] text-gray-500">Release jaar: ${year}</p>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        fullDiscogsCatalog = allReleases;
+        document.getElementById('discogs-controls').classList.remove('hidden');
+        renderDiscogsList(fullDiscogsCatalog);
+        showToast(`${fullDiscogsCatalog.length} platen geladen! 🞊`);
 
     } catch (err) {
         console.error(err);
         container.innerHTML = `<p class="text-xs text-red-500 text-center py-2">Kon collectie niet laden. Controleer de Discogs gebruikersnaam.</p>`;
     }
+}
+
+function renderDiscogsList(releases) {
+    const container = document.getElementById('discogs-catalog-container');
+    if (!releases || releases.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Geen platen gevonden.</p>`;
+        return;
+    }
+
+    container.innerHTML = `<p class="text-[10px] text-gray-400 mb-1">Totaal weergegeven: ${releases.length} releases</p>` + releases.map(item => {
+        const basic = item.basic_information;
+        const title = basic.title || 'Onbekend album';
+        const artist = basic.artists ? basic.artists.map(a => a.name).join(', ') : 'Onbekende artiest';
+        const year = basic.year ? `(${basic.year})` : '';
+        const cover = basic.cover_image || '';
+
+        return `
+            <div class="flex items-center gap-3 p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs">
+                <img src="${cover}" alt="cover" class="w-10 h-10 object-cover rounded-lg border shadow-xs">
+                <div class="flex-1 overflow-hidden">
+                    <p class="font-bold text-indigo-950 truncate">${artist} - ${title}</p>
+                    <p class="text-[10px] text-gray-500">Release jaar: ${year}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderPlaylists(appData) {
@@ -295,7 +346,6 @@ function renderPlaylists(appData) {
     const activePlaylist = playlists[0] || DEFAULT_PLAYLISTS[0];
     const otherPlaylists = playlists.slice(1);
 
-    // Uitgelichte speler bovenaan met subtiele Luister-knop
     featuredBox.innerHTML = `
         <div class="flex justify-between items-center">
             <div>
@@ -306,7 +356,6 @@ function renderPlaylists(appData) {
         </div>
     `;
 
-    // Overige playlists met dezelfde subtiele Luister-knop
     container.innerHTML = otherPlaylists.length === 0 ? '' : otherPlaylists.map((p) => `
         <div class="p-2.5 bg-gray-50 border border-gray-100 rounded-xl flex justify-between items-center text-xs">
             <div>
@@ -318,7 +367,7 @@ function renderPlaylists(appData) {
     `).join('');
 }
 
-// Sudoku Generator met extra dikke 3x3 bloklijnen (zowel horizontaal als verticaal)
+// Sudoku Generator met extra krachtige geforceerde inline CSS voor de 3x3 verticale lijnen
 function initSudokuGame(appData) {
     if (!appData.luchtig.sudokuGame || !appData.luchtig.sudokuGame.puzzle) {
         generateNewSudoku(appData);
@@ -419,12 +468,13 @@ function renderSudokuBoard(appData) {
             input.min = '1';
             input.max = '9';
             
-            // Keiharde 3x3 rasterlijnen zowel verticaal als horizontaal
-            let borderClasses = 'border border-indigo-200';
-            if (c === 2 || c === 5) borderClasses += ' border-r-2 border-r-indigo-950';
-            if (r === 2 || r === 5) borderClasses += ' border-b-2 border-b-indigo-950';
+            // GEFORCEERDE INLINE STIJLEN VOOR DE 3X3 BLOKLIJNEN
+            let borderStyle = 'border: 1px solid #c7d2fe;';
+            if (c === 2 || c === 5) borderStyle += ' border-right: 3px solid #030712 !important;';
+            if (r === 2 || r === 5) borderStyle += ' border-bottom: 3px solid #030712 !important;';
 
-            input.className = `sudoku-cell w-8 h-8 text-center text-xs font-bold rounded-none focus:outline-none focus:ring-1 focus:ring-emerald-500 ${borderClasses} ${
+            input.style.cssText = borderStyle;
+            input.className = `sudoku-cell w-8 h-8 text-center text-xs font-bold rounded-none focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
                 isInitial ? 'bg-indigo-100 text-indigo-950 font-extrabold' : 'bg-white text-emerald-800'
             }`;
 
