@@ -9,7 +9,7 @@ const DEFAULT_PLAYLISTS = [
 
 const DEFAULT_NEWS_SOURCES = [
     { name: "Alles", url: "ALL" },
-    { name: "3voor12", url: "https://3voor12.vpro.nl/meedraaien/rss.xml" },
+    { name: "3voor12", url: "https://3voor12.vpro.nl/rss.xml" }, // Gecorrigeerde werkende RSS feed url
     { name: "OOR", url: "https://oor.nl/feed/" },
     { name: "Blues Magazine", url: "https://www.bluesmagazine.nl/feed/" },
     { name: "MusicMeter", url: "https://www.musicmeter.nl/rss/" },
@@ -32,7 +32,7 @@ export function initLuchtigModule(appData) {
             discogsUser: '', 
             sudokuGame: null, 
             activeNewsSource: 'Alles',
-            discogsTab: 'collection' // 'collection' of 'wantlist'
+            discogsTab: 'collection' 
         };
     }
     if (!appData.luchtig.newsSources) {
@@ -90,10 +90,13 @@ export function initLuchtigModule(appData) {
             </div>
         </div>
 
-        <!-- 3. volDaan Draait Vinyl (Discogs met Collectie & Wantlist tabbladen) -->
+        <!-- 3. volDaan Draait Vinyl (Met zichtbaar vinyl icoontje) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-indigo-200/80 mb-4">
             <div class="flex justify-between items-center mb-1.5">
-                <h2 class="text-base font-bold text-indigo-900">🞊 volDaan Draait Vinyl</h2>
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">💿</span>
+                    <h2 class="text-base font-bold text-indigo-900">volDaan Draait Vinyl</h2>
+                </div>
                 <button id="toggle-discogs-edit" class="text-xs text-indigo-600 hover:underline font-semibold">${hasDiscogsUser ? 'Wijzigen ⚙️' : 'Instellen 🔄'}</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Beheer en doorzoek je vinyl collectie en verlanglijst.</p>
@@ -104,7 +107,6 @@ export function initLuchtigModule(appData) {
             </div>
 
             <div id="discogs-content-section" class="${hasDiscogsUser ? '' : 'hidden'} space-y-2.5">
-                <!-- Tabbladen switcher -->
                 <div class="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl">
                     <button id="discogs-tab-coll" class="py-1.5 rounded-lg text-xs font-bold transition ${currentDiscogsTab === 'collection' ? 'bg-white text-indigo-950 shadow-xs' : 'text-gray-500 hover:text-gray-900'}">Collectie</button>
                     <button id="discogs-tab-want" class="py-1.5 rounded-lg text-xs font-bold transition ${currentDiscogsTab === 'wantlist' ? 'bg-white text-indigo-950 shadow-xs' : 'text-gray-500 hover:text-gray-900'}">Wantlist</button>
@@ -177,7 +179,6 @@ function initLuchtigModals(appData) {
             </div>
         </div>
 
-        <!-- Netjes ingeperkte Nieuwsbronnen Beheer Modal -->
         <div id="news-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl space-y-3 text-xs max-h-[80vh] overflow-y-auto border border-gray-200">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -352,7 +353,6 @@ function initLuchtigLogic(appData) {
         showToast("Nieuws ververst! 🎸");
     };
 
-    // Discogs tabbladen (Collectie vs Wantlist)
     document.getElementById('discogs-tab-coll').onclick = () => {
         appData.luchtig.discogsTab = 'collection';
         saveAppData(appData);
@@ -432,7 +432,6 @@ async function fetchDiscogsData(username) {
     container.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">Collectie en wantlist ophalen van Discogs...</p>`;
 
     try {
-        // 1. Haal Collectie op
         let page = 1;
         let allReleases = [];
         let totalPages = 1;
@@ -447,7 +446,6 @@ async function fetchDiscogsData(username) {
         }
         fullDiscogsCatalog = allReleases;
 
-        // 2. Haal Wantlist op
         let wantPage = 1;
         let allWants = [];
         let totalWantPages = 1;
@@ -464,7 +462,7 @@ async function fetchDiscogsData(username) {
 
         document.getElementById('discogs-content-section').classList.remove('hidden');
         updateDiscogsTabsUI(appData);
-        showToast(`Geladen: ${fullDiscogsCatalog.length} platen, ${fullDiscogsWantlist.length} wantlist items! 🞊`);
+        showToast(`Geladen: ${fullDiscogsCatalog.length} platen, ${fullDiscogsWantlist.length} wantlist items! 🎵`);
 
     } catch (err) {
         console.error(err);
