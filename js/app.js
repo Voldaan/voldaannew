@@ -9,15 +9,13 @@ import { initKnowledgeModule } from './modules/knowledge.js';
 import { initLuchtigModule } from './modules/luchtig.js';
 import { initInsightsModule } from './modules/insights.js';
 
-// Cache voor externe data (weer & nieuws)
 let cachedWeather = null;
 let cachedNews = null;
 
 async function fetchTegelenWeather() {
     if (cachedWeather) return cachedWeather;
     try {
-        // Open-Meteo coördinaten voor Tegelen
-        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.36&longitude=6.16¤t=temperature_2m,weather_code');
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.36&longitude=6.16¤t=temperature_2m');
         const data = await res.json();
         if (data && data.current) {
             const temp = Math.round(data.current.temperature_2m);
@@ -33,7 +31,6 @@ async function fetchTegelenWeather() {
 async function fetchOmroepVenloNews() {
     if (cachedNews) return cachedNews;
     try {
-        // Ophalen via een publieke CORS proxy of RSS-feed van Omroep Venlo
         const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.omroepvenlo.nl/nieuws/rss');
         const data = await res.json();
         if (data && data.items && data.items.length > 0) {
@@ -53,7 +50,8 @@ export async function updateGlobalTicker(appData) {
 
     if (!appData.tickerSettings) {
         appData.tickerSettings = {
-            speed: '20',
+            enabled: true,
+            speed: '50',
             showMatches: true,
             showTasks: true,
             showMoney: true,
@@ -63,6 +61,12 @@ export async function updateGlobalTicker(appData) {
     }
 
     const settings = appData.tickerSettings;
+
+    if (settings.enabled === false) {
+        wrapper.classList.add('hidden');
+        return;
+    }
+
     track.style.setProperty('--ticker-speed', `${settings.speed}s`);
 
     let items = [];
@@ -90,7 +94,7 @@ export async function updateGlobalTicker(appData) {
         });
     }
 
-    // 2. Focus taken uit het zachte planbord (openstaande taken)
+    // 2. Focus taken uit het zachte planbord
     if (settings.showTasks) {
         const tasks = (appData.plans?.tasks || []).filter(t => !t.archived && !t.completed && !t.done);
         tasks.slice(0, 5).forEach(t => {
@@ -98,10 +102,29 @@ export async function updateGlobalTicker(appData) {
         });
     }
 
-    // 3. Verwachte uitgaven deze week (uit geld module)
+    // 3. Openstaande verwachte uitgaven vanaf vandaag tot einde van de week
     if (settings.showMoney) {
-        const transactions = (appData.money?.transactions || []).filter(tx => tx.type === 'uitgave' || tx.amount < 0);
-        transactions.slice(0, 3).forEach(tx => {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const endOfWeek = new Date();
+        const dayOfWeek = now.getDay();
+        const daysUntilSunday = dayOfWeek === 0 ? 0 : (7 - dayOfWeek);
+        endOfWeek.setDate(now.getDate() + daysUntilSunday);
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const transactions = (appData.money?.transactions || []).filter(tx => {
+            const isUitgave = tx.type === 'uitgave' || tx.amount < 0 || tx.bedrag < 0;
+            const isNietAfgevinkt = !tx.completed && !tx.done && !tx.afgevinkt;
+            
+            const txDateStr = tx.date || tx.datum;
+            if (!isUitgave || !isNietAfgevinkt || !txDateStr) return false;
+
+            const txDate = new Date(txDateStr);
+            return txDate >= now && txDate <= endOfWeek;
+        });
+
+        transactions.forEach(tx => {
             const amount = Math.abs(tx.amount || tx.bedrag || 0);
             items.push(`<div class="ticker-pill"><span class="text-amber-800">💰 Uitgave: ${tx.description || tx.titel || 'Kosten'} (€${amount})</span></div>`);
         });
@@ -128,7 +151,6 @@ export async function updateGlobalTicker(appData) {
 
     wrapper.classList.remove('hidden');
     const combinedHTML = items.join(`<span class="mx-3 text-emerald-300">•</span>`);
-    // Verdubbel voor naadloze oneindige loop
     track.innerHTML = combinedHTML + `<span class="mx-3 text-emerald-300">•</span>` + combinedHTML;
 }
 
@@ -137,6 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.updateGlobalTicker = () => updateGlobalTicker(appData);
     window.updateGlobalTicker();
+
+    // Klik op ticker om te pauzeren / hervatten
+    const tickerTrack = document.getElementById('global-ticker-track');
+    if (tickerTrack) {
+        tickerTrack.onclick = () => {
+            tickerTrack.classList.toggle('ticker-paused');
+        };
+    }
 
     // Modal logica voor Live Ticker instellingen
     const tickerModal = document.getElementById('ticker-settings-modal');
@@ -148,7 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
         openTickerBtn.onclick = () => {
             tickerModal.classList.remove('hidden');
             const settings = appData.tickerSettings || {};
-            document.getElementById('ticker-speed-select').value = settings.speed || '20';
+            document.getElementById('ticker-enabled-checkbox').checked = settings.enabled ?? true;
+            document.getElementById('ticker-speed-select').value = settings.speed || '50';
             document.getElementById('show-ticker-matches').checked = settings.showMatches ?? true;
             document.getElementById('show-ticker-tasks').checked = settings.showTasks ?? true;
             document.getElementById('show-ticker-money').checked = settings.showMoney ?? true;
@@ -164,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveTickerBtn && tickerModal) {
         saveTickerBtn.onclick = () => {
             appData.tickerSettings = {
+                enabled: document.getElementById('ticker-enabled-checkbox').checked,
                 speed: document.getElementById('ticker-speed-select').value,
                 showMatches: document.getElementById('show-ticker-matches').checked,
                 showTasks: document.getElementById('show-ticker-tasks').checked,
