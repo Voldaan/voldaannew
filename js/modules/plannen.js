@@ -28,24 +28,11 @@ export function initPlannenModule(appData) {
     if (!appData.plans.matches) appData.plans.matches = [];
 
     container.innerHTML = `
-        <!-- Wedstrijden Deze Week Ticker (Bewegende Balk) -->
-        <div id="weekly-matches-ticker-container" class="hidden mb-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-3 shadow-sm overflow-hidden relative">
-            <div class="flex items-center gap-2 mb-1.5 px-1">
-                <span class="text-xs font-bold text-emerald-900 flex items-center gap-1">⚽ Wedstrijden Deze Week</span>
-                <div class="h-px bg-emerald-200 flex-1"></div>
-            </div>
-            <div class="relative overflow-hidden whitespace-nowrap py-1">
-                <div id="ticker-track" class="inline-flex gap-8 items-center text-xs font-semibold text-emerald-950 animate-marquee">
-                    <!-- Wordt dynamisch ingevuld -->
-                </div>
-            </div>
-        </div>
-
         <!-- 1. Het Avond-Pact -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(253, 230, 138, 0.9);">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950 flex items-center gap-1.5"><span>🌙</span> Het Avond-Pact</h2>
-                <button id="open-pact-beheer-btn" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">Beheer</button>
+                <button id="open-pact-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Wat laat je vandaag achter voor morgen?</p>
             
@@ -60,7 +47,7 @@ export function initPlannenModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">🎯 Het Zachte Planbord</h2>
-                <button id="open-plan-beheer-btn" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">Beheer</button>
+                <button id="open-plan-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Taken structureren op jouw tempo.</p>
             
@@ -86,7 +73,7 @@ export function initPlannenModule(appData) {
         <div class="bg-gradient-to-r from-amber-50/80 to-amber-100/50 p-4 rounded-2xl shadow-sm border border-amber-200/70 mb-4 text-xs space-y-2">
             <div class="flex justify-between items-center">
                 <span id="hack-title" class="font-bold text-amber-950 text-sm flex items-center gap-1.5">🧠 De 2-Minuten Regel</span>
-                <button id="next-hack-btn" class="px-2.5 py-1 bg-white border border-amber-300 text-amber-900 rounded-lg text-[11px] font-semibold hover:bg-amber-100 transition shadow-sm">💡 Volgende Tip</button>
+                <button id="next-hack-btn" class="px-2.5 py-1 bg-white border border-amber-300 text-amber-900 rounded-lg text-[11px] font-semibold hover:bg-amber-100 transition shadow-2xs">💡 Volgende Tip</button>
             </div>
             <p id="hack-text" class="text-amber-900/90 leading-relaxed"></p>
         </div>
@@ -95,7 +82,7 @@ export function initPlannenModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">🧭 Het Zachte KomPAS</h2>
-                <button id="open-compass-beheer-btn" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">Beheer</button>
+                <button id="open-compass-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
             </div>
             <p class="text-xs text-gray-500 mb-3">Langetermijn voornemens met een ingebouwd veiligheidsnet.</p>
             
@@ -139,8 +126,8 @@ export function initPlannenModule(appData) {
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-950">⚽ Voetbal & Wedstrijden Agenda</h2>
                 <div class="flex gap-1.5">
-                    <button id="open-club-beheer-btn" class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition shadow-sm">⚙️ Beheer Clubs</button>
-                    <button id="open-match-modal" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-sm">+ Wedstrijd</button>
+                    <button id="open-club-beheer-btn" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer Clubs</button>
+                    <button id="open-match-modal" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">+ Wedstrijd</button>
                 </div>
             </div>
             <p class="text-xs text-gray-500 mb-3">Beheer al je wedstrijden en teams overzichtelijk in eigen hand.</p>
@@ -179,7 +166,6 @@ export function initPlannenModule(appData) {
     initPlannenLogic(appData);
     initMatchesLogic(appData);
     renderKnowledgeHack(appData);
-    renderWeeklyTicker(appData);
 }
 
 function initPlannenModals(appData) {
@@ -600,7 +586,10 @@ function initMatchesLogic(appData) {
             e.target.reset();
             document.getElementById('match-modal').classList.add('hidden');
             renderMatchesView(appData);
-            renderWeeklyTicker(appData);
+            
+            // Direct verversen van de globale live ticker
+            if (window.updateGlobalTicker) window.updateGlobalTicker();
+
             showToast("Wedstrijd succesvol toegevoegd! ⚽");
         }
     };
@@ -646,7 +635,7 @@ function renderClubBeheerContent(appData) {
     listEl.innerHTML = clubs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen favoriete clubs ingesteld.</p>' : clubs.map(c => `
         <div class="flex justify-between items-center p-2.5 bg-gray-50 border rounded-xl text-xs">
             <span class="font-bold text-indigo-950">⚽ ${c}</span>
-            <button onclick="window.deleteFavoriteClub('${c}')" class="text-red-400 font-bold hover:text-red-600 px-2">Verwijderen ✕</button>
+            <button onclick="window.deleteFavoriteClub('${c}')" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
         </div>
     `).join('');
 
@@ -686,57 +675,6 @@ function setupMatchDateFilter() {
         if (val === 'specific-year') document.getElementById('match-custom-year')?.classList.remove('hidden');
         if (val === 'specific-week') document.getElementById('match-custom-week')?.classList.remove('hidden');
     }
-}
-
-// Logica voor de bewegende balk (Ticker) met wedstrijden deze week
-function renderWeeklyTicker(appData) {
-    const container = document.getElementById('weekly-matches-ticker-container');
-    const track = document.getElementById('ticker-track');
-    if (!container || !track) return;
-
-    const matches = appData.plans?.matches || [];
-    const now = new Date();
-    
-    // Bereken het einde van deze week (komende zondag om 23:59:59)
-    const endOfWeek = new Date();
-    const dayOfWeek = now.getDay(); // 0 = zondag, 1 = maandag, etc.
-    const daysUntilSunday = dayOfWeek === 0 ? 0 : (7 - dayOfWeek);
-    endOfWeek.setDate(now.getDate() + daysUntilSunday);
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    // Filter: alleen wedstrijden vanaf NU tot komende zondag die nog gespeeld moeten worden
-    const upcomingThisWeek = matches.filter(m => {
-        const matchDate = new Date(m.date);
-        return matchDate >= now && matchDate <= endOfWeek;
-    });
-
-    upcomingThisWeek.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    if (upcomingThisWeek.length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
-
-    container.classList.remove('hidden');
-
-    // Maak de lijst van items klaar voor de ticker
-    const tickerItemsHTML = upcomingThisWeek.map(m => {
-        const isThuis = m.location === 'Thuis';
-        const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
-        const dateFormatted = new Date(m.date).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-        
-        return `
-            <div class="inline-flex items-center gap-2 bg-white/80 border border-emerald-200/70 px-3 py-1.5 rounded-xl shadow-2xs">
-                <span class="text-emerald-700 font-bold">⚽ ${displayTeams}</span>
-                <span class="text-gray-400 font-normal">|</span>
-                <span class="text-gray-600 font-medium">📅 ${dateFormatted}</span>
-                <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">${m.location}</span>
-            </div>
-        `;
-    }).join('');
-
-    // Verdubbel de items zodat de animatie naadloos en traploos doorloopt
-    track.innerHTML = tickerItemsHTML + `<span class="mx-4 text-emerald-300">•</span>` + tickerItemsHTML;
 }
 
 function renderMatchesView(appData) {
@@ -787,7 +725,7 @@ function renderMatchesView(appData) {
                 </div>
                 <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
                     <span>📅 ${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                    <button onclick="window.deleteMatch('${m.id}')" class="text-red-400 font-bold hover:text-red-600">Verwijderen ✕</button>
+                    <button onclick="window.deleteMatch('${m.id}')" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
                 </div>
             </li>
         `;
@@ -807,7 +745,10 @@ function renderMatchesView(appData) {
         plans.matches = plans.matches.filter(x => String(x.id) !== String(id));
         saveAppData(appData);
         renderMatchesView(appData);
-        renderWeeklyTicker(appData);
+        
+        // Direct verversen van de globale live ticker
+        if (window.updateGlobalTicker) window.updateGlobalTicker();
+
         showToast("Wedstrijd verwijderd.");
     };
 }
@@ -1233,32 +1174,6 @@ function renderPlanBeheerFilteredList(appData) {
             showToast("Taak verwijderd! 🗑️");
         }
     };
-}
-
-function setupPactDateFilterListeners() {
-    const dateFilterSelect = document.getElementById('pact-filter-date');
-    const customBox = document.getElementById('pact-custom-filter-box');
-    const dateInput = document.getElementById('pact-custom-date');
-    const monthInput = document.getElementById('pact-custom-month');
-    const yearInput = document.getElementById('pact-custom-year');
-    const weekInput = document.getElementById('pact-custom-week');
-
-    if (!dateFilterSelect) return;
-
-    if (customBox) customBox.classList.add('hidden');
-    if (dateInput) { dateInput.classList.add('hidden'); dateInput.value = ''; }
-    if (monthInput) { monthInput.classList.add('hidden'); monthInput.value = ''; }
-    if (yearInput) { yearInput.classList.add('hidden'); yearInput.value = ''; }
-    if (weekInput) { weekInput.classList.add('hidden'); weekInput.value = ''; }
-
-    const val = dateFilterSelect.value;
-    if (val.startsWith('specific-')) {
-        if (customBox) customBox.classList.remove('hidden');
-        if (val === 'specific-day' && dateInput) dateInput.classList.remove('hidden');
-        if (val === 'specific-month' && monthInput) monthInput.classList.remove('hidden');
-        if (val === 'specific-year' && yearInput) yearInput.classList.remove('hidden');
-        if (val === 'specific-week' && weekInput) weekInput.classList.remove('hidden');
-    }
 }
 
 function renderPactBeheerContent(appData) {
