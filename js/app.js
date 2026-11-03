@@ -9,8 +9,64 @@ import { initKnowledgeModule } from './modules/knowledge.js';
 import { initLuchtigModule } from './modules/luchtig.js';
 import { initInsightsModule } from './modules/insights.js';
 
+// Globale Ticker Functie (Laat wedstrijden deze week zien)
+export function updateGlobalTicker(appData) {
+    const wrapper = document.getElementById('global-ticker-container');
+    const track = document.getElementById('global-ticker-track');
+    if (!wrapper || !track) return;
+
+    const matches = appData.plans?.matches || [];
+    const now = new Date();
+    
+    // Einde van deze week (komende zondag 23:59:59)
+    const endOfWeek = new Date();
+    const dayOfWeek = now.getDay();
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : (7 - dayOfWeek);
+    endOfWeek.setDate(now.getDate() + daysUntilSunday);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Filter wedstrijden deze week die vanaf nu tot einde week spelen
+    const upcomingThisWeek = matches.filter(m => {
+        const matchDate = new Date(m.date);
+        return matchDate >= now && matchDate <= endOfWeek;
+    });
+
+    upcomingThisWeek.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (upcomingThisWeek.length === 0) {
+        wrapper.classList.add('hidden');
+        return;
+    }
+
+    wrapper.classList.remove('hidden');
+
+    const itemsHTML = upcomingThisWeek.map(m => {
+        const isThuis = m.location === 'Thuis';
+        const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
+        const dateFormatted = new Date(m.date).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        
+        return `
+            <div class="ticker-pill">
+                <span class="text-emerald-800">⚽ ${displayTeams}</span>
+                <span class="text-emerald-300">|</span>
+                <span class="text-gray-500 font-normal">📅 ${dateFormatted}</span>
+                <span class="px-1 py-0.2 bg-emerald-100 text-emerald-800 rounded text-[9px] font-bold">${m.location}</span>
+            </div>
+        `;
+    }).join('');
+
+    // Verdubbel de items zodat de oneindige loop naadloos doorloopt
+    track.innerHTML = itemsHTML + `<span class="mx-3 text-emerald-300">•</span>` + itemsHTML;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     let appData = loadAppData();
+
+    // Maak updateGlobalTicker globaal beschikbaar zodat plannen.js deze ook direct kan aanroepen bij wijzigingen
+    window.updateGlobalTicker = () => updateGlobalTicker(appData);
+
+    // Initialiseer de ticker direct bij opstarten
+    window.updateGlobalTicker();
 
     // Initialiseer alle modules direct bij opstarten zodat de DOM-elementen bestaan
     try { initVandaagModule(appData); } catch (e) { console.error("Fout Vandaag:", e); }
