@@ -45,3 +45,26 @@ img, svg, video, canvas {
     max-width: 100%;
     height: auto;
 }
+
+/* ==========================================
+   MARQUEE / TICKER ANIMATIE VOOR VOETBAL
+   ================================---------- */
+@keyframes marquee {
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-marquee {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: marquee 30s linear infinite; /* Pas de snelheid aan door seconden te verhogen/verlagen */
+}
+
+/* Pauzeer de beweging subtiel als je met de muis over de balk gaat */
+.animate-marquee:hover {
+    animation-play-state: paused;
+}
