@@ -24,7 +24,7 @@ html, body {
     width: 100%;
 }
 
-/* Zorg dat de inhoud onder de vaste header begint */
+/* Zorg dat de inhoud netjes onder de vaste header begint */
 .main-content-spacing {
     padding-top: 5.5rem !important;
 }
@@ -52,8 +52,25 @@ section.view-section > div {
     box-shadow: 0 2px 4px 0 rgba(15, 23, 42, 0.04);
 }
 
-input, select, textarea, button {
-    font-size: 14px !important;
+/* ==========================================
+   VERFIJNDE SCHALING VOOR KNOPPEN & INPUTS
+   ========================================== */
+/* We zorgen dat formulieren en knoppen weer netjes compact en in balans zijn */
+input[type="text"], 
+input[type="number"], 
+input[type="date"], 
+input[type="month"], 
+input[type="week"], 
+input[type="datetime-local"], 
+select, 
+textarea {
+    font-size: 13px !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+/* Algemene reset voor knoppen zodat ze niet te grof ogen */
+button {
+    font-size: 12px !important;
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
