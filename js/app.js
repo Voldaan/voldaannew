@@ -69,7 +69,7 @@ export async function updateGlobalTicker(appData) {
     if (!appData.tickerSettings) {
         appData.tickerSettings = {
             enabled: true,
-            speed: '50',
+            speed: '80',
             showMatches: true,
             showTasks: true,
             showMoney: true,
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tickerModal.classList.remove('hidden');
             const settings = appData.tickerSettings || {};
             document.getElementById('ticker-enabled-checkbox').checked = settings.enabled ?? true;
-            document.getElementById('ticker-speed-select').value = settings.speed || '50';
+            document.getElementById('ticker-speed-select').value = settings.speed || '80';
             document.getElementById('show-ticker-matches').checked = settings.showMatches ?? true;
             document.getElementById('show-ticker-tasks').checked = settings.showTasks ?? true;
             document.getElementById('show-ticker-money').checked = settings.showMoney ?? true;
