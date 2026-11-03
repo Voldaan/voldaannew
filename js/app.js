@@ -31,16 +31,21 @@ async function fetchTegelenWeather() {
 async function fetchOmroepVenloNews() {
     if (cachedNews) return cachedNews;
     try {
-        const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.omroepvenlo.nl/nieuws/rss');
+        // Gebruik een alternatieve public RSS-naar-JSON service met timestamp om caching tegen te gaan
+        const timestamp = new Date().getTime();
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.omroepvenlo.nl%2Fnieuws%2Frss&_t=${timestamp}`);
         const data = await res.json();
         if (data && data.items && data.items.length > 0) {
-            cachedNews = data.items.slice(0, 3).map(item => `📰 ${item.title}`);
+            cachedNews = data.items.slice(0, 4).map(item => `📰 ${item.title}`);
             return cachedNews;
         }
     } catch (e) {
         console.error("Kon nieuws niet ophalen", e);
     }
-    return ["📰 Omroep Venlo: Cultuurprijs voor Venlose stichting", "📰 Vernieuwing centrum Tegelen van start"];
+    return [
+        "📰 Omroep Venlo: Laatste nieuws uit Venlo en omgeving", 
+        "📰 Nopens het laatste lokale nieuws in Tegelen en Venlo"
+    ];
 }
 
 export async function updateGlobalTicker(appData) {
