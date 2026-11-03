@@ -2,8 +2,8 @@
 <html lang="nl">
 <head>
     <link rel="icon" type="image/jpeg" href="icon.jpg?v=3">
-  <link rel="apple-touch-icon" href="icon.jpg?v=3">
-  <link rel="manifest" href="manifest.json?v=3">
+    <link rel="apple-touch-icon" href="icon.jpg?v=3">
+    <link rel="manifest" href="manifest.json?v=3">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voldaan - Jouw Zachte Dashboard</title>
@@ -11,11 +11,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    <style>
-        /* Verberg scrollbar maar behoud scroll-functionaliteit voor de menubalk */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
+    <!-- Eigen Stylesheet -->
+    <link rel="stylesheet" href="css/style.css?v=4.1">
 </head>
 <body class="bg-[#f7f5f0] text-gray-800 font-sans min-h-screen flex flex-col justify-between pb-20">
     
@@ -29,6 +26,13 @@
             <p class="text-[11px] text-gray-500 font-medium">Zonder oordeel, in jouw eigen tempo</p>
         </div>
     </header>
+
+    <!-- ⭐ Globale Live Ticker Balk (Vast onder de header op elke pagina) -->
+    <div id="global-ticker-container" class="ticker-wrapper hidden">
+        <div id="global-ticker-track" class="ticker-track">
+            <!-- Wordt automatisch gevuld -->
+        </div>
+    </div>
 
     <!-- Main Content Container -->
     <main class="max-w-md mx-auto px-4 py-5 flex-1 w-full">
@@ -90,6 +94,6 @@
     </nav>
 
     <!-- App JavaScript Entry Point -->
-    <script type="module" src="js/app.js?v=4.0"></script>
+    <script type="module" src="js/app.js?v=4.1"></script>
 </body>
 </html>
