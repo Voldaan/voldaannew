@@ -12,14 +12,14 @@
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <!-- Eigen Stylesheet -->
-    <link rel="stylesheet" href="css/style.css?v=6.0">
+    <link rel="stylesheet" href="css/style.css?v=6.1">
 </head>
 <body class="bg-[#f7f5f0] text-gray-800 font-sans min-h-screen flex flex-col justify-between pb-20">
     
-    <!-- Vaste sticky container voor Header + Ticker zodat alles altijd mee naar beneden scrolt -->
-    <div class="sticky top-0 z-40 w-full bg-[#f7f5f0] shadow-sm">
+    <!-- Vaste sticky container voor Header + Ticker die altijd in beeld blijft bij scrollen -->
+    <div class="sticky-header-container">
         <!-- Header: Compact, edge-to-edge -->
-        <header class="bg-white border-b border-indigo-100 w-full">
+        <header class="bg-white border-b border-indigo-100 w-full shadow-sm">
             <div class="max-w-md mx-auto px-3 py-2 flex items-center justify-between">
                 <div class="flex items-center gap-2 overflow-hidden">
                     <div class="flex items-center gap-1.5 flex-shrink-0">
@@ -67,7 +67,7 @@
                     <select id="ticker-speed-select" class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
                         <option value="50">Rustig & Traag (50s)</option>
                         <option value="80">Extra Langzaam (80s)</option>
-                        <option value="35">Snel (35s)</option>
+                        <option value="15">Snel (15s)</option>
                     </select>
                 </div>
 
@@ -160,6 +160,6 @@
     </nav>
 
     <!-- App JavaScript Entry Point -->
-    <script type="module" src="js/app.js?v=6.0"></script>
+    <script type="module" src="js/app.js?v=6.1"></script>
 </body>
 </html>
