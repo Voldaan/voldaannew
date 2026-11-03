@@ -12,26 +12,26 @@
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <!-- Eigen Stylesheet -->
-    <link rel="stylesheet" href="css/style.css?v=6.3">
+    <link rel="stylesheet" href="css/style.css?v=7.0">
 </head>
 <body class="bg-[#f7f5f0] text-gray-800 font-sans min-h-screen flex flex-col justify-between pb-20">
     
     <!-- Muurvast bovenaan met fixed position -->
     <div class="fixed-top-container">
-        <!-- Header: Compact, edge-to-edge -->
+        <!-- Header: Duidelijker zichtbaar, iets groter opgezet -->
         <header class="bg-white border-b border-indigo-100 w-full shadow-sm">
-            <div class="max-w-md mx-auto px-3 py-2 flex items-center justify-between">
-                <div class="flex items-center gap-2 overflow-hidden">
+            <div class="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5 overflow-hidden">
                     <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <span class="text-base">🪷</span>
-                        <h1 class="text-sm font-bold text-indigo-950 tracking-tight">Voldaan</h1>
+                        <span class="text-lg">🪷</span>
+                        <h1 class="text-base font-bold text-indigo-950 tracking-tight">Voldaan</h1>
                     </div>
-                    <span class="text-gray-300 text-xs">|</span>
-                    <p class="text-[11px] text-gray-500 font-medium truncate">meer structuur, minder chaos</p>
+                    <span class="text-gray-300 text-sm">|</span>
+                    <p class="text-xs text-gray-500 font-medium truncate">meer structuur, minder chaos</p>
                 </div>
-                <!-- Live knop om ticker in te stellen -->
-                <button id="open-ticker-settings" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-2xs flex-shrink-0">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live
+                <!-- Live knop, duidelijker aanwezig -->
+                <button id="open-ticker-settings" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs flex-shrink-0 border border-emerald-200">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
                 </button>
             </div>
         </header>
@@ -92,6 +92,10 @@
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="show-ticker-news" class="rounded text-indigo-600" checked>
                         <span>📰 Omroep Venlo Headliners</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="show-ticker-nu-nl" class="rounded text-indigo-600" checked>
+                        <span>📰 NU.nl Laatste Nieuws</span>
                     </label>
                 </div>
             </div>
@@ -160,6 +164,6 @@
     </nav>
 
     <!-- App JavaScript Entry Point -->
-    <script type="module" src="js/app.js?v=6.3"></script>
+    <script type="module" src="js/app.js?v=7.0"></script>
 </body>
 </html>
