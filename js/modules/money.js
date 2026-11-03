@@ -1,7 +1,7 @@
 // js/modules/money.js
 import { saveAppData, checkDateFilter, showToast } from './storage.js';
 
-const MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwachte uitgaven', 'uitje', 'cadeau', 'aanschaf', 'aflossen', 'loon', 'lening', 'verwachte uitgave'];
+let MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwachte uitgaven', 'uitje', 'cadeau', 'aanschaf', 'aflossen', 'loon', 'lening', 'verwachte uitgave'];
 const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaankoop', 'Noodzakelijk/Vaste last', 'Investeer in mezelf'];
 const PERIODIC_OPTIONS = ['Eenmalig', 'Wekelijks', 'Maandelijks', 'Jaarlijks'];
 
@@ -52,7 +52,6 @@ function getPaydayPeriod(dateInput = new Date()) {
     let month = d.getMonth();
 
     if (day < 23) {
-        // Zit in de periode gestart op de 23e van de VORIGE maand
         month -= 1;
         if (month < 0) {
             month = 11;
@@ -67,25 +66,54 @@ function getPaydayPeriod(dateInput = new Date()) {
     return { start, end };
 }
 
-function isInCurrentPaydayMonth(dateStr) {
-    if (!dateStr) return false;
-    const d = new Date(dateStr);
-    const { start, end } = getPaydayPeriod(new Date());
-    return d >= start && d <= end;
-}
-
-function checkPaydayMonthFilter(dateStr, filterVal) {
-    if (!dateStr || filterVal === 'all') return true;
-    const d = new Date(dateStr);
+function checkPaydayMonthFilter(expDateStr, filterVal) {
+    if (!expDateStr) return false;
+    const d = new Date(expDateStr);
+    
+    if (filterVal === 'all') return true;
     if (filterVal === 'current') {
-        return isInCurrentPaydayMonth(dateStr);
-    } else if (filterVal.startsWith('month-')) {
-        // formaat: month-YYYY-MM
-        const [, targetYear, targetMonth] = filterVal.split('-');
-        const period = getPaydayPeriod(new Date(parseInt(targetYear), parseInt(targetMonth) - 1, 23));
-        return d >= period.start && d <= period.end;
+        const { start, end } = getPaydayPeriod(new Date());
+        return d >= start && d <= end;
+    }
+    if (filterVal.startsWith('period-')) {
+        const [, yStr, mStr] = filterVal.split('-');
+        const targetDate = new Date(parseInt(yStr), parseInt(mStr), 23);
+        const { start, end } = getPaydayPeriod(targetDate);
+        return d >= start && d <= end;
     }
     return true;
+}
+
+// Genereer virtuele optredens van periodieke uitgaven binnen een bepaalde payday-periode
+function getExpandedExpectedExpenses(expenses, targetPeriodStart, targetPeriodEnd) {
+    let result = [];
+    expenses.forEach(e => {
+        const baseDate = new Date(e.date);
+        const period = e.period || 'Eenmalig';
+        const endDate = e.endDate ? new Date(e.endDate) : null;
+
+        if (period === 'Eenmalig') {
+            if (baseDate >= targetPeriodStart && baseDate <= targetPeriodEnd) {
+                result.push({ ...e, virtualDate: e.date });
+            }
+        } else {
+            // Genereer herhalingen
+            let curr = new Date(baseDate);
+            let safetyCount = 0;
+            while (curr <= targetPeriodEnd && safetyCount < 120) {
+                if (endDate && curr > endDate) break;
+                if (curr >= targetPeriodStart && curr <= targetPeriodEnd) {
+                    result.push({ ...e, id: `${e.id}_${curr.getTime()}`, virtualDate: curr.toISOString().slice(0, 10) });
+                }
+                // Volgende stap op basis van period
+                if (period === 'Wekelijks') curr.setDate(curr.getDate() + 7);
+                else if (period === 'Maandelijks') curr.setMonth(curr.getMonth() + 1);
+                else if (period === 'Jaarlijks') curr.setFullYear(curr.getFullYear() + 1);
+                safetyCount++;
+            }
+        }
+    });
+    return result;
 }
 
 export function initMoneyModule(appData) {
@@ -96,6 +124,9 @@ export function initMoneyModule(appData) {
     if (!appData.money.transactions) appData.money.transactions = [];
     if (!appData.money.expectedExpenses) appData.money.expectedExpenses = [];
     if (!appData.money.financialProjects) appData.money.financialProjects = [];
+    if (!appData.money.categories) appData.money.categories = MONEY_CATEGORIES;
+    else MONEY_CATEGORIES = appData.money.categories;
+
     if (!appData.money.studyDebt) {
         appData.money.studyDebt = { total: 41939, paid: 477.35, monthly: 477.35 };
     }
@@ -176,20 +207,24 @@ export function initMoneyModule(appData) {
             <div class="flex justify-between items-center mb-2">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
-                    <p id="expected-total-label" class="text-xs font-semibold text-indigo-700 mt-0.5">Totaal verwacht: € 0.00</p>
+                    <div class="mt-1 inline-block bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-xl shadow-2xs">
+                        <p id="expected-total-label" class="text-xs font-bold text-indigo-900">Totaal verwacht: € 0.00</p>
+                    </div>
                 </div>
                 <div class="flex gap-1.5">
                     <button id="open-expected-beheer-modal-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
                     <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+toevoegen</button>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven in deze payday-maand.</p>
+            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven in de geselecteerde payday-maand.</p>
             
             <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <div class="grid grid-cols-1">
                     <select id="expected-filter-payday-month" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                        <option value="current">Huidige payday-maand (23e t/m 22e)</option>
+                        <option value="current">Huidige payday-maand (23 okt t/m 22 nov)</option>
                         <option value="all">Alle payday-maanden</option>
+                        <optgroup label="Selecteer payday-maand:" id="expected-payday-options-group">
+                        </optgroup>
                     </select>
                 </div>
             </div>
@@ -198,7 +233,7 @@ export function initMoneyModule(appData) {
             <div id="expected-expand-toggle-container" class="text-center pt-2"></div>
         </div>
 
-        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET (Aangepast volgens Zachte Focus stijl) -->
+        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET -->
         <div class="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50/60 p-4 rounded-2xl shadow-sm border border-emerald-200/60 mb-4 text-xs space-y-2">
             <div class="flex justify-between items-center">
                 <span id="money-hack-title" class="font-bold text-indigo-950 text-sm flex items-center gap-1.5">🧠 De 24-Uurs Wachtkamer Regel</span>
@@ -213,7 +248,7 @@ export function initMoneyModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">🧭 Het Ruimte-Kompas (Vrijheids-Horizon)</h2>
-                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Financieel Doel</button>
+                <button id="open-project-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+Doel</button>
             </div>
             <p class="text-xs text-gray-500 mb-2">Herstel en breng financiële afspraken & leningen rustig in balans.</p>
             
@@ -255,8 +290,33 @@ export function initMoneyModule(appData) {
         </div>
     `;
 
+    populatePaydayMonthDropdown();
     initMoneyModals(appData);
     initMoneyLogic(appData);
+}
+
+function populatePaydayMonthDropdown() {
+    const group = document.getElementById('expected-payday-options-group');
+    if (!group) return;
+
+    const monthsNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+    let optionsHTML = '';
+    const now = new Date();
+    let currYear = now.getFullYear();
+    let currMonth = now.getMonth();
+
+    // Genereer voor 12 maanden terug tot 12 maanden vooruit
+    for (let i = -6; i <= 12; i++) {
+        let m = currMonth + i;
+        let y = currYear;
+        while (m > 11) { m -= 12; y++; }
+        while (m < 0) { m += 12; y--; }
+
+        const val = `period-${y}-${m + 1}`;
+        const label = `${monthsNames[m]} ${y} (23 ${monthsNames[m === 0 ? 11 : m - 1]} t/m 22 ${monthsNames[m]})`;
+        optionsHTML += `<option value="${val}">${label}</option>`;
+    }
+    group.innerHTML = optionsHTML;
 }
 
 function initMoneyModals(appData) {
@@ -318,14 +378,25 @@ function initMoneyModals(appData) {
         </div>
     `;
 
-    // Transactie Beheer Modal
+    // Transactie Beheer Modal met categorieën bewerken
     const txBeheerModalHTML = `
         <div id="tx-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Transacties & Archief</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Transacties & Categorieën</h3>
                     <button id="close-tx-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
+                
+                <!-- Categorieën Subtiel Beheren -->
+                <div class="space-y-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                    <h4 class="font-bold text-indigo-900">Categorieën Beheren</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-money-cat-input" placeholder="Nieuwe categorie..." class="flex-1 px-3 py-1.5 border rounded-xl bg-white">
+                        <button id="add-money-cat-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen</button>
+                    </div>
+                    <div id="money-categories-tags-list" class="flex flex-wrap gap-1.5 pt-1"></div>
+                </div>
+
                 <div class="space-y-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <input type="text" id="tx-beheer-search" placeholder="🔍 Live zoeken in alle transacties..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                     <div class="grid grid-cols-2 gap-2">
@@ -348,7 +419,7 @@ function initMoneyModals(appData) {
         </div>
     `;
 
-    // Verwachte Uitgave Beheren Modal
+    // Verwachte Uitgave Modal met periodiek & einddatum
     const expectedModalHTML = `
         <div id="expected-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -388,6 +459,18 @@ function initMoneyModals(appData) {
                             <input type="date" id="modal-exp-date" class="w-full px-3 py-2 border rounded-xl" required>
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Periodiek herhalen</label>
+                            <select id="modal-exp-period" class="w-full px-3 py-2 border rounded-xl bg-white">
+                                ${PERIODIC_OPTIONS.map(p => `<option value="${p}">${p}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Einddatum (optioneel)</label>
+                            <input type="date" id="modal-exp-end-date" class="w-full px-3 py-2 border rounded-xl">
+                        </div>
+                    </div>
                     <div class="flex gap-2 pt-2">
                         <button type="button" id="cancel-expected-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
                         <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Opslaan ✨</button>
@@ -397,14 +480,25 @@ function initMoneyModals(appData) {
         </div>
     `;
 
-    // Verwachte Uitgaven Beheer Modal (met live zoekfunctie, herstel en verwijder knoppen)
+    // Verwachte Uitgaven Beheer Modal met categorieën bewerken
     const expectedBeheerModalHTML = `
         <div id="expected-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Verwachte Uitgaven & Afgevinkte Historie</h3>
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Verwachte Uitgaven & Categorieën</h3>
                     <button id="close-expected-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
+
+                <!-- Categorieën Subtiel Beheren -->
+                <div class="space-y-2 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                    <h4 class="font-bold text-indigo-900">Categorieën Beheren</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-money-cat-input-2" placeholder="Nieuwe categorie..." class="flex-1 px-3 py-1.5 border rounded-xl bg-white">
+                        <button id="add-money-cat-btn-2" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl font-semibold">Toevoegen</button>
+                    </div>
+                    <div id="money-categories-tags-list-2" class="flex flex-wrap gap-1.5 pt-1"></div>
+                </div>
+
                 <div class="space-y-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <input type="text" id="expected-beheer-search" placeholder="🔍 Live zoeken in verwachte uitgaven..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                     <div class="grid grid-cols-2 gap-2">
@@ -425,18 +519,19 @@ function initMoneyModals(appData) {
         </div>
     `;
 
+    // Financieel Doel Modal (Ruimte-Kompas)
     const projectModalHTML = `
         <div id="project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 id="project-modal-title" class="text-sm font-bold text-indigo-950">🧭 Financieel Doel / Lening Beheren</h3>
+                    <h3 id="project-modal-title" class="text-sm font-bold text-indigo-950">🧭 Financieel Doel Toevoegen</h3>
                     <button id="close-project-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 <form id="project-modal-form" class="space-y-3">
                     <input type="hidden" id="modal-proj-id">
                     <div>
                         <label class="block font-semibold text-gray-600 mb-1">Naam Lening / Doel</label>
-                        <input type="text" id="modal-proj-title" placeholder="Bijv. Achterstand betalen" class="w-full px-3 py-2 border rounded-xl" required>
+                        <input type="text" id="modal-proj-title" placeholder="Bijv. Achterstand betalen of spaarpotje" class="w-full px-3 py-2 border rounded-xl" required>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
@@ -462,10 +557,10 @@ function initMoneyModals(appData) {
     setupModalHandlers('expected', appData);
     setupModalHandlers('project', appData);
 
-    // Beheer modal openers
     document.getElementById('open-tx-beheer-modal-btn').onclick = () => {
         document.getElementById('tx-beheer-modal').classList.remove('hidden');
         renderTxBeheerList(appData);
+        renderMoneyCategoriesBeheer(appData);
     };
     document.getElementById('close-tx-beheer').onclick = () => document.getElementById('tx-beheer-modal').classList.add('hidden');
     document.getElementById('close-tx-beheer-bottom').onclick = () => document.getElementById('tx-beheer-modal').classList.add('hidden');
@@ -473,11 +568,11 @@ function initMoneyModals(appData) {
     document.getElementById('open-expected-beheer-modal-btn').onclick = () => {
         document.getElementById('expected-beheer-modal').classList.remove('hidden');
         renderExpectedBeheerList(appData);
+        renderMoneyCategoriesBeheer2(appData);
     };
     document.getElementById('close-expected-beheer').onclick = () => document.getElementById('expected-beheer-modal').classList.add('hidden');
     document.getElementById('close-expected-beheer-bottom').onclick = () => document.getElementById('expected-beheer-modal').classList.add('hidden');
 
-    // Plus/Min knop logica voor transacties
     const signBtn = document.getElementById('tx-sign-btn');
     if (signBtn) {
         let isNegative = true;
@@ -489,6 +584,84 @@ function initMoneyModals(appData) {
             } else {
                 signBtn.textContent = '+';
                 signBtn.className = "px-3 py-2 bg-green-100 text-green-800 font-bold rounded-xl transition";
+            }
+        };
+    }
+}
+
+function renderMoneyCategoriesBeheer(appData) {
+    const listEl = document.getElementById('money-categories-tags-list');
+    const inputEl = document.getElementById('new-money-cat-input');
+    const addBtn = document.getElementById('add-money-cat-btn');
+    if (!listEl) return;
+
+    if (!appData.money.categories) appData.money.categories = MONEY_CATEGORIES;
+    MONEY_CATEGORIES = appData.money.categories;
+
+    listEl.innerHTML = MONEY_CATEGORIES.map(c => `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 text-indigo-900 rounded-xl text-xs font-medium">
+            ${c} <button onclick="window.deleteMoneyCat('${c}')" class="text-red-500 font-bold hover:text-red-700 ml-0.5">✕</button>
+        </span>
+    `).join('');
+
+    if (addBtn && inputEl) {
+        addBtn.onclick = () => {
+            const val = inputEl.value.trim().toLowerCase();
+            if (val && !MONEY_CATEGORIES.includes(val)) {
+                MONEY_CATEGORIES.push(val);
+                appData.money.categories = MONEY_CATEGORIES;
+                saveAppData(appData);
+                inputEl.value = '';
+                renderMoneyCategoriesBeheer(appData);
+                renderMoneyCategoriesBeheer2(appData);
+                initMoneyModule(appData);
+                showToast("Categorie toegevoegd! ✨");
+            }
+        };
+    }
+
+    window.deleteMoneyCat = (cat) => {
+        if (MONEY_CATEGORIES.length <= 1) {
+            showToast("Je moet minimaal één categorie overhouden.");
+            return;
+        }
+        MONEY_CATEGORIES = MONEY_CATEGORIES.filter(c => c !== cat);
+        appData.money.categories = MONEY_CATEGORIES;
+        saveAppData(appData);
+        renderMoneyCategoriesBeheer(appData);
+        renderMoneyCategoriesBeheer2(appData);
+        initMoneyModule(appData);
+        showToast("Categorie verwijderd.");
+    };
+}
+
+function renderMoneyCategoriesBeheer2(appData) {
+    const listEl = document.getElementById('money-categories-tags-list-2');
+    const inputEl = document.getElementById('new-money-cat-input-2');
+    const addBtn = document.getElementById('add-money-cat-btn-2');
+    if (!listEl) return;
+
+    if (!appData.money.categories) appData.money.categories = MONEY_CATEGORIES;
+    MONEY_CATEGORIES = appData.money.categories;
+
+    listEl.innerHTML = MONEY_CATEGORIES.map(c => `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 text-indigo-900 rounded-xl text-xs font-medium">
+            ${c} <button onclick="window.deleteMoneyCat('${c}')" class="text-red-500 font-bold hover:text-red-700 ml-0.5">✕</button>
+        </span>
+    `).join('');
+
+    if (addBtn && inputEl) {
+        addBtn.onclick = () => {
+            const val = inputEl.value.trim().toLowerCase();
+            if (val && !MONEY_CATEGORIES.includes(val)) {
+                MONEY_CATEGORIES.push(val);
+                appData.money.categories = MONEY_CATEGORIES;
+                saveAppData(appData);
+                inputEl.value = '';
+                renderMoneyCategoriesBeheer(appData);
+                renderMoneyCategoriesBeheer2(appData);
+                initMoneyModule(appData);
+                showToast("Categorie toegevoegd! ✨");
             }
         };
     }
@@ -516,7 +689,7 @@ function setupModalHandlers(type, appData) {
         } else if (type === 'project') {
             document.getElementById('modal-proj-id').value = '';
             document.getElementById('project-modal-form').reset();
-            document.getElementById('project-modal-title').textContent = '🧭 Nieuw Financieel Doel';
+            document.getElementById('project-modal-title').textContent = '🧭 Financieel Doel Toevoegen';
         }
         modal.classList.remove('hidden');
     };
@@ -571,6 +744,9 @@ function setupModalHandlers(type, appData) {
                 const method = document.getElementById('modal-exp-method').value;
                 const category = document.getElementById('modal-exp-cat').value;
                 const date = document.getElementById('modal-exp-date').value;
+                const period = document.getElementById('modal-exp-period').value;
+                const endDate = document.getElementById('modal-exp-end-date').value;
+
                 if (description && !isNaN(amount) && date) {
                     if (!appData.money.expectedExpenses) appData.money.expectedExpenses = [];
                     if (id) {
@@ -581,9 +757,11 @@ function setupModalHandlers(type, appData) {
                             exp.method = method;
                             exp.category = category;
                             exp.date = date;
+                            exp.period = period;
+                            exp.endDate = endDate;
                         }
                     } else {
-                        appData.money.expectedExpenses.push({ id: Date.now(), description, amount, method, category, date, completed: false });
+                        appData.money.expectedExpenses.push({ id: Date.now(), description, amount, method, category, date, period, endDate, completed: false });
                     }
                     saveAppData(appData);
                     modal.classList.add('hidden');
@@ -821,7 +999,7 @@ function renderExpectedBeheerList(appData) {
                 <div class="flex justify-between items-start">
                     <div>
                         <span class="font-bold text-indigo-900">[${e.category}]</span> <span class="font-medium text-gray-900">${e.description}</span>
-                        <span class="text-[10px] text-gray-400 block mt-0.5">Datum: ${e.date} • ${e.method}</span>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">Datum: ${e.date} • ${e.method} ${e.period && e.period !== 'Eenmalig' ? '• ' + e.period : ''}</span>
                     </div>
                     <span class="font-bold text-sm text-indigo-950">€ ${e.amount.toFixed(2)}</span>
                 </div>
@@ -872,7 +1050,7 @@ function renderMoneyViews(appData) {
         }
     }
 
-    // Transacties rendering (bedragen netjes onder elkaar)
+    // Transacties rendering
     const txList = document.getElementById('transaction-list');
     const toggleContainer = document.getElementById('tx-expand-toggle-container');
     const searchTerm = document.getElementById('tx-search').value.toLowerCase();
@@ -965,7 +1143,7 @@ function renderMoneyViews(appData) {
         }
     };
 
-    // Verwachte Uitgaven Rendering (met payday maand filter & max 5 zichtbaar + totaalbedrag dat meerekent met filter)
+    // Verwachte Uitgaven Rendering (met periodieke expansie & correcte payday-maand berekening)
     const expList = document.getElementById('expected-expense-list');
     const expectedExpandContainer = document.getElementById('expected-expand-toggle-container');
     const paydayMonthFilterVal = document.getElementById('expected-filter-payday-month')?.value || 'current';
@@ -975,14 +1153,32 @@ function renderMoneyViews(appData) {
         { id: 102, description: "Huur / Hypotheek", amount: 850.00, method: "Automatische Incasso", category: "verwachte uitgave", date: "2026-11-01", completed: true }
     ] : (appData.money?.expectedExpenses || []);
     
-    // Filter op payday maand & alleen openstaand zichtbaar in de hoofdlijst (afgevinkt verdwijnt hier)
-    const filteredExpenses = rawExpenses.filter(e => {
-        const matchesPaydayMonth = checkPaydayMonthFilter(e.date, paydayMonthFilterVal);
+    // Bepaal de target periode start en eind voor de uitzetting
+    let targetStart, targetEnd;
+    if (paydayMonthFilterVal === 'current') {
+        const p = getPaydayPeriod(new Date());
+        targetStart = p.start;
+        targetEnd = p.end;
+    } else if (paydayMonthFilterVal.startsWith('period-')) {
+        const [, yStr, mStr] = paydayMonthFilterVal.split('-');
+        const targetDate = new Date(parseInt(yStr), parseInt(mStr) - 1, 23);
+        const p = getPaydayPeriod(targetDate);
+        targetStart = p.start;
+        targetEnd = p.end;
+    } else {
+        // 'all' -> neem brede range
+        targetStart = new Date(2025, 0, 1);
+        targetEnd = new Date(2035, 11, 31);
+    }
+
+    const expandedExpenses = getExpandedExpectedExpenses(rawExpenses, targetStart, targetEnd);
+
+    const filteredExpenses = expandedExpenses.filter(e => {
+        const matchesPaydayMonth = checkPaydayMonthFilter(e.virtualDate, paydayMonthFilterVal);
         const isOpen = !e.completed;
         return matchesPaydayMonth && isOpen;
     });
 
-    // Bereken totaal bedrag van ALLE overgebleven gefilterde openstaande uitgaven
     let totalExpectedAmount = 0;
     filteredExpenses.forEach(e => { totalExpectedAmount += e.amount; });
     document.getElementById('expected-total-label').textContent = `Totaal verwacht (${filteredExpenses.length} items): € ${totalExpectedAmount.toFixed(2)}`;
@@ -991,9 +1187,9 @@ function renderMoneyViews(appData) {
 
     expList.innerHTML = displayedExpenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande verwachte uitgaven in deze periode.</p>' : displayedExpenses.map(e => `
         <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs">
-            <div ${isPrivacyMode ? '' : `onclick="window.openEditExpectedModal(${e.id})" `}class="${isPrivacyMode ? '' : 'cursor-pointer'} flex-1">
+            <div ${isPrivacyMode ? '' : `onclick="window.openEditExpectedModal(${e.id.toString().split('_')[0]})"`} class="${isPrivacyMode ? '' : 'cursor-pointer'} flex-1">
                 <span class="font-bold text-indigo-950 text-xs">[${e.category}]</span> <span class="font-medium text-gray-900 text-sm">${e.description}</span> - <span class="font-bold text-sm">€ ${e.amount.toFixed(2)}</span>
-                <span class="text-[11px] text-gray-500 block mt-0.5">Betaalwijze: ${e.method} • Datum: ${e.date}</span>
+                <span class="text-[11px] text-gray-500 block mt-0.5">Betaalwijze: ${e.method} • Datum: ${e.virtualDate} ${e.period && e.period !== 'Eenmalig' ? '• ' + e.period : ''}</span>
             </div>
             <div class="flex gap-2 items-center">
                 ${isPrivacyMode ? '' : `
@@ -1017,7 +1213,8 @@ function renderMoneyViews(appData) {
 
     window.openEditExpectedModal = (id) => {
         if (isPrivacyMode) return;
-        const e = appData.money.expectedExpenses.find(x => x.id === id);
+        const realId = String(id).split('_')[0];
+        const e = appData.money.expectedExpenses.find(x => String(x.id) === String(realId));
         if (e) {
             document.getElementById('modal-exp-id').value = e.id;
             document.getElementById('modal-exp-desc').value = e.description;
@@ -1025,6 +1222,8 @@ function renderMoneyViews(appData) {
             document.getElementById('modal-exp-method').value = e.method;
             document.getElementById('modal-exp-cat').value = e.category;
             document.getElementById('modal-exp-date').value = e.date;
+            document.getElementById('modal-exp-period').value = e.period || 'Eenmalig';
+            document.getElementById('modal-exp-end-date').value = e.endDate || '';
             document.getElementById('expected-modal-title').textContent = '📅 Verwachte Uitgave Bewerken';
             document.getElementById('expected-modal').classList.remove('hidden');
         }
@@ -1032,7 +1231,8 @@ function renderMoneyViews(appData) {
 
     window.toggleExpectedExpense = (id) => {
         if (isPrivacyMode) return;
-        const exp = appData.money.expectedExpenses.find(x => x.id === id);
+        const realId = String(id).split('_')[0];
+        const exp = appData.money.expectedExpenses.find(x => String(x.id) === String(realId));
         if (exp) {
             exp.completed = !exp.completed;
             if (exp.completed) {
@@ -1047,7 +1247,8 @@ function renderMoneyViews(appData) {
 
     window.deleteExpected = (id) => {
         if (isPrivacyMode) return;
-        appData.money.expectedExpenses = appData.money.expectedExpenses.filter(x => x.id !== id);
+        const realId = String(id).split('_')[0];
+        appData.money.expectedExpenses = appData.money.expectedExpenses.filter(x => String(x.id) !== String(realId));
         saveAppData(appData);
         renderMoneyViews(appData);
     };
