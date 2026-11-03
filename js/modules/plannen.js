@@ -9,6 +9,8 @@ const KNOWLEDGE_HACKS = [
     { title: "🎯 Klein Begin", text: "Zie je op tegen een groot project? Hak het in stukjes zo klein als een luciferhoutje. Je hoeft alleen maar de eerste kleine stap te zetten." }
 ];
 
+let showAllPlanboardTasks = false;
+
 export function initPlannenModule(appData) {
     const container = document.getElementById('plannen');
     if (!container) return;
@@ -44,29 +46,38 @@ export function initPlannenModule(appData) {
         </div>
 
         <!-- 2. Het Zachte Planbord -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-950">🎯 Het Zachte Planbord</h2>
-                <button id="open-plan-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
-            </div>
-            <p class="text-xs text-gray-500 mb-3">Taken structureren op jouw tempo.</p>
-            
-            <div class="space-y-3">
-                <input type="text" id="task-input-field" placeholder="Nieuwe taak..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="task-category-select" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                        ${appData.plans.categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                    </select>
-                    <select id="task-priority-select" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                        <option value="Laag">Prioriteit: Laag</option>
-                        <option value="Normaal">Prioriteit: Normaal</option>
-                        <option value="Hoog">Prioriteit: Hoog</option>
-                    </select>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-base font-bold text-indigo-950">🎯 Het Zachte Planbord</h2>
+                    <p class="text-xs text-gray-500">Taken structureren op jouw tempo.</p>
                 </div>
-                <button id="add-task-btn" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Taak Toevoegen</button>
-
-                <div id="planboard-tasks-list" class="space-y-2 pt-1"></div>
+                <div class="flex gap-1.5">
+                    <button id="open-add-task-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Taak Toevoegen</button>
+                    <button id="open-plan-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
+                </div>
             </div>
+
+            <!-- Filters voor getoonde taken -->
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <select id="filter-tasks-cat" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                    <option value="Alle">Alle categorieën</option>
+                    ${(appData.plans.categories || []).map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+                <select id="filter-tasks-sort" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                    <option value="nieuwste">Nieuwste eerst</option>
+                    <option value="oudste">Oudste eerst</option>
+                </select>
+                <select id="filter-tasks-pri" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
+                    <option value="Alle">Alle prioriteiten</option>
+                    <option value="Hoog">Prioriteit: Hoog</option>
+                    <option value="Normaal">Prioriteit: Normaal</option>
+                    <option value="Laag">Prioriteit: Laag</option>
+                </select>
+            </div>
+
+            <div id="planboard-tasks-list" class="space-y-2 pt-1"></div>
+            <div id="planboard-more-container" class="text-center pt-1"></div>
         </div>
 
         <!-- Micro-Inspiratie Kader -->
@@ -172,6 +183,42 @@ function initPlannenModals(appData) {
     if (document.getElementById('plan-beheer-modal')) return;
 
     const modalsHTML = `
+        <!-- Taak Toevoegen Modal -->
+        <div id="add-task-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">🎯 Nieuwe Taak Toevoegen</h3>
+                    <button id="close-add-task-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Taakomschrijving</label>
+                        <input type="text" id="modal-task-input-field" placeholder="Nieuwe taak..." class="w-full px-3 py-2 border rounded-xl">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Categorie</label>
+                            <select id="modal-task-category-select" class="w-full px-3 py-2 border rounded-xl bg-white">
+                                ${(appData.plans.categories || []).map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-600 mb-1">Prioriteit</label>
+                            <select id="modal-task-priority-select" class="w-full px-3 py-2 border rounded-xl bg-white">
+                                <option value="Laag">Laag</option>
+                                <option value="Normaal" selected>Normaal</option>
+                                <option value="Hoog">Hoog</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" id="cancel-add-task-modal" class="flex-1 py-2 bg-gray-100 rounded-xl font-semibold">Annuleren</button>
+                        <button type="button" id="modal-save-task-btn" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl font-semibold">Taak Opslaan ✨</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Planbord Beheer Modal -->
         <div id="plan-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -399,6 +446,7 @@ function initPlannenModals(appData) {
     `;
     document.body.insertAdjacentHTML('beforeend', modalsHTML);
 
+    const addTaskModal = document.getElementById('add-task-modal');
     const planModal = document.getElementById('plan-beheer-modal');
     const pactModal = document.getElementById('pact-beheer-modal');
     const compassModal = document.getElementById('compass-beheer-modal');
@@ -406,6 +454,10 @@ function initPlannenModals(appData) {
     const matchModal = document.getElementById('match-modal');
     const editTaskModal = document.getElementById('edit-task-modal');
     const editGoalModal = document.getElementById('edit-goal-modal');
+
+    document.getElementById('open-add-task-modal-btn').onclick = () => addTaskModal.classList.remove('hidden');
+    document.getElementById('close-add-task-modal').onclick = () => addTaskModal.classList.add('hidden');
+    document.getElementById('cancel-add-task-modal').onclick = () => addTaskModal.classList.add('hidden');
 
     document.getElementById('open-plan-beheer-btn').onclick = () => { planModal.classList.remove('hidden'); renderPlanBeheerContent(appData); };
     document.getElementById('close-plan-beheer').onclick = () => planModal.classList.add('hidden');
@@ -482,21 +534,31 @@ function initPlannenLogic(appData) {
         };
     }
 
-    const addTaskBtn = document.getElementById('add-task-btn');
-    if (addTaskBtn) {
-        addTaskBtn.onclick = () => {
-            const text = document.getElementById('task-input-field').value.trim();
-            const category = document.getElementById('task-category-select').value;
-            const priority = document.getElementById('task-priority-select').value;
+    // Modal taak toevoegen logica
+    const modalSaveTaskBtn = document.getElementById('modal-save-task-btn');
+    if (modalSaveTaskBtn) {
+        modalSaveTaskBtn.onclick = () => {
+            const text = document.getElementById('modal-task-input-field').value.trim();
+            const category = document.getElementById('modal-task-category-select').value;
+            const priority = document.getElementById('modal-task-priority-select').value;
             if (text) {
                 appData.plans.tasks.push({ id: Date.now(), text, category, priority, completed: false, archived: false, date: new Date().toISOString() });
                 saveAppData(appData);
-                document.getElementById('task-input-field').value = '';
+                document.getElementById('modal-task-input-field').value = '';
+                document.getElementById('add-task-modal').classList.add('hidden');
                 renderPlanboardTasks(appData);
                 showToast("Taak toegevoegd! 🎯");
             }
         };
     }
+
+    // Filters koppelen
+    ['filter-tasks-cat', 'filter-tasks-sort', 'filter-tasks-pri'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.onchange = () => renderPlanboardTasks(appData);
+        }
+    });
 
     const addGoalBtn = document.getElementById('add-goal-btn');
     if (addGoalBtn) {
@@ -587,7 +649,6 @@ function initMatchesLogic(appData) {
             document.getElementById('match-modal').classList.add('hidden');
             renderMatchesView(appData);
             
-            // Direct verversen van de globale live ticker
             if (window.updateGlobalTicker) window.updateGlobalTicker();
 
             showToast("Wedstrijd succesvol toegevoegd! ⚽");
@@ -746,7 +807,6 @@ function renderMatchesView(appData) {
         saveAppData(appData);
         renderMatchesView(appData);
         
-        // Direct verversen van de globale live ticker
         if (window.updateGlobalTicker) window.updateGlobalTicker();
 
         showToast("Wedstrijd verwijderd.");
@@ -801,11 +861,33 @@ function renderPlanboardViews(appData) {
 
 function renderPlanboardTasks(appData) {
     const listEl = document.getElementById('planboard-tasks-list');
+    const moreContainer = document.getElementById('planboard-more-container');
     if (!listEl) return;
 
-    const tasks = (appData.plans?.tasks || []).filter(t => !t.archived && !t.completed && !t.done);
+    const catFilter = document.getElementById('filter-tasks-cat')?.value || 'Alle';
+    const sortFilter = document.getElementById('filter-tasks-sort')?.value || 'nieuwste';
+    const priFilter = document.getElementById('filter-tasks-pri')?.value || 'Alle';
 
-    listEl.innerHTML = tasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken.</p>' : tasks.map(t => `
+    let tasks = (appData.plans?.tasks || []).filter(t => !t.archived && !t.completed && !t.done);
+
+    // Filteren
+    if (catFilter !== 'Alle') {
+        tasks = tasks.filter(t => (t.category || 'Algemeen') === catFilter);
+    }
+    if (priFilter !== 'Alle') {
+        tasks = tasks.filter(t => (t.priority || 'Normaal') === priFilter);
+    }
+
+    // Sorteren
+    tasks.sort((a, b) => {
+        const dateA = new Date(a.date || Date.now()).getTime();
+        const dateB = new Date(b.date || Date.now()).getTime();
+        return sortFilter === 'nieuwste' ? dateB - dateA : dateA - dateB;
+    });
+
+    const displayedTasks = showAllPlanboardTasks ? tasks : tasks.slice(0, 7);
+
+    listEl.innerHTML = displayedTasks.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande taken.</p>' : displayedTasks.map(t => `
         <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl shadow-sm text-xs cursor-pointer hover:border-indigo-200 transition" onclick="window.editPlanTask(${t.id})">
             <div>
                 <span class="font-bold text-indigo-900 mr-1">[${t.category || 'Algemeen'}]</span> 
@@ -820,6 +902,16 @@ function renderPlanboardTasks(appData) {
             </div>
         </div>
     `).join('');
+
+    if (tasks.length > 7 && moreContainer) {
+        moreContainer.innerHTML = `<button id="toggle-more-plan-tasks" class="text-[11px] text-indigo-600 font-semibold hover:underline">${showAllPlanboardTasks ? 'Minder weergeven' : `+ ${tasks.length - 7} meer weergeven...`}</button>`;
+        document.getElementById('toggle-more-plan-tasks').onclick = () => {
+            showAllPlanboardTasks = !showAllPlanboardTasks;
+            renderPlanboardTasks(appData);
+        };
+    } else if (moreContainer) {
+        moreContainer.innerHTML = '';
+    }
 
     window.completePlanTask = (id) => {
         const t = appData.plans.tasks.find(x => x.id === id);
