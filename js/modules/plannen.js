@@ -668,18 +668,24 @@ function renderMatchesView(appData) {
     let showAllMatches = window._showAllMatches || false;
     const displayed = showAllMatches ? filtered : filtered.slice(0, 5);
 
-    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => `
-        <li class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-1 flex flex-col">
-            <div class="flex justify-between items-center">
-                <span class="font-bold text-indigo-950">⚽ ${m.club} vs ${m.opponent}</span>
-                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-semibold text-[10px]">${m.location}</span>
-            </div>
-            <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
-                <span>📅 ${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                <button onclick="window.deleteMatch('${m.id}')" class="text-red-400 font-bold hover:text-red-600">Verwijderen ✕</button>
-            </div>
-        </li>
-    `).join('');
+    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => {
+        // Bepaal de weergavevolgorde op basis van de locatie (Thuis / Uit)
+        const isThuis = m.location === 'Thuis';
+        const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
+
+        return `
+            <li class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-1 flex flex-col">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-indigo-950">⚽ ${displayTeams}</span>
+                    <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-semibold text-[10px]">${m.location}</span>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
+                    <span>📅 ${new Date(m.date).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                    <button onclick="window.deleteMatch('${m.id}')" class="text-red-400 font-bold hover:text-red-600">Verwijderen ✕</button>
+                </div>
+            </li>
+        `;
+    }).join('');
 
     if (filtered.length > 5) {
         moreContainer.innerHTML = `<button id="toggle-more-matches" class="text-[11px] text-indigo-600 font-semibold hover:underline">${showAllMatches ? 'Minder weergeven' : `+ ${filtered.length - 5} meer weergeven...`}</button>`;
