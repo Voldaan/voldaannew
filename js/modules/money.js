@@ -161,16 +161,18 @@ export function initMoneyModule(appData) {
 
         <!-- 1. Transacties & Overzicht -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-900">💶 Transacties & Overzicht</h2>
-                <div class="flex gap-1.5">
-                    <button id="open-tx-beheer-modal-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <h2 class="text-base font-bold text-indigo-900">💶 Transacties & Overzicht</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Houd rust en overzicht in al je uitgaven en inkomsten.</p>
+                </div>
+                <div class="flex gap-1.5 shrink-0">
+                    <button id="open-tx-beheer-modal-btn" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
                     <button id="open-tx-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+Toevoegen</button>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Houd rust en overzicht in al je uitgaven en inkomsten.</p>
             
-            <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+            <div class="flex flex-col gap-2 mb-3 mt-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <input type="text" id="tx-search" placeholder="Zoek transactie..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl">
                 <div class="grid grid-cols-2 gap-2">
                     <select id="tx-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl">
@@ -202,28 +204,29 @@ export function initMoneyModule(appData) {
 
         <!-- 2. Verwachte Uitgaven -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
-            <div class="flex justify-between items-center mb-2">
+            <div class="flex justify-between items-start mb-2">
                 <div>
                     <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
-                    <!-- Verfraaid Totaal verwacht label -->
-                    <div class="mt-1.5 inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/80 px-3 py-1.5 rounded-xl shadow-2xs">
-                        <span class="text-xs">💡</span>
-                        <p id="expected-total-label" class="text-xs font-bold text-indigo-950">Totaal verwacht: € 0.00</p>
-                    </div>
+                    <p class="text-xs text-gray-500 mt-0.5">Overzicht van geplande uitgaven in de geselecteerde payday-maand.</p>
                 </div>
-                <div class="flex gap-1.5">
-                    <button id="open-expected-beheer-modal-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
-                    <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+toevoegen</button>
+                <div class="flex gap-1.5 shrink-0">
+                    <button id="open-expected-beheer-modal-btn" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
+                    <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+Toevoegen</button>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven in de geselecteerde payday-maand.</p>
-            
-            <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
-                <div class="grid grid-cols-1">
-                    <select id="expected-filter-payday-month" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+
+            <!-- Verfraaid Totaal verwacht label en Filter direct eronder -->
+            <div class="flex flex-col gap-2.5 mb-3 mt-3">
+                <div class="inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/80 px-3 py-2 rounded-xl shadow-2xs w-full">
+                    <span class="text-xs">💡</span>
+                    <p id="expected-total-label" class="text-xs font-bold text-indigo-950">Totaal verwacht: € 0.00</p>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+                    <select id="expected-filter-payday-month" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                         <option value="current">Huidige payday-maand</option>
                         <option value="all">Alle payday-maanden</option>
-                        <optgroup label="Selecteer payday-maand:" id="expected-payday-options-group">
+                        <optgroup label="Selecteer specifieke payday-maand:" id="expected-payday-options-group">
                         </optgroup>
                     </select>
                 </div>
@@ -311,7 +314,6 @@ function populatePaydayMonthDropdown() {
         while (m > 11) { m -= 12; y++; }
         while (m < 0) { m += 12; y--; }
 
-        // Bepaal de begindatum en einddatum van deze payday-maand voor nette weergave in de selectie
         const prevM = m === 0 ? 11 : m - 1;
         const val = `period-${y}-${m + 1}`;
         const label = `${monthsNames[m]} ${y} (23 ${monthsNames[prevM]} t/m 22 ${monthsNames[m]})`;
@@ -378,7 +380,6 @@ function initMoneyModals(appData) {
         </div>
     `;
 
-    // Transactie Beheer Modal met verbeterde en overzichtelijke filters
     const txBeheerModalHTML = `
         <div id="tx-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -488,7 +489,6 @@ function initMoneyModals(appData) {
         </div>
     `;
 
-    // Verwachte Uitgaven Beheer Modal met verbeterde filters
     const expectedBeheerModalHTML = `
         <div id="expected-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -1186,7 +1186,7 @@ function renderMoneyViews(appData) {
         }
     };
 
-    // Verwachte Uitgaven Rendering (met periodieke expansie & correcte payday-maand berekening)
+    // Verwachte Uitgaven Rendering
     const expList = document.getElementById('expected-expense-list');
     const expectedExpandContainer = document.getElementById('expected-expand-toggle-container');
     const paydayMonthFilterVal = document.getElementById('expected-filter-payday-month')?.value || 'current';
