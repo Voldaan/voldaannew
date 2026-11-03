@@ -52,11 +52,11 @@ export function initPlannenModule(appData) {
                     <h2 class="text-base font-bold text-indigo-950">🎯 Het Zachte Planbord</h2>
                     <p class="text-xs text-gray-500">Taken structureren op jouw tempo.</p>
                 </div>
-                <div class="flex gap-1.5">
-                    <button id="open-add-task-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Taak Toevoegen</button>
-                    <button id="open-plan-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
-                </div>
+                <button id="open-plan-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
             </div>
+
+            <!-- Horizontale langwerpige knop zoals bij Avond-Pact -->
+            <button id="open-add-task-modal-btn" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Taak Toevoegen</button>
 
             <!-- Filters voor getoonde taken -->
             <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
@@ -133,17 +133,19 @@ export function initPlannenModule(appData) {
         </div>
 
         <!-- 4. Voetbal & Wedstrijden Agenda -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-base font-bold text-indigo-950">⚽ Voetbal & Wedstrijden Agenda</h2>
-                <div class="flex gap-1.5">
-                    <button id="open-club-beheer-btn" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer Clubs</button>
-                    <button id="open-match-modal" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">+ Wedstrijd</button>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 space-y-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-base font-bold text-indigo-950">⚽ Voetbal & Wedstrijden Agenda</h2>
+                    <p class="text-xs text-gray-500">Beheer al je wedstrijden en teams overzichtelijk in eigen hand.</p>
                 </div>
+                <button id="open-club-beheer-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer Clubs</button>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Beheer al je wedstrijden en teams overzichtelijk in eigen hand.</p>
 
-            <div class="space-y-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+            <!-- Uniforme langwerpige knop voor Wedstrijd toevoegen -->
+            <button id="open-match-modal" class="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Wedstrijd Toevoegen</button>
+
+            <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <select id="match-filter-club" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
                         <option value="Alle">Alle clubs / teams</option>
@@ -776,6 +778,7 @@ function renderMatchesView(appData) {
 
     list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => {
         const isThuis = m.location === 'Thuis';
+        // Automatische bepaling volgorde: Thuis = Club - Tegenstander | Uit = Tegenstander - Club
         const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
 
         return `
