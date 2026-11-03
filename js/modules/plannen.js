@@ -19,7 +19,6 @@ export function initPlannenModule(appData) {
     if (!appData.plans.eveningPacts) appData.plans.eveningPacts = [];
     if (!appData.plans.categories) appData.plans.categories = ['Privé', 'Klussen', 'Gezin', 'Financieel', 'Algemeen'];
     
-    // Standaard favoriete voetbalclubs/teams als ze er nog niet zijn
     if (!appData.plans.favoriteClubs) {
         appData.plans.favoriteClubs = ['Ajax', 'VVV-Venlo', 'Arsenal', 'Barcelona', 'TSC Irene 11', 'TSC Irene JO13-1', 'TSC Irene JO9-1'];
     }
@@ -29,6 +28,19 @@ export function initPlannenModule(appData) {
     if (!appData.plans.matches) appData.plans.matches = [];
 
     container.innerHTML = `
+        <!-- Wedstrijden Deze Week Ticker (Bewegende Balk) -->
+        <div id="weekly-matches-ticker-container" class="hidden mb-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-3 shadow-sm overflow-hidden relative">
+            <div class="flex items-center gap-2 mb-1.5 px-1">
+                <span class="text-xs font-bold text-emerald-900 flex items-center gap-1">⚽ Wedstrijden Deze Week</span>
+                <div class="h-px bg-emerald-200 flex-1"></div>
+            </div>
+            <div class="relative overflow-hidden whitespace-nowrap py-1">
+                <div id="ticker-track" class="inline-flex gap-8 items-center text-xs font-semibold text-emerald-950 animate-marquee">
+                    <!-- Wordt dynamisch ingevuld -->
+                </div>
+            </div>
+        </div>
+
         <!-- 1. Het Avond-Pact -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 mb-4 relative overflow-hidden" style="box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(253, 230, 138, 0.9);">
             <div class="flex justify-between items-center mb-2">
@@ -167,6 +179,7 @@ export function initPlannenModule(appData) {
     initPlannenLogic(appData);
     initMatchesLogic(appData);
     renderKnowledgeHack(appData);
+    renderWeeklyTicker(appData);
 }
 
 function initPlannenModals(appData) {
@@ -546,7 +559,7 @@ function initMatchesLogic(appData) {
     if (clubSelect) {
         clubSelect.onchange = () => {
             if (clubSelect.value) {
-                clubInput.value = ''; // Als er een keuzelijst-optie wordt gekozen, maken we het vrije tekstveld leeg
+                clubInput.value = '';
             }
         };
     }
@@ -554,7 +567,7 @@ function initMatchesLogic(appData) {
     if (clubInput) {
         clubInput.oninput = () => {
             if (clubInput.value.trim() !== '') {
-                clubSelect.value = ''; // Als er zelf wordt getypt, resetten we de dropdown
+                clubSelect.value = '';
             }
         };
     }
@@ -564,7 +577,6 @@ function initMatchesLogic(appData) {
         const selectedClubFromDropdown = clubSelect ? clubSelect.value : '';
         const customClubInput = clubInput ? clubInput.value.trim() : '';
         
-        // De vrije invoer heeft prioriteit als er iets is getypt, anders wordt de dropdown gebruikt
         const club = customClubInput !== '' ? customClubInput : selectedClubFromDropdown;
         const opponent = document.getElementById('match-opponent').value.trim();
         const date = document.getElementById('match-date').value;
@@ -579,7 +591,6 @@ function initMatchesLogic(appData) {
             if (!plans.matches) plans.matches = [];
             plans.matches.push({ id: Date.now(), club, opponent, date, location });
             
-            // Als de gebruiker een gloednieuwe club heeft ingetyped die nog niet in de favorietenlijst staat, automatisch toevoegen!
             if (!plans.favoriteClubs) plans.favoriteClubs = [];
             if (!plans.favoriteClubs.includes(club)) {
                 plans.favoriteClubs.push(club);
@@ -589,6 +600,7 @@ function initMatchesLogic(appData) {
             e.target.reset();
             document.getElementById('match-modal').classList.add('hidden');
             renderMatchesView(appData);
+            renderWeeklyTicker(appData);
             showToast("Wedstrijd succesvol toegevoegd! ⚽");
         }
     };
@@ -676,6 +688,57 @@ function setupMatchDateFilter() {
     }
 }
 
+// Logica voor de bewegende balk (Ticker) met wedstrijden deze week
+function renderWeeklyTicker(appData) {
+    const container = document.getElementById('weekly-matches-ticker-container');
+    const track = document.getElementById('ticker-track');
+    if (!container || !track) return;
+
+    const matches = appData.plans?.matches || [];
+    const now = new Date();
+    
+    // Bereken het einde van deze week (komende zondag om 23:59:59)
+    const endOfWeek = new Date();
+    const dayOfWeek = now.getDay(); // 0 = zondag, 1 = maandag, etc.
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : (7 - dayOfWeek);
+    endOfWeek.setDate(now.getDate() + daysUntilSunday);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Filter: alleen wedstrijden vanaf NU tot komende zondag die nog gespeeld moeten worden
+    const upcomingThisWeek = matches.filter(m => {
+        const matchDate = new Date(m.date);
+        return matchDate >= now && matchDate <= endOfWeek;
+    });
+
+    upcomingThisWeek.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (upcomingThisWeek.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+
+    // Maak de lijst van items klaar voor de ticker
+    const tickerItemsHTML = upcomingThisWeek.map(m => {
+        const isThuis = m.location === 'Thuis';
+        const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
+        const dateFormatted = new Date(m.date).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        
+        return `
+            <div class="inline-flex items-center gap-2 bg-white/80 border border-emerald-200/70 px-3 py-1.5 rounded-xl shadow-2xs">
+                <span class="text-emerald-700 font-bold">⚽ ${displayTeams}</span>
+                <span class="text-gray-400 font-normal">|</span>
+                <span class="text-gray-600 font-medium">📅 ${dateFormatted}</span>
+                <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded text-[10px] font-bold">${m.location}</span>
+            </div>
+        `;
+    }).join('');
+
+    // Verdubbel de items zodat de animatie naadloos en traploos doorloopt
+    track.innerHTML = tickerItemsHTML + `<span class="mx-4 text-emerald-300">•</span>` + tickerItemsHTML;
+}
+
 function renderMatchesView(appData) {
     const plans = appData.plans;
     const list = document.getElementById('match-list');
@@ -692,7 +755,6 @@ function renderMatchesView(appData) {
 
     const matches = plans.matches || [];
 
-    // Vult de filter dropdown met zowel de vaste favoriete clubs als eventuele unieke clubs uit ingevoerde wedstrijden
     const favoriteClubs = plans.favoriteClubs || [];
     const matchClubs = matches.map(m => m.club);
     const allUniqueClubs = [...new Set([...favoriteClubs, ...matchClubs])];
@@ -714,9 +776,6 @@ function renderMatchesView(appData) {
     const displayed = showAllMatches ? filtered : filtered.slice(0, 5);
 
     list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => {
-        // Bepaal de weergavevolgorde op basis van de locatie (Thuis / Uit)
-        // Thuis: [Club] - [Tegenstander]
-        // Uit: [Tegenstander] - [Club]
         const isThuis = m.location === 'Thuis';
         const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
 
@@ -748,6 +807,7 @@ function renderMatchesView(appData) {
         plans.matches = plans.matches.filter(x => String(x.id) !== String(id));
         saveAppData(appData);
         renderMatchesView(appData);
+        renderWeeklyTicker(appData);
         showToast("Wedstrijd verwijderd.");
     };
 }
