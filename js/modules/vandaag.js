@@ -80,11 +80,10 @@ export function initVandaagModule(appData) {
             </div>
         </div>
 
-        <!-- 2. Actie-Hub voor Vandaag -->
+        <!-- 2. Actie-Hub voor Vandaag (zonder overbodige knop) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4 space-y-4 text-xs">
             <div class="flex justify-between items-center">
                 <h2 class="text-base font-bold text-indigo-950">📋 Actie-Hub voor Vandaag</h2>
-                <span class="px-3 py-1 bg-indigo-600 text-white rounded-xl font-semibold shadow-sm">Direct Afvinken</span>
             </div>
             <p class="text-gray-500">Hier verzamelen we de belangrijkste zaken van jouw andere tabbladen. Vink ze hier direct af!</p>
             <div class="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-1">
@@ -678,7 +677,7 @@ function renderActieHub(appData) {
         const g = goals.find(x => x.id === id);
         if (g) {
             g.status = status;
-            if (status === 'volledig') voegTrtsKnikkerToe(appData, `Doel volbracht: ${g.title}`, 'Doelen');
+            if (status === 'volledig') voegTrotsKnikkerToe(appData, `Doel volbracht: ${g.title}`, 'Doelen');
             saveAppData(appData);
             renderActieHub(appData);
             showToast("Doel-status bijgewerkt! 🎯");
