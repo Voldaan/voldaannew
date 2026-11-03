@@ -5,10 +5,10 @@ const MONEY_CATEGORIES = ['boodschappen', 'tanken', 'horeca', 'tabak', 'onverwac
 const MONEY_LABELS = ['Geen bewustwordingslabel', 'Besparing/Onnodig', 'Impulsaankoop', 'Noodzakelijk/Vaste last', 'Investeer in mezelf'];
 const PERIODIC_OPTIONS = ['Eenmalig', 'Wekelijks', 'Maandelijks', 'Jaarlijks'];
 
-// Status voor privacy / demo-modus
 let isPrivacyMode = false;
+let showAllTxs = false;
+let showAllExpected = false;
 
-// Uitgebreide databank met Kennis & Hacks specifiek voor Geld & Financiën
 const MONEY_HACKS_DB = [
     {
         title: "🛡️ De 24-Uurs Wachtkamer Regel",
@@ -40,9 +40,53 @@ const MONEY_HACKS_DB = [
     },
     {
         title: "🧭 Vrijheids-Horizon Focus",
-        text: "Elke euro die je extra aflost of bespaart, vergroot direct je financiële bewegingsruimte en brengt je een stap dichter bij totale rust in je hoofd."
+        text: "Elke euro die je extra aflost of bespaart, vergroot direct je financiële bewegingsruimte en brengt je een stap dichtbij totale rust in je hoofd."
     }
 ];
+
+// Helper: Bepaal de Payday-periode (loopt van 23e t/m de 22e van de volgende maand)
+function getPaydayPeriod(dateInput = new Date()) {
+    const d = new Date(dateInput);
+    const day = d.getDate();
+    let year = d.getFullYear();
+    let month = d.getMonth();
+
+    if (day < 23) {
+        // Zit in de periode gestart op de 23e van de VORIGE maand
+        month -= 1;
+        if (month < 0) {
+            month = 11;
+            year -= 1;
+        }
+    }
+    const start = new Date(year, month, 23, 0, 0, 0);
+    const nextMonth = month + 1 === 12 ? 0 : month + 1;
+    const nextYear = month + 1 === 12 ? year + 1 : year;
+    const end = new Date(nextYear, nextMonth, 22, 23, 59, 59);
+
+    return { start, end };
+}
+
+function isInCurrentPaydayMonth(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const { start, end } = getPaydayPeriod(new Date());
+    return d >= start && d <= end;
+}
+
+function checkPaydayMonthFilter(dateStr, filterVal) {
+    if (!dateStr || filterVal === 'all') return true;
+    const d = new Date(dateStr);
+    if (filterVal === 'current') {
+        return isInCurrentPaydayMonth(dateStr);
+    } else if (filterVal.startsWith('month-')) {
+        // formaat: month-YYYY-MM
+        const [, targetYear, targetMonth] = filterVal.split('-');
+        const period = getPaydayPeriod(new Date(parseInt(targetYear), parseInt(targetMonth) - 1, 23));
+        return d >= period.start && d <= period.end;
+    }
+    return true;
+}
 
 export function initMoneyModule(appData) {
     const container = document.getElementById('geld') || document.getElementById('money');
@@ -64,7 +108,7 @@ export function initMoneyModule(appData) {
             </button>
         </div>
 
-        <!-- Bovenste Grid: Saldo (met dynamische pastel gloed) & compacte Paydayradar -->
+        <!-- Bovenste Grid: Saldo & Paydayradar -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div id="balance-card" class="bg-white p-5 rounded-2xl shadow-sm border-2 flex flex-col justify-between transition-all duration-300">
                 <div>
@@ -90,9 +134,12 @@ export function initMoneyModule(appData) {
         <div class="bg-white p-5 rounded-2xl shadow-sm border-2 border-indigo-100 mb-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-base font-bold text-indigo-900">💶 Transacties & Overzicht</h2>
-                <button id="open-tx-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Transactie</button>
+                <div class="flex gap-1.5">
+                    <button id="open-tx-beheer-modal-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
+                    <button id="open-tx-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+Toevoegen</button>
+                </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Houd rust en overzicht in al je uitgaven en inkomsten. Klik op een transactie om te bewerken.</p>
+            <p class="text-xs text-gray-500 mb-3">Houd rust en overzicht in al je uitgaven en inkomsten.</p>
             
             <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
                 <input type="text" id="tx-search" placeholder="Zoek transactie..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl">
@@ -131,24 +178,35 @@ export function initMoneyModule(appData) {
                     <h2 class="text-base font-bold text-indigo-900">📅 Verwachte Uitgaven & Vaste Lasten</h2>
                     <p id="expected-total-label" class="text-xs font-semibold text-indigo-700 mt-0.5">Totaal verwacht: € 0.00</p>
                 </div>
-                <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+ Verwachte Uitgave</button>
+                <div class="flex gap-1.5">
+                    <button id="open-expected-beheer-modal-btn" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition shadow-2xs">Beheer</button>
+                    <button id="open-expected-modal-btn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition shadow-sm">+toevoegen</button>
+                </div>
             </div>
-            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven. Klik om te bewerken of vink af.</p>
+            <p class="text-xs text-gray-500 mb-3">Overzicht van geplande uitgaven in deze payday-maand.</p>
+            
+            <div class="flex flex-col gap-2 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+                <div class="grid grid-cols-1">
+                    <select id="expected-filter-payday-month" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                        <option value="current">Huidige payday-maand (23e t/m 22e)</option>
+                        <option value="all">Alle payday-maanden</option>
+                    </select>
+                </div>
+            </div>
+
             <ul id="expected-expense-list" class="space-y-2"></ul>
+            <div id="expected-expand-toggle-container" class="text-center pt-2"></div>
         </div>
 
-        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET -->
-        <div class="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50/60 p-4 rounded-2xl shadow-sm border border-emerald-200/60 mb-4">
-            <div class="flex justify-between items-start mb-1.5">
-                <div class="flex items-center gap-1.5">
-                    <span class="text-sm">🧠</span>
-                    <h3 id="money-hack-title" class="text-xs font-bold text-indigo-900 uppercase tracking-wide"></h3>
-                </div>
-                <button id="refresh-money-hack-btn" title="Toon andere financiële tip" class="text-[11px] bg-white/80 hover:bg-white text-indigo-700 border border-emerald-200 px-2.5 py-1 rounded-xl shadow-sm transition font-medium flex items-center gap-1">
-                    <span>🔄</span> <span>Ververs Tip</span>
+        <!-- ✨ SUBTIELE KENNIS & HACKS WIDGET (Aangepast volgens Zachte Focus stijl) -->
+        <div class="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-indigo-50/60 p-4 rounded-2xl shadow-sm border border-emerald-200/60 mb-4 text-xs space-y-2">
+            <div class="flex justify-between items-center">
+                <span id="money-hack-title" class="font-bold text-indigo-950 text-sm flex items-center gap-1.5">🧠 De 24-Uurs Wachtkamer Regel</span>
+                <button id="refresh-money-hack-btn" class="px-2.5 py-1 bg-white border border-emerald-300 text-emerald-900 rounded-lg text-[11px] font-semibold hover:bg-emerald-100 transition shadow-2xs flex items-center gap-1">
+                    <span>💡</span> <span>Ververs Tip</span>
                 </button>
             </div>
-            <p id="money-hack-text" class="text-xs text-gray-600 leading-relaxed"></p>
+            <p id="money-hack-text" class="text-gray-600 leading-relaxed"></p>
         </div>
 
         <!-- 3. Het Ruimte-Kompas -->
@@ -204,6 +262,7 @@ export function initMoneyModule(appData) {
 function initMoneyModals(appData) {
     if (document.getElementById('tx-modal')) return;
 
+    // Transactie modal met plus/minus knop
     const txModalHTML = `
         <div id="tx-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
@@ -220,7 +279,10 @@ function initMoneyModals(appData) {
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block font-semibold text-gray-600 mb-1">Bedrag (€)</label>
-                            <input type="number" step="0.01" id="modal-tx-amount" placeholder="Negatief (-15.50) of positief (100)" class="w-full px-3 py-2 border rounded-xl" required>
+                            <div class="flex gap-1">
+                                <button type="button" id="tx-sign-btn" class="px-3 py-2 bg-red-100 text-red-800 font-bold rounded-xl transition" title="Wissel tussen Uitgave (-) en Inkomst (+)">-</button>
+                                <input type="number" step="0.01" id="modal-tx-amount" placeholder="Bedrag" class="w-full px-3 py-2 border rounded-xl" required>
+                            </div>
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-600 mb-1">Categorie</label>
@@ -255,11 +317,43 @@ function initMoneyModals(appData) {
             </div>
         </div>
     `;
+
+    // Transactie Beheer Modal
+    const txBeheerModalHTML = `
+        <div id="tx-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Transacties & Archief</h3>
+                    <button id="close-tx-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <div class="space-y-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <input type="text" id="tx-beheer-search" placeholder="🔍 Live zoeken in alle transacties..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="tx-beheer-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                            <option value="all">Alle data</option>
+                            <option value="today">Vandaag</option>
+                            <option value="week">Deze week</option>
+                            <option value="month">Deze maand</option>
+                            <option value="year">Dit jaar</option>
+                        </select>
+                        <select id="tx-beheer-filter-cat" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                            <option value="Alle">Alle categorieën</option>
+                            ${MONEY_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div id="tx-beheer-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                <button id="close-tx-beheer-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
+            </div>
+        </div>
+    `;
+
+    // Verwachte Uitgave Beheren Modal
     const expectedModalHTML = `
         <div id="expected-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
                 <div class="flex justify-between items-center">
-                    <h3 id="expected-modal-title" class="text-sm font-bold text-indigo-950">📅 Verwachte Uitgave Beheren</h3>
+                    <h3 id="expected-modal-title" class="text-sm font-bold text-indigo-950">📅 Verwachte Uitgave Toevoegen / Bewerken</h3>
                     <button id="close-expected-modal" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
                 </div>
                 <form id="expected-modal-form" class="space-y-3">
@@ -302,6 +396,35 @@ function initMoneyModals(appData) {
             </div>
         </div>
     `;
+
+    // Verwachte Uitgaven Beheer Modal (met live zoekfunctie, herstel en verwijder knoppen)
+    const expectedBeheerModalHTML = `
+        <div id="expected-beheer-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-indigo-950">⚙️ Beheer Verwachte Uitgaven & Afgevinkte Historie</h3>
+                    <button id="close-expected-beheer" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
+                </div>
+                <div class="space-y-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <input type="text" id="expected-beheer-search" placeholder="🔍 Live zoeken in verwachte uitgaven..." class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="expected-beheer-filter-status" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                            <option value="all">Alle statussen</option>
+                            <option value="open">Alleen openstaand</option>
+                            <option value="completed">Alleen afgevinkt</option>
+                        </select>
+                        <select id="expected-beheer-filter-cat" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
+                            <option value="Alle">Alle categorieën</option>
+                            ${MONEY_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div id="expected-beheer-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                <button id="close-expected-beheer-bottom" class="w-full py-2 bg-indigo-600 text-white rounded-xl font-semibold">Sluiten ✨</button>
+            </div>
+        </div>
+    `;
+
     const projectModalHTML = `
         <div id="project-modal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-xs">
@@ -333,10 +456,42 @@ function initMoneyModals(appData) {
             </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', txModalHTML + expectedModalHTML + projectModalHTML);
+
+    document.body.insertAdjacentHTML('beforeend', txModalHTML + txBeheerModalHTML + expectedModalHTML + expectedBeheerModalHTML + projectModalHTML);
     setupModalHandlers('tx', appData);
     setupModalHandlers('expected', appData);
     setupModalHandlers('project', appData);
+
+    // Beheer modal openers
+    document.getElementById('open-tx-beheer-modal-btn').onclick = () => {
+        document.getElementById('tx-beheer-modal').classList.remove('hidden');
+        renderTxBeheerList(appData);
+    };
+    document.getElementById('close-tx-beheer').onclick = () => document.getElementById('tx-beheer-modal').classList.add('hidden');
+    document.getElementById('close-tx-beheer-bottom').onclick = () => document.getElementById('tx-beheer-modal').classList.add('hidden');
+
+    document.getElementById('open-expected-beheer-modal-btn').onclick = () => {
+        document.getElementById('expected-beheer-modal').classList.remove('hidden');
+        renderExpectedBeheerList(appData);
+    };
+    document.getElementById('close-expected-beheer').onclick = () => document.getElementById('expected-beheer-modal').classList.add('hidden');
+    document.getElementById('close-expected-beheer-bottom').onclick = () => document.getElementById('expected-beheer-modal').classList.add('hidden');
+
+    // Plus/Min knop logica voor transacties
+    const signBtn = document.getElementById('tx-sign-btn');
+    if (signBtn) {
+        let isNegative = true;
+        signBtn.onclick = () => {
+            isNegative = !isNegative;
+            if (isNegative) {
+                signBtn.textContent = '-';
+                signBtn.className = "px-3 py-2 bg-red-100 text-red-800 font-bold rounded-xl transition";
+            } else {
+                signBtn.textContent = '+';
+                signBtn.className = "px-3 py-2 bg-green-100 text-green-800 font-bold rounded-xl transition";
+            }
+        };
+    }
 }
 
 function setupModalHandlers(type, appData) {
@@ -351,11 +506,13 @@ function setupModalHandlers(type, appData) {
         if (type === 'tx') {
             document.getElementById('modal-tx-id').value = '';
             document.getElementById('tx-modal-form').reset();
-            document.getElementById('tx-modal-title').textContent = '💶 Nieuwe Transactie Invoeren';
+            document.getElementById('tx-sign-btn').textContent = '-';
+            document.getElementById('tx-sign-btn').className = "px-3 py-2 bg-red-100 text-red-800 font-bold rounded-xl transition";
+            document.getElementById('tx-modal-title').textContent = '💶 Transactie Toevoegen';
         } else if (type === 'expected') {
             document.getElementById('modal-exp-id').value = '';
             document.getElementById('expected-modal-form').reset();
-            document.getElementById('expected-modal-title').textContent = '📅 Nieuwe Verwachte Uitgave';
+            document.getElementById('expected-modal-title').textContent = '📅 Verwachte Uitgave Toevoegen';
         } else if (type === 'project') {
             document.getElementById('modal-proj-id').value = '';
             document.getElementById('project-modal-form').reset();
@@ -371,7 +528,11 @@ function setupModalHandlers(type, appData) {
             if (type === 'tx') {
                 const id = document.getElementById('modal-tx-id').value;
                 const description = document.getElementById('modal-tx-desc').value.trim();
-                const amount = parseFloat(document.getElementById('modal-tx-amount').value);
+                let amount = parseFloat(document.getElementById('modal-tx-amount').value);
+                const sign = document.getElementById('tx-sign-btn').textContent;
+                if (sign === '-' && amount > 0) amount = -amount;
+                if (sign === '+' && amount < 0) amount = Math.abs(amount);
+
                 const category = document.getElementById('modal-tx-cat').value;
                 const label = document.getElementById('modal-tx-label').value;
                 const period = document.getElementById('modal-tx-period').value;
@@ -459,7 +620,6 @@ function setupModalHandlers(type, appData) {
 }
 
 function initMoneyLogic(appData) {
-    // Privacy / Demo-modus knop koppelen
     const privacyBtn = document.getElementById('toggle-privacy-btn');
     if (privacyBtn) {
         privacyBtn.onclick = () => {
@@ -507,9 +667,11 @@ function initMoneyLogic(appData) {
             renderMoneyViews(appData);
         }
     };
+
     document.getElementById('tx-search').oninput = () => renderMoneyViews(appData);
     document.getElementById('tx-filter-cat').onchange = () => renderMoneyViews(appData);
-    
+    document.getElementById('expected-filter-payday-month').onchange = () => renderMoneyViews(appData);
+
     const dateFilterSelect = document.getElementById('tx-filter-date');
     const customBox = document.getElementById('tx-custom-filter-box');
     const dateInput = document.getElementById('tx-custom-date');
@@ -576,13 +738,123 @@ function initMoneyLogic(appData) {
     initPaydayRadar();
 }
 
-let showAllTxs = false;
+function renderTxBeheerList(appData) {
+    const listEl = document.getElementById('tx-beheer-list');
+    const searchInput = document.getElementById('tx-beheer-search');
+    const filterDate = document.getElementById('tx-beheer-filter-date');
+    const filterCat = document.getElementById('tx-beheer-filter-cat');
+    if (!listEl) return;
+
+    const render = () => {
+        const query = (searchInput?.value || '').toLowerCase();
+        const dFilter = filterDate?.value || 'all';
+        const cFilter = filterCat?.value || 'Alle';
+
+        const txs = appData.money?.transactions || [];
+        const filtered = txs.filter(t => {
+            const matchQ = t.description.toLowerCase().includes(query) || t.category.toLowerCase().includes(query);
+            const matchC = cFilter === 'Alle' || t.category === cFilter;
+            const matchD = checkDateFilter(t.date, dFilter, null);
+            return matchQ && matchC && matchD;
+        });
+
+        listEl.innerHTML = filtered.length === 0 ? '<p class="text-xs text-gray-400 italic text-center py-3">Geen transacties gevonden.</p>' : filtered.slice().reverse().map(t => `
+            <div class="flex flex-col gap-1 p-3 bg-white border border-gray-100 rounded-xl shadow-xs text-xs">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="font-bold text-indigo-900">[${t.category}]</span> <span class="font-medium text-gray-900">${t.description}</span>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">${new Date(t.date).toLocaleDateString('nl-NL')} • ${t.label || ''}</span>
+                    </div>
+                    <span class="font-bold text-sm ${t.amount >= 0 ? 'text-green-700' : 'text-red-700'}">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-end gap-1.5 pt-1 border-t border-gray-50">
+                    <button onclick="window.openEditTxModal(${t.id}); document.getElementById('tx-beheer-modal').classList.add('hidden');" class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium">Bewerken ✏️</button>
+                    <button onclick="window.deleteTransactionBeheer(${t.id})" class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-medium">Verwijderen ✕</button>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    if (searchInput) searchInput.oninput = render;
+    if (filterDate) filterDate.onchange = render;
+    if (filterCat) filterCat.onchange = render;
+
+    window.deleteTransactionBeheer = (id) => {
+        const tx = appData.money.transactions.find(x => x.id === id);
+        if (tx) {
+            appData.money.balance -= tx.amount;
+            appData.money.transactions = appData.money.transactions.filter(x => x.id !== id);
+            saveAppData(appData);
+            renderTxBeheerList(appData);
+            renderMoneyViews(appData);
+            showToast("Transactie definitief verwijderd.");
+        }
+    };
+
+    render();
+}
+
+function renderExpectedBeheerList(appData) {
+    const listEl = document.getElementById('expected-beheer-list');
+    const searchInput = document.getElementById('expected-beheer-search');
+    const filterStatus = document.getElementById('expected-beheer-filter-status');
+    const filterCat = document.getElementById('expected-beheer-filter-cat');
+    if (!listEl) return;
+
+    const render = () => {
+        const query = (searchInput?.value || '').toLowerCase();
+        const sFilter = filterStatus?.value || 'all';
+        const cFilter = filterCat?.value || 'Alle';
+
+        const expenses = appData.money?.expectedExpenses || [];
+        const filtered = expenses.filter(e => {
+            const matchQ = e.description.toLowerCase().includes(query) || e.category.toLowerCase().includes(query);
+            const matchC = cFilter === 'Alle' || e.category === cFilter;
+            let matchS = true;
+            if (sFilter === 'open') matchS = !e.completed;
+            if (sFilter === 'completed') matchS = e.completed;
+            return matchQ && matchC && matchS;
+        });
+
+        listEl.innerHTML = filtered.length === 0 ? '<p class="text-xs text-gray-400 italic text-center py-3">Geen verwachte uitgaven gevonden.</p>' : filtered.slice().reverse().map(e => `
+            <div class="flex flex-col gap-1.5 p-3 bg-white border border-gray-100 rounded-xl shadow-xs text-xs ${e.completed ? 'opacity-70' : ''}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="font-bold text-indigo-900">[${e.category}]</span> <span class="font-medium text-gray-900">${e.description}</span>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">Datum: ${e.date} • ${e.method}</span>
+                    </div>
+                    <span class="font-bold text-sm text-indigo-950">€ ${e.amount.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between items-center pt-1 border-t border-gray-50">
+                    <span class="text-[10px] font-semibold ${e.completed ? 'text-emerald-700' : 'text-amber-700'}">${e.completed ? '✓ Afgevinkt' : 'Openstaand'}</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="window.toggleExpectedExpense(${e.id}); renderExpectedBeheerList(appData);" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-medium">${e.completed ? 'Terugzetten 🔄' : 'Afvinken ✓'}</button>
+                        <button onclick="window.deleteExpectedBeheer(${e.id})" class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg font-medium">Verwijderen ✕</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    if (searchInput) searchInput.oninput = render;
+    if (filterStatus) filterStatus.onchange = render;
+    if (filterCat) filterCat.onchange = render;
+
+    window.deleteExpectedBeheer = (id) => {
+        appData.money.expectedExpenses = appData.money.expectedExpenses.filter(x => x.id !== id);
+        saveAppData(appData);
+        renderExpectedBeheerList(appData);
+        renderMoneyViews(appData);
+        showToast("Verwachte uitgave definitief verwijderd.");
+    };
+
+    render();
+}
 
 function renderMoneyViews(appData) {
     const balanceEl = document.getElementById('current-balance');
     const balanceCard = document.getElementById('balance-card');
     
-    // Als privacy-modus aan staat, tonen we veilige fictieve cijfers
     const balance = isPrivacyMode ? 2450.00 : (appData.money?.balance || 0);
     
     balanceEl.textContent = `€ ${balance.toFixed(2)}`;
@@ -600,6 +872,7 @@ function renderMoneyViews(appData) {
         }
     }
 
+    // Transacties rendering (bedragen netjes onder elkaar)
     const txList = document.getElementById('transaction-list');
     const toggleContainer = document.getElementById('tx-expand-toggle-container');
     const searchTerm = document.getElementById('tx-search').value.toLowerCase();
@@ -612,7 +885,6 @@ function renderMoneyViews(appData) {
     else if (dateFilter === 'specific-year') customVal = document.getElementById('tx-custom-year').value;
     else if (dateFilter === 'specific-week') customVal = document.getElementById('tx-custom-week').value;
 
-    // Fictieve transacties als privacy-modus aan staat
     const rawTxs = isPrivacyMode ? [
         { id: 1, description: "Salaris Maand", amount: 2850.00, category: "loon", label: "Investeer in mezelf", date: new Date().toISOString() },
         { id: 2, description: "Supermarkt Boodschappen", amount: -65.50, category: "boodschappen", label: "Noodzakelijk/Vaste last", date: new Date().toISOString() },
@@ -628,14 +900,16 @@ function renderMoneyViews(appData) {
 
     const displayTxs = showAllTxs ? txs.slice().reverse() : txs.slice(-5).reverse();
     txList.innerHTML = displayTxs.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen transacties gevonden.</p>' : displayTxs.map(t => `
-        <li ${isPrivacyMode ? '' : `onclick="window.openEditTxModal(${t.id})"`} class="flex justify-between items-center p-3 rounded-xl text-xs border ${isPrivacyMode ? '' : 'cursor-pointer hover:bg-gray-50/80'} transition ${t.amount >= 0 ? 'bg-green-50/40 border-green-100 text-green-950' : 'bg-red-50/40 border-red-100 text-red-950'}">
-            <div>
-                <span class="font-bold">[${t.category}]</span> <span class="text-sm font-medium">${t.description}</span>
-                <span class="text-[10px] text-gray-500 block mt-0.5">${t.label || ''} • ${new Date(t.date).toLocaleDateString('nl-NL')}</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="font-bold text-sm">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
+        <li ${isPrivacyMode ? '' : `onclick="window.openEditTxModal(${t.id})"`} class="flex flex-col p-3 rounded-xl text-xs border ${isPrivacyMode ? '' : 'cursor-pointer hover:bg-gray-50/80'} transition ${t.amount >= 0 ? 'bg-green-50/40 border-green-100 text-green-950' : 'bg-red-50/40 border-red-100 text-red-950'} gap-1">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="font-bold">[${t.category}]</span> <span class="text-sm font-medium">${t.description}</span>
+                </div>
                 ${isPrivacyMode ? '' : `<button onclick="event.stopPropagation(); window.deleteTransaction(${t.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>`}
+            </div>
+            <div class="flex justify-between items-center text-[11px] text-gray-500 pt-1 border-t border-gray-100">
+                <span>${t.label || ''} • ${new Date(t.date).toLocaleDateString('nl-NL')}</span>
+                <span class="font-bold text-sm">${t.amount >= 0 ? '+' : ''}€ ${t.amount.toFixed(2)}</span>
             </div>
         </li>
     `).join('');
@@ -657,7 +931,17 @@ function renderMoneyViews(appData) {
         if (t) {
             document.getElementById('modal-tx-id').value = t.id;
             document.getElementById('modal-tx-desc').value = t.description;
-            document.getElementById('modal-tx-amount').value = t.amount;
+            document.getElementById('modal-tx-amount').value = Math.abs(t.amount);
+            
+            const signBtn = document.getElementById('tx-sign-btn');
+            if (t.amount >= 0) {
+                signBtn.textContent = '+';
+                signBtn.className = "px-3 py-2 bg-green-100 text-green-800 font-bold rounded-xl transition";
+            } else {
+                signBtn.textContent = '-';
+                signBtn.className = "px-3 py-2 bg-red-100 text-red-800 font-bold rounded-xl transition";
+            }
+
             document.getElementById('modal-tx-cat').value = t.category;
             document.getElementById('modal-tx-label').value = t.label || MONEY_LABELS[0];
             document.getElementById('modal-tx-period').value = t.period || PERIODIC_OPTIONS[0];
@@ -681,30 +965,55 @@ function renderMoneyViews(appData) {
         }
     };
 
+    // Verwachte Uitgaven Rendering (met payday maand filter & max 5 zichtbaar + totaalbedrag dat meerekent met filter)
     const expList = document.getElementById('expected-expense-list');
-    const expenses = isPrivacyMode ? [
+    const expectedExpandContainer = document.getElementById('expected-expand-toggle-container');
+    const paydayMonthFilterVal = document.getElementById('expected-filter-payday-month')?.value || 'current';
+
+    const rawExpenses = isPrivacyMode ? [
         { id: 101, description: "Zorgverzekering", amount: 135.00, method: "Automatische Incasso", category: "verwachte uitgave", date: "2026-11-01", completed: false },
         { id: 102, description: "Huur / Hypotheek", amount: 850.00, method: "Automatische Incasso", category: "verwachte uitgave", date: "2026-11-01", completed: true }
     ] : (appData.money?.expectedExpenses || []);
     
+    // Filter op payday maand & alleen openstaand zichtbaar in de hoofdlijst (afgevinkt verdwijnt hier)
+    const filteredExpenses = rawExpenses.filter(e => {
+        const matchesPaydayMonth = checkPaydayMonthFilter(e.date, paydayMonthFilterVal);
+        const isOpen = !e.completed;
+        return matchesPaydayMonth && isOpen;
+    });
+
+    // Bereken totaal bedrag van ALLE overgebleven gefilterde openstaande uitgaven
     let totalExpectedAmount = 0;
-    expenses.forEach(e => { if (!e.completed) totalExpectedAmount += e.amount; });
-    document.getElementById('expected-total-label').textContent = `Totaal nog te verwachten: € ${totalExpectedAmount.toFixed(2)}`;
-    
-    expList.innerHTML = expenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen verwachte uitgaven ingesteld.</p>' : expenses.map(e => `
-        <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs ${e.completed ? 'opacity-50 line-through' : ''}">
+    filteredExpenses.forEach(e => { totalExpectedAmount += e.amount; });
+    document.getElementById('expected-total-label').textContent = `Totaal verwacht (${filteredExpenses.length} items): € ${totalExpectedAmount.toFixed(2)}`;
+
+    const displayedExpenses = showAllExpected ? filteredExpenses : filteredExpenses.slice(0, 5);
+
+    expList.innerHTML = displayedExpenses.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen openstaande verwachte uitgaven in deze periode.</p>' : displayedExpenses.map(e => `
+        <div class="flex justify-between items-center p-3 bg-gray-50 border rounded-xl text-xs">
             <div ${isPrivacyMode ? '' : `onclick="window.openEditExpectedModal(${e.id})" `}class="${isPrivacyMode ? '' : 'cursor-pointer'} flex-1">
                 <span class="font-bold text-indigo-950 text-xs">[${e.category}]</span> <span class="font-medium text-gray-900 text-sm">${e.description}</span> - <span class="font-bold text-sm">€ ${e.amount.toFixed(2)}</span>
                 <span class="text-[11px] text-gray-500 block mt-0.5">Betaalwijze: ${e.method} • Datum: ${e.date}</span>
             </div>
             <div class="flex gap-2 items-center">
                 ${isPrivacyMode ? '' : `
-                    <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100">${e.completed ? 'Terugzetten' : 'Afvinken ✨'}</button>
+                    <button onclick="window.toggleExpectedExpense(${e.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold hover:bg-indigo-100">Afvinken ✨</button>
                     <button onclick="window.deleteExpected(${e.id})" class="text-gray-300 hover:text-red-500 font-bold px-1">✕</button>
                 `}
             </div>
         </div>
     `).join('');
+
+    if (filteredExpenses.length > 5 && !isPrivacyMode) {
+        expectedExpandContainer.innerHTML = `<button onclick="window.toggleShowAllExpected()" class="text-xs text-indigo-600 font-semibold underline">${showAllExpected ? 'Minder weergeven (max 5)' : `Alles weergeven (${filteredExpenses.length} uitgaven)`}</button>`;
+    } else {
+        expectedExpandContainer.innerHTML = '';
+    }
+
+    window.toggleShowAllExpected = () => {
+        showAllExpected = !showAllExpected;
+        renderMoneyViews(appData);
+    };
 
     window.openEditExpectedModal = (id) => {
         if (isPrivacyMode) return;
@@ -743,6 +1052,7 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
+    // Financiële projecten / Ruimte-Kompas
     const projList = document.getElementById('financial-projects-list');
     const projects = isPrivacyMode ? [
         { id: 201, title: "Financiële Buffer Opbouwen", target: 3000.00, freed: 2100.00 }
@@ -821,6 +1131,7 @@ function renderMoneyViews(appData) {
         renderMoneyViews(appData);
     };
 
+    // Studieschuld
     const studySummary = document.getElementById('study-debt-summary');
     const study = isPrivacyMode ? { total: 15000, paid: 5000, monthly: 150 } : (appData.money?.studyDebt || { total: 41939, paid: 477.35, monthly: 477.35 });
     const rest = Math.max(0, study.total - study.paid);
@@ -834,6 +1145,7 @@ function renderMoneyViews(appData) {
         <div class="flex justify-between pt-1 border-t"><span>Geschatte looptijd:</span><span class="font-bold">${monthsLeft} maanden (${yearsLeft} jaar)</span></div>
     `;
 
+    // Impuls Wachtkamer
     const impulseList = document.getElementById('impulse-list');
     const impulses = isPrivacyMode ? [
         { id: 301, item: "Nieuwe Boekencollectie", price: 39.99 }
