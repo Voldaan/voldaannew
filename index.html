@@ -12,32 +12,35 @@
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <!-- Eigen Stylesheet -->
-    <link rel="stylesheet" href="css/style.css?v=5.0">
+    <link rel="stylesheet" href="css/style.css?v=6.0">
 </head>
 <body class="bg-[#f7f5f0] text-gray-800 font-sans min-h-screen flex flex-col justify-between pb-20">
     
-    <!-- Header: Compact, edge-to-edge en vast (sticky) -->
-    <header class="bg-white border-b border-indigo-100 sticky top-0 z-40 shadow-sm w-full">
-        <div class="max-w-md mx-auto px-3 py-2 flex items-center justify-between">
-            <div class="flex items-center gap-2 overflow-hidden">
-                <div class="flex items-center gap-1 flex-shrink-0">
-                    <span class="text-sm">🪷</span>
-                    <h1 class="text-xs font-bold text-indigo-950 tracking-tight">Voldaan</h1>
+    <!-- Vaste sticky container voor Header + Ticker zodat alles altijd mee naar beneden scrolt -->
+    <div class="sticky top-0 z-40 w-full bg-[#f7f5f0] shadow-sm">
+        <!-- Header: Compact, edge-to-edge -->
+        <header class="bg-white border-b border-indigo-100 w-full">
+            <div class="max-w-md mx-auto px-3 py-2 flex items-center justify-between">
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <span class="text-base">🪷</span>
+                        <h1 class="text-sm font-bold text-indigo-950 tracking-tight">Voldaan</h1>
+                    </div>
+                    <span class="text-gray-300 text-xs">|</span>
+                    <p class="text-[11px] text-gray-500 font-medium truncate">meer structuur, minder chaos</p>
                 </div>
-                <span class="text-gray-300 text-xs">|</span>
-                <p class="text-[10px] text-gray-500 font-medium truncate">meer structuur, minder chaos</p>
+                <!-- Live knop om ticker in te stellen -->
+                <button id="open-ticker-settings" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-2xs flex-shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live
+                </button>
             </div>
-            <!-- Live knop om ticker in te stellen -->
-            <button id="open-ticker-settings" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-2xs flex-shrink-0">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live
-            </button>
-        </div>
-    </header>
+        </header>
 
-    <!-- Globale Live Ticker Balk (Vast onder de header op elke pagina) -->
-    <div id="global-ticker-container" class="ticker-wrapper hidden">
-        <div id="global-ticker-track" class="ticker-track">
-            <!-- Wordt automatisch gevuld -->
+        <!-- Globale Live Ticker Balk -->
+        <div id="global-ticker-container" class="ticker-wrapper hidden">
+            <div id="global-ticker-track" class="ticker-track" title="Klik om te pauzeren/hervatten">
+                <!-- Wordt automatisch gevuld -->
+            </div>
         </div>
     </div>
 
@@ -48,19 +51,27 @@
                 <h3 class="text-sm font-bold text-indigo-950 flex items-center gap-1">🔴 Live Ticker Instellingen</h3>
                 <button id="close-ticker-settings" class="text-gray-400 hover:text-gray-600 text-base font-bold">✕</button>
             </div>
-            <p class="text-gray-500">Bepaal wat er door de live balk moet scrollen en hoe snel.</p>
+            <p class="text-gray-500">Beheer de weergave en het tempo van de live balk.</p>
             
             <div class="space-y-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Zichtbaarheid</label>
+                    <label class="flex items-center gap-2 cursor-pointer font-medium text-emerald-900">
+                        <input type="checkbox" id="ticker-enabled-checkbox" class="rounded text-indigo-600" checked>
+                        <span>Toon live ticker balk in de app</span>
+                    </label>
+                </div>
+
+                <div class="pt-1">
                     <label class="block font-semibold text-gray-700 mb-1">Looptempo (Snelheid)</label>
                     <select id="ticker-speed-select" class="w-full px-3 py-2 bg-white border rounded-xl text-xs">
-                        <option value="35">Rustig & Traag (35s)</option>
-                        <option value="20" selected>Normaal (20s)</option>
-                        <option value="10">Flitsend / Snel (10s)</option>
+                        <option value="50">Rustig & Traag (50s)</option>
+                        <option value="80">Extra Langzaam (80s)</option>
+                        <option value="35">Snel (35s)</option>
                     </select>
                 </div>
 
-                <div class="space-y-2 pt-1">
+                <div class="space-y-2 pt-1 border-t border-gray-200">
                     <label class="block font-semibold text-gray-700">Te tonen onderdelen:</label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="show-ticker-matches" class="rounded text-indigo-600" checked>
@@ -72,7 +83,7 @@
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="show-ticker-money" class="rounded text-indigo-600" checked>
-                        <span>💰 Verwachte uitgaven deze week</span>
+                        <span>💰 Openstaande verwachte uitgaven deze week</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="show-ticker-weather" class="rounded text-indigo-600" checked>
@@ -149,6 +160,6 @@
     </nav>
 
     <!-- App JavaScript Entry Point -->
-    <script type="module" src="js/app.js?v=5.0"></script>
+    <script type="module" src="js/app.js?v=6.0"></script>
 </body>
 </html>
