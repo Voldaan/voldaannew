@@ -10,7 +10,8 @@ import { initLuchtigModule } from './modules/luchtig.js';
 import { initInsightsModule } from './modules/insights.js';
 
 let cachedWeather = null;
-let cachedNews = null;
+let cachedNewsVenlo = null;
+let cachedNewsNuNl = null;
 
 async function fetchTegelenWeather() {
     if (cachedWeather) return cachedWeather;
@@ -29,23 +30,35 @@ async function fetchTegelenWeather() {
 }
 
 async function fetchOmroepVenloNews() {
-    if (cachedNews) return cachedNews;
+    if (cachedNewsVenlo) return cachedNewsVenlo;
     try {
-        // Gebruik een alternatieve public RSS-naar-JSON service met timestamp om caching tegen te gaan
         const timestamp = new Date().getTime();
         const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.omroepvenlo.nl%2Fnieuws%2Frss&_t=${timestamp}`);
         const data = await res.json();
         if (data && data.items && data.items.length > 0) {
-            cachedNews = data.items.slice(0, 4).map(item => `📰 ${item.title}`);
-            return cachedNews;
+            cachedNewsVenlo = data.items.slice(0, 3).map(item => `📰 Omroep Venlo: ${item.title}`);
+            return cachedNewsVenlo;
         }
     } catch (e) {
-        console.error("Kon nieuws niet ophalen", e);
+        console.error("Kon Omroep Venlo nieuws niet ophalen", e);
     }
-    return [
-        "📰 Omroep Venlo: Laatste nieuws uit Venlo en omgeving", 
-        "📰 Nopens het laatste lokale nieuws in Tegelen en Venlo"
-    ];
+    return ["📰 Omroep Venlo: Laatste lokaal nieuws"];
+}
+
+async function fetchNuNlNews() {
+    if (cachedNewsNuNl) return cachedNewsNuNl;
+    try {
+        const timestamp = new Date().getTime();
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.nu.nl%2Frss%2FAlgemeen&_t=${timestamp}`);
+        const data = await res.json();
+        if (data && data.items && data.items.length > 0) {
+            cachedNewsNuNl = data.items.slice(0, 4).map(item => `📰 NU.nl: ${item.title}`);
+            return cachedNewsNuNl;
+        }
+    } catch (e) {
+        console.error("Kon NU.nl nieuws niet ophalen", e);
+    }
+    return ["📰 NU.nl: Het laatste algemene nieuws"];
 }
 
 export async function updateGlobalTicker(appData) {
@@ -61,7 +74,8 @@ export async function updateGlobalTicker(appData) {
             showTasks: true,
             showMoney: true,
             showWeather: true,
-            showNews: true
+            showNews: true,
+            showNuNl: true
         };
     }
 
@@ -149,6 +163,14 @@ export async function updateGlobalTicker(appData) {
         });
     }
 
+    // 6. NU.nl News
+    if (settings.showNuNl) {
+        const nuItems = await fetchNuNlNews();
+        nuItems.forEach(news => {
+            items.push(`<div class="ticker-pill"><span>${news}</span></div>`);
+        });
+    }
+
     if (items.length === 0) {
         wrapper.classList.add('hidden');
         return;
@@ -190,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('show-ticker-money').checked = settings.showMoney ?? true;
             document.getElementById('show-ticker-weather').checked = settings.showWeather ?? true;
             document.getElementById('show-ticker-news').checked = settings.showNews ?? true;
+            document.getElementById('show-ticker-nu-nl').checked = settings.showNuNl ?? true;
         };
     }
 
@@ -206,7 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showTasks: document.getElementById('show-ticker-tasks').checked,
                 showMoney: document.getElementById('show-ticker-money').checked,
                 showWeather: document.getElementById('show-ticker-weather').checked,
-                showNews: document.getElementById('show-ticker-news').checked
+                showNews: document.getElementById('show-ticker-news').checked,
+                showNuNl: document.getElementById('show-ticker-nu-nl').checked
             };
             saveAppData(appData);
             tickerModal.classList.add('hidden');
