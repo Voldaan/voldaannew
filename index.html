@@ -12,12 +12,12 @@
     <!-- Matter.js CDN voor de fysische zwaartekracht pot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <!-- Eigen Stylesheet -->
-    <link rel="stylesheet" href="css/style.css?v=6.1">
+    <link rel="stylesheet" href="css/style.css?v=6.2">
 </head>
 <body class="bg-[#f7f5f0] text-gray-800 font-sans min-h-screen flex flex-col justify-between pb-20">
     
-    <!-- Vaste sticky container voor Header + Ticker die altijd in beeld blijft bij scrollen -->
-    <div class="sticky-header-container">
+    <!-- Muurvast bovenaan door inline sticky styling -->
+    <div style="position: sticky; top: 0; z-index: 999; background-color: #f7f5f0; width: 100%;">
         <!-- Header: Compact, edge-to-edge -->
         <header class="bg-white border-b border-indigo-100 w-full shadow-sm">
             <div class="max-w-md mx-auto px-3 py-2 flex items-center justify-between">
@@ -160,6 +160,6 @@
     </nav>
 
     <!-- App JavaScript Entry Point -->
-    <script type="module" src="js/app.js?v=6.1"></script>
+    <script type="module" src="js/app.js?v=6.2"></script>
 </body>
 </html>
