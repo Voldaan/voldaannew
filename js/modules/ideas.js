@@ -11,6 +11,8 @@ const CATEGORY_COLORS = {
     'Privé / Thuis': { bg: 'bg-emerald-50/90', border: 'border-emerald-200', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-800' }
 };
 
+let expandedIdeas = {}; // Houdt per post-it bij of deze volledig is opengeklapt
+
 function getCategoryColorStyle(category) {
     if (CATEGORY_COLORS[category]) {
         return CATEGORY_COLORS[category];
@@ -263,7 +265,7 @@ function initIdeasLogic(appData) {
         if (text) {
             if (!appData.ideasModule.ideas) appData.ideasModule.ideas = [];
             appData.ideasModule.ideas.push({ id: Date.now(), text, category, date: new Date().toISOString() });
-            saveAppData(appData); // Sla direct op in localStorage via storage.js
+            saveAppData(appData); 
             e.target.reset();
             renderIdeasView(appData);
             showToast("Post-it toegevoegd! 📌");
@@ -320,6 +322,9 @@ function renderIdeasView(appData) {
 
     grid.innerHTML = displayIdeas.length === 0 ? '<p class="text-xs text-gray-400 italic">Nog geen post-its op het bord.</p>' : displayIdeas.map(i => {
         const colors = getCategoryColorStyle(i.category);
+        const isExpanded = expandedIdeas[i.id];
+        const isLongText = i.text && i.text.length > 60; // Bepaalt of de tekst lang genoeg is voor de "meer weergeven" knop
+
         return `
             <div class="p-3.5 ${colors.bg} border ${colors.border} rounded-xl relative flex flex-col gap-1.5 shadow-sm transition-all">
                 <div class="flex justify-between items-start">
@@ -338,7 +343,14 @@ function renderIdeasView(appData) {
                         </div>
                     </div>
                 </div>
-                <p class="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">${i.text}</p>
+                <div class="overflow-hidden">
+                    <p class="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-2 break-words'}">${i.text}</p>
+                    ${isLongText ? `
+                        <button onclick="window.toggleExpandIdea(${i.id})" class="text-[10px] text-indigo-600 font-semibold hover:underline mt-1 block">
+                            ${isExpanded ? 'Minder weergeven' : 'Meer weergeven...'}
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `;
     }).join('');
@@ -348,6 +360,11 @@ function renderIdeasView(appData) {
     } else {
         toggleContainer.innerHTML = '';
     }
+
+    window.toggleExpandIdea = (id) => {
+        expandedIdeas[id] = !expandedIdeas[id];
+        renderIdeasView(appData);
+    };
 
     window.toggleShowAllIdeas = () => {
         showAllIdeas = !showAllIdeas;
