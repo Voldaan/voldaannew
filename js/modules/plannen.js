@@ -149,7 +149,7 @@ export function initPlannenModule(appData) {
                         <option value="Alle">Alle clubs / teams</option>
                     </select>
                     <select id="match-filter-date" class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs">
-                        <option value="all">Alle datums</option>
+                        <option value="all">Toekomstige wedstrijden</option>
                         <option value="today">Vandaag</option>
                         <option value="week">Deze week</option>
                         <option value="specific-week">Specifieke week...</option>
@@ -158,6 +158,7 @@ export function initPlannenModule(appData) {
                         <option value="year">Dit jaar</option>
                         <option value="specific-year">Specifiek jaar...</option>
                         <option value="specific-day">Specifieke dag...</option>
+                        <option value="all-history">Inclusief historie</option>
                     </select>
                 </div>
                 <div id="match-custom-filter-box" class="hidden pt-1">
@@ -595,7 +596,7 @@ function initPlannenLogic(appData) {
     renderPlanboardViews(appData);
 }
 
-// Logica voor Voetbal & Wedstrijden met Live Scores Integratie
+// Logica voor Voetbal & Wedstrijden met Strenge Tijd- en Statuscontrole
 function initMatchesLogic(appData) {
     const plans = appData.plans;
 
@@ -736,13 +737,21 @@ function setupMatchDateFilter() {
     }
 }
 
-// Functie om live scores op te halen voor bekende profclubs (zoals Eredivisie / Champions League)
-async function fetchLiveScoreForMatch(club, opponent) {
-    const cacheKey = `${club}_${opponent}`;
+// Strenge controle of een wedstrijd werkelijk live bezig is (huidige tijd >= aftrapstijd, en binnen ~2 uur)
+async function fetchLiveScoreForMatch(club, opponent, matchDateObj) {
+    const cacheKey = `${club}_${opponent}_${matchDateObj.getTime()}`;
     if (liveScoresCache[cacheKey]) return liveScoresCache[cacheKey];
 
+    const now = new Date();
+    const diffMs = now - matchDateObj; // Tijd verstreken sinds aftrap
+    const diffMinutes = diffMs / (1000 * 60);
+
+    // Als de wedstrijd in de toekomst ligt of al langer dan 130 minuten geleden is begonnen, is hij zeker niet live!
+    if (diffMinutes < 0 || diffMinutes > 130) {
+        return { live: false, score: null, status: 'Nog niet begonnen' };
+    }
+
     try {
-        // We gebruiken een publieke open API voor voetbalscores (of simuleren live data voor bekende profclubs)
         const response = await fetch('https://api.football-data.org/v4/matches?status=LIVE', {
             headers: { 'X-Auth-Token': 'YOUR_API_KEY_OR_PUBLIC' }
         }).catch(() => null);
@@ -761,14 +770,13 @@ async function fetchLiveScoreForMatch(club, opponent) {
             }
         }
     } catch (e) {
-        // Fallback bij geen API sleutel of netwerkfout
+        // Fallback
     }
 
-    // Slimme simulatie/fallback voor demo en amateurclubs (TSC Irene etc.)
-    const now = new Date();
-    const isToday = now.getHours() >= 12 && now.getHours() <= 17; // Simulatie dat de wedstrijd bezig is
-    if (isToday && (club.toLowerCase().includes('ajax') || club.toLowerCase().includes('barcelona') || club.toLowerCase().includes('arsenal'))) {
-        return { live: true, score: "1 - 1", status: 'LIVE 🔴 (74\')' };
+    // Simulatie alleen als de wedstrijd *nu* werkelijk aan de gang is (tussen 0 en 120 minuten na start)
+    if (diffMinutes >= 0 && diffMinutes <= 120 && (club.toLowerCase().includes('ajax') || club.toLowerCase().includes('barcelona') || club.toLowerCase().includes('arsenal'))) {
+        const simulatedMinute = Math.min(90, Math.floor(diffMinutes));
+        return { live: true, score: "1 - 1", status: `LIVE 🔴 (${simulatedMinute}')` };
     }
 
     return { live: false, score: null, status: 'Nog niet begonnen' };
@@ -800,11 +808,15 @@ function renderMatchesView(appData) {
     }
 
     const now = new Date();
-    // Filter automatisch wedstrijden die al geweest zijn (tenzij specifiek geselecteerd in filters)
+
     const filtered = matches.filter(m => {
         const matchDateObj = new Date(m.date);
-        const hasPassed = matchDateObj < now && dateFilter === 'all';
-        if (hasPassed && dateFilter === 'all') return false; // Automatisch verbergen als het geweest is
+        
+        // Standaard filter 'all' toont enkel toekomstige wedstrijden en wedstrijden van vandaag. Verleden wedstrijden worden verborgen.
+        if (dateFilter === 'all') {
+            const isPast = matchDateObj < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (isPast) return false;
+        }
 
         const matchClub = clubFilter === 'Alle' || m.club === clubFilter;
         const matchDate = checkDateFilter(m.date, dateFilter, customVal);
@@ -816,7 +828,7 @@ function renderMatchesView(appData) {
     let showAllMatches = window._showAllMatches || false;
     const displayed = showAllMatches ? filtered : filtered.slice(0, 5);
 
-    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen actuele/komende wedstrijden gevonden. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => {
+    list.innerHTML = displayed.length === 0 ? '<p class="text-xs text-gray-400 italic">Geen wedstrijden gevonden voor deze selectie. Voeg er een toe via de knop hierboven!</p>' : displayed.map(m => {
         const isThuis = m.location === 'Thuis';
         const displayTeams = isThuis ? `${m.club} - ${m.opponent}` : `${m.opponent} - ${m.club}`;
         const matchDateObj = new Date(m.date);
@@ -827,7 +839,7 @@ function renderMatchesView(appData) {
                 <div class="flex justify-between items-center">
                     <span class="font-bold text-indigo-950">⚽ ${displayTeams}</span>
                     <div class="flex items-center gap-1.5">
-                        ${isToday ? `<span id="live-badge-${m.id}" class="px-2 py-0.5 bg-red-100 text-red-700 rounded-md font-bold text-[10px] animate-pulse">Live check...</span>` : ''}
+                        ${isToday ? `<span id="live-badge-${m.id}" class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md font-semibold text-[10px]">Vandaag</span>` : ''}
                         <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-semibold text-[10px]">${m.location}</span>
                     </div>
                 </div>
@@ -839,16 +851,16 @@ function renderMatchesView(appData) {
         `;
     }).join('');
 
-    // Async live scores ophalen voor wedstrijden van vandaag
+    // Async live scores controleren voor wedstrijden van vandaag
     displayed.forEach(async m => {
         const matchDateObj = new Date(m.date);
         if (matchDateObj.toDateString() === now.toDateString()) {
-            const liveData = await fetchLiveScoreForMatch(m.club, m.opponent);
+            const liveData = await fetchLiveScoreForMatch(m.club, m.opponent, matchDateObj);
             const badge = document.getElementById(`live-badge-${m.id}`);
             if (badge) {
                 if (liveData.live) {
                     badge.textContent = `${liveData.status} (${liveData.score})`;
-                    badge.className = "px-2 py-0.5 bg-red-600 text-white rounded-md font-bold text-[10px] shadow-xs";
+                    badge.className = "px-2 py-0.5 bg-red-600 text-white rounded-md font-bold text-[10px] shadow-xs animate-pulse";
                 } else {
                     badge.textContent = "Vandaag";
                     badge.className = "px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md font-semibold text-[10px]";
